@@ -91,9 +91,8 @@ export default function SchutterFormulier({ initieel, onOpslaan, onAnnuleer }: P
     (c) => !(form.type_boog === 'Compound' && c === 'Veteraan')
   )
 
-  const labelCls = 'block text-sm font-medium text-slate-700 mb-1'
-  const inputCls =
-    'w-full rounded border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none'
+  const labelCls = 'block text-sm font-medium text-primary mb-1'
+  const inputCls = 'input'
   const selectCls = inputCls
 
   return (
@@ -140,7 +139,7 @@ export default function SchutterFormulier({ initieel, onOpslaan, onAnnuleer }: P
             <button
               type="button"
               onClick={() => setNieuwGilde(true)}
-              className="whitespace-nowrap rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+              className="btn-secondary whitespace-nowrap"
             >
               + Nieuw gilde
             </button>
@@ -157,7 +156,7 @@ export default function SchutterFormulier({ initieel, onOpslaan, onAnnuleer }: P
             <button
               type="button"
               onClick={() => setNieuwGilde(false)}
-              className="whitespace-nowrap rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+              className="btn-secondary whitespace-nowrap"
             >
               Annuleer
             </button>
@@ -211,7 +210,7 @@ export default function SchutterFormulier({ initieel, onOpslaan, onAnnuleer }: P
           <label className={labelCls}>
             Afstand
             {isJeugdCategorie(form.leeftijdscategorie) && (
-              <span className="ml-1 text-[10px] font-normal text-slate-400">(jeugd: 12m of 18m)</span>
+              <span className="ml-1 text-[10px] font-normal text-muted">(jeugd: 12m of 18m)</span>
             )}
           </label>
           <select
@@ -228,18 +227,14 @@ export default function SchutterFormulier({ initieel, onOpslaan, onAnnuleer }: P
 
       {/* Knoppen */}
       <div className="flex justify-end gap-2 pt-2">
-        <button
-          type="button"
-          onClick={onAnnuleer}
-          className="rounded border border-slate-300 px-4 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-        >
+        <button type="button" onClick={onAnnuleer} className="btn-secondary">
           Annuleer
         </button>
         <button
           type="button"
           onClick={handleOpslaan}
           disabled={!form.voornaam.trim() || !form.naam.trim()}
-          className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40"
+          className="btn-primary"
         >
           {initieel ? 'Opslaan' : 'Toevoegen'}
         </button>

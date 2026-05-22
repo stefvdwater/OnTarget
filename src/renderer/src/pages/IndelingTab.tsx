@@ -16,6 +16,7 @@ import { voegConflictenToe } from '../algoritme/conflicten'
 import SchutterKaart from '../components/SchutterKaart'
 import DoelKolom from '../components/DoelKolom'
 import NietIngedeeldBalk from '../components/NietIngedeeldBalk'
+import { useRegisterMenuActions } from '../hooks/MenuContext'
 
 interface Props {
   wedstrijd: Wedstrijd
@@ -33,6 +34,11 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
   useEffect(() => {
     laadIndeling()
   }, [wedstrijd.id])
+
+  useRegisterMenuActions({
+    autoIndeling: () => voerAutoIn(),
+    opslaan: () => slaOp(doelen)
+  })
 
   async function laadIndeling(): Promise<void> {
     const rijen = await window.api.indeling.getByWedstrijd(wedstrijd.id)
@@ -58,6 +64,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
             gilde_naam: r.gilde_naam,
             type_boog: r.type_boog,
             afstand: r.afstand,
+            leeftijdscategorie: r.leeftijdscategorie,
             dubbel_eerste_helft: !!r.dubbel_eerste_helft,
             dubbel_tweede_helft: !!r.dubbel_tweede_helft,
             positie: r.positie
@@ -117,6 +124,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
       gilde_naam: s.gilde_naam,
       type_boog: s.type_boog,
       afstand: s.afstand,
+      leeftijdscategorie: s.leeftijdscategorie,
       dubbel_eerste_helft: !!s.dubbel_eerste_helft,
       dubbel_tweede_helft: !!s.dubbel_tweede_helft,
       positie: i
@@ -247,23 +255,19 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Actiebalk */}
           <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={voerAutoIn}
-                className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-              >
-                ⚡ Auto
+            <div className="flex items-center gap-2">
+              <button onClick={voerAutoIn} className="btn-primary">
+                Auto-indeling
               </button>
-              <button
-                onClick={() => slaOp(doelen)}
-                className="rounded border border-slate-300 px-4 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-              >
-                💾 Opslaan
+              <button onClick={() => slaOp(doelen)} className="btn-secondary">
+                Opslaan
               </button>
-              {opgeslagen && <span className="text-xs text-green-600">✓ Opgeslagen</span>}
+              {opgeslagen && (
+                <span className="text-xs text-emerald-600 dark:text-emerald-400">✓ Opgeslagen</span>
+              )}
             </div>
             {totaalConflicten > 0 && (
-              <span className="text-sm text-amber-600">
+              <span className="text-sm text-amber-600 dark:text-amber-400">
                 ⚠ {totaalConflicten} aandachtspunt{totaalConflicten > 1 ? 'en' : ''}
               </span>
             )}
@@ -291,23 +295,17 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
 
       {/* Bevestiging Auto */}
       {bevestigAuto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-            <h2 className="mb-2 text-lg font-semibold text-slate-800">Indeling herberekenen?</h2>
-            <p className="mb-5 text-sm text-slate-600">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="w-full max-w-sm surface border border-soft rounded-md p-6 shadow-lg">
+            <h2 className="mb-2 text-lg font-semibold text-primary">Indeling herberekenen?</h2>
+            <p className="mb-5 text-sm text-muted">
               De huidige indeling wordt overschreven. Vergrendelde doelen blijven bewaard.
             </p>
             <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setBevestigAuto(false)}
-                className="rounded border border-slate-300 px-4 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-              >
+              <button onClick={() => setBevestigAuto(false)} className="btn-secondary">
                 Annuleer
               </button>
-              <button
-                onClick={runAuto}
-                className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-              >
+              <button onClick={runAuto} className="btn-primary">
                 Herbereken
               </button>
             </div>
@@ -348,6 +346,7 @@ function inschrijvingNaarSlot(i: Inschrijving, idx: number): DoelSlot {
     gilde_naam: i.gilde_naam,
     type_boog: i.type_boog,
     afstand: i.afstand,
+    leeftijdscategorie: i.leeftijdscategorie,
     dubbel_eerste_helft: !!i.dubbel_eerste_helft,
     dubbel_tweede_helft: !!i.dubbel_tweede_helft,
     positie: idx

@@ -69,8 +69,8 @@ export default function WedstrijdFormulier({ initieel, onOpslaan, onAnnuleer }: 
     })
   }
 
-  const labelCls = 'block text-sm font-medium text-slate-700 mb-1'
-  const inputCls = 'w-full rounded border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none'
+  const labelCls = 'block text-sm font-medium text-primary mb-1'
+  const inputCls = 'input'
   const totaal = form.aantal_doelen_25m + form.aantal_doelen_18m + form.aantal_doelen_12m
 
   const compoundEinde = form.compound_startdoel + form.aantal_compound_doelen - 1
@@ -118,7 +118,7 @@ export default function WedstrijdFormulier({ initieel, onOpslaan, onAnnuleer }: 
         <label className={labelCls}>Doelconfiguratie</label>
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <p className="mb-1 text-xs text-slate-500">Doelen op 25m</p>
+            <p className="mb-1 text-xs text-muted">Doelen op 25m</p>
             <input
               type="number"
               min={0}
@@ -128,7 +128,7 @@ export default function WedstrijdFormulier({ initieel, onOpslaan, onAnnuleer }: 
             />
           </div>
           <div>
-            <p className="mb-1 text-xs text-slate-500">Doelen op 18m</p>
+            <p className="mb-1 text-xs text-muted">Doelen op 18m</p>
             <input
               type="number"
               min={0}
@@ -138,7 +138,7 @@ export default function WedstrijdFormulier({ initieel, onOpslaan, onAnnuleer }: 
             />
           </div>
           <div>
-            <p className="mb-1 text-xs text-slate-500">Doelen op 12m</p>
+            <p className="mb-1 text-xs text-muted">Doelen op 12m</p>
             <input
               type="number"
               min={0}
@@ -148,7 +148,7 @@ export default function WedstrijdFormulier({ initieel, onOpslaan, onAnnuleer }: 
             />
           </div>
         </div>
-        <p className="mt-1.5 text-xs text-slate-400">
+        <p className="mt-1.5 text-xs text-muted">
           Totaal: {totaal} doel{totaal !== 1 ? 'en' : ''}
         </p>
       </div>
@@ -159,7 +159,7 @@ export default function WedstrijdFormulier({ initieel, onOpslaan, onAnnuleer }: 
           <label className={labelCls}>Compound (binnen de 25m doelen)</label>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="mb-1 text-xs text-slate-500">Startdoel</p>
+              <p className="mb-1 text-xs text-muted">Startdoel</p>
               <input
                 type="number"
                 min={1}
@@ -170,7 +170,7 @@ export default function WedstrijdFormulier({ initieel, onOpslaan, onAnnuleer }: 
               />
             </div>
             <div>
-              <p className="mb-1 text-xs text-slate-500">Aantal compound doelen</p>
+              <p className="mb-1 text-xs text-muted">Aantal compound doelen</p>
               <input
                 type="number"
                 min={1}
@@ -182,7 +182,7 @@ export default function WedstrijdFormulier({ initieel, onOpslaan, onAnnuleer }: 
             </div>
           </div>
           {compoundGeldig ? (
-            <p className="mt-1.5 text-xs text-slate-400">
+            <p className="mt-1.5 text-xs text-muted">
               Doel{form.aantal_compound_doelen > 1 ? 'en' : ''}{' '}
               {form.compound_startdoel === compoundEinde
                 ? form.compound_startdoel
@@ -199,16 +199,13 @@ export default function WedstrijdFormulier({ initieel, onOpslaan, onAnnuleer }: 
 
       {/* Knoppen */}
       <div className="flex justify-end gap-2 pt-2">
-        <button
-          onClick={onAnnuleer}
-          className="rounded border border-slate-300 px-4 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-        >
+        <button onClick={onAnnuleer} className="btn-secondary">
           Annuleer
         </button>
         <button
           onClick={handleOpslaan}
           disabled={!form.naam.trim() || !form.datum || totaal === 0 || !compoundGeldig}
-          className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40"
+          className="btn-primary"
         >
           {initieel ? 'Opslaan' : 'Aanmaken'}
         </button>

@@ -50,6 +50,7 @@ function schutterNaarSlot(s: Schutter, positie: number): DoelSlot {
     gilde_naam: s.gilde_naam,
     type_boog: s.type_boog,
     afstand: s.afstand,
+    leeftijdscategorie: s.leeftijdscategorie,
     dubbel_eerste_helft: !!s.dubbel_eerste_helft,
     dubbel_tweede_helft: !!s.dubbel_tweede_helft,
     positie

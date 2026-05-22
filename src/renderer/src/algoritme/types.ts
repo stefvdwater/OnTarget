@@ -9,6 +9,7 @@ export interface DoelSlot {
   gilde_naam: string | null
   type_boog: string
   afstand: number
+  leeftijdscategorie: string
   dubbel_eerste_helft: boolean
   dubbel_tweede_helft: boolean
   positie: number

@@ -7,11 +7,12 @@ interface Props {
   onVergrendel: () => void
 }
 
-const zoneStijl: Record<string, string> = {
-  '25m': 'border-slate-200 bg-white',
-  compound: 'border-purple-200 bg-purple-50',
-  '18m': 'border-amber-200 bg-amber-50',
-  '12m': 'border-orange-200 bg-orange-50'
+// Subtiele 2px-strip bovenaan om zones te onderscheiden zonder volle vlakvulling
+const zoneStrip: Record<string, string> = {
+  '25m': 'bg-slate-300 dark:bg-slate-600',
+  compound: 'bg-violet-400',
+  '18m': 'bg-amber-400',
+  '12m': 'bg-orange-400'
 }
 
 const zoneLabel: Record<string, string | null> = {
@@ -29,31 +30,30 @@ export default function DoelKolom({ doel, onVergrendel }: Props): JSX.Element {
   return (
     <div
       ref={setNodeRef}
-      className={`
-        flex flex-col rounded-lg border-2 transition
-        ${zoneStijl[doel.zone]}
-        ${isOver ? 'border-blue-400 ring-2 ring-blue-200' : ''}
-        ${doel.vergrendeld ? 'opacity-75' : ''}
-      `}
+      className={`flex flex-col rounded-md border surface-muted overflow-hidden transition ${
+        isOver
+          ? 'border-indigo-400 ring-2 ring-indigo-200 dark:ring-indigo-900'
+          : 'border-soft'
+      } ${doel.vergrendeld ? 'opacity-75' : ''}`}
     >
+      {/* Zone-strip */}
+      <div className={`h-0.5 w-full ${zoneStrip[doel.zone]}`} aria-hidden="true" />
+
       {/* Doel header */}
-      <div className="flex items-center justify-between px-2 py-1.5 border-b border-inherit">
+      <div className="flex items-center justify-between px-2 py-1.5 border-b border-soft">
         <div className="flex items-center gap-1.5">
-          <span className="font-bold text-sm text-slate-700">#{doel.nummer}</span>
+          <span className="font-semibold text-sm text-primary">#{doel.nummer}</span>
           {zoneLabel[doel.zone] && (
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-white/70 text-slate-600">
-              {zoneLabel[doel.zone]}
-            </span>
+            <span className="text-[10px] font-medium text-muted">{zoneLabel[doel.zone]}</span>
           )}
         </div>
         <div className="flex items-center gap-1">
           {heeftConflicten && (
             <div className="relative group">
               <span className="text-amber-500 cursor-help text-sm">⚠</span>
-              {/* Tooltip */}
-              <div className="absolute right-0 top-5 z-50 hidden w-56 rounded-lg border border-slate-200 bg-white p-2 shadow-xl group-hover:block">
+              <div className="absolute right-0 top-5 z-50 hidden w-56 surface border border-soft rounded-md p-2 shadow-lg group-hover:block">
                 {doel.conflicten.map((c, i) => (
-                  <p key={i} className="text-xs text-slate-700 py-0.5">
+                  <p key={i} className="text-xs text-primary py-0.5">
                     {c.bericht}
                   </p>
                 ))}
@@ -63,7 +63,7 @@ export default function DoelKolom({ doel, onVergrendel }: Props): JSX.Element {
           <button
             onClick={onVergrendel}
             title={doel.vergrendeld ? 'Doel ontgrendelen' : 'Doel vergrendelen'}
-            className="text-slate-400 hover:text-slate-600 text-xs transition"
+            className="text-muted hover:text-primary text-xs transition"
           >
             {doel.vergrendeld ? '🔒' : '🔓'}
           </button>
@@ -71,7 +71,7 @@ export default function DoelKolom({ doel, onVergrendel }: Props): JSX.Element {
       </div>
 
       {/* Schutters */}
-      <div className="flex-1 p-1.5 space-y-1 min-h-[60px]">
+      <div className="flex-1 p-1.5 space-y-1.5 min-h-[60px]">
         {doel.schutters.map((s) => (
           <SchutterKaart
             key={s.schutter_id}
@@ -81,12 +81,12 @@ export default function DoelKolom({ doel, onVergrendel }: Props): JSX.Element {
           />
         ))}
         {doel.schutters.length === 0 && (
-          <p className="text-center text-[10px] text-slate-300 py-2">leeg</p>
+          <p className="text-center text-[10px] text-muted py-2">leeg</p>
         )}
       </div>
 
       {/* Teller */}
-      <div className="border-t border-inherit px-2 py-0.5 text-[10px] text-slate-400 text-right">
+      <div className="border-t border-soft px-2 py-0.5 text-[10px] text-muted text-right">
         {(() => {
           const b1 = doel.schutters.reduce((som, s) => {
             if (!s.dubbel_eerste_helft && s.dubbel_tweede_helft) return som

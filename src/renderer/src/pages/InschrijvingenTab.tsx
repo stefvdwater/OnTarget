@@ -107,17 +107,17 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
     laadInschrijvingen()
   }
 
-  const boogkleur: Record<string, string> = {
-    Compound: 'bg-purple-100 text-purple-700',
-    Recurve: 'bg-blue-100 text-blue-700',
-    Barebow: 'bg-green-100 text-green-700',
-    Andere: 'bg-slate-100 text-slate-600'
+  const boogStip: Record<string, string> = {
+    Recurve: 'bg-sky-500',
+    Compound: 'bg-violet-500',
+    Barebow: 'bg-emerald-500',
+    Andere: 'bg-slate-400'
   }
 
-  const afstandkleur: Record<number, string> = {
-    25: '',
-    18: 'bg-amber-100 text-amber-700',
-    12: 'bg-orange-100 text-orange-700'
+  const afstandKleur: Record<number, string> = {
+    25: 'text-muted',
+    18: 'text-amber-600 dark:text-amber-400',
+    12: 'text-orange-600 dark:text-orange-400'
   }
 
   return (
@@ -132,7 +132,7 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
             setZoekterm('')
             setToonNieuw(false)
           }}
-          className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none"
+          className="input w-auto"
         >
           <option value="">Alle gilden</option>
           {gilden.map((g) => (
@@ -154,22 +154,22 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
               setToonNieuw(false)
             }}
             disabled={gildeFilter !== ''}
-            className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-400"
+            className="input disabled:opacity-60"
           />
 
           {/* Zoekresultaten dropdown — bij vrij zoeken */}
           {gildeFilter === '' && zoekresultaten.length > 0 && (
-            <div className="absolute top-full z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg">
+            <div className="absolute top-full z-20 mt-1 w-full rounded-md border border-soft surface shadow-lg">
               {zoekresultaten.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => schrijfIn(s)}
-                  className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-blue-50"
+                  className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-800 text-primary"
                 >
                   <span className="font-medium">
                     {s.voornaam} {s.naam}
                   </span>
-                  <span className="text-slate-400">{s.gilde_naam ?? '—'}</span>
+                  <span className="text-muted">{s.gilde_naam ?? '—'}</span>
                 </button>
               ))}
               <button
@@ -177,7 +177,7 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
                   setToonNieuw(true)
                   setZoekresultaten([])
                 }}
-                className="flex w-full items-center gap-2 border-t border-slate-100 px-4 py-2.5 text-left text-sm text-blue-600 hover:bg-blue-50"
+                className="flex w-full items-center gap-2 border-t divider px-4 py-2.5 text-left text-sm text-indigo-600 dark:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 + Nieuwe schutter toevoegen: &quot;{zoekterm}&quot;
               </button>
@@ -185,13 +185,13 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
           )}
           {/* Geen resultaten maar wel zoekterm */}
           {gildeFilter === '' && zoekterm.trim().length > 0 && zoekresultaten.length === 0 && !toonNieuw && (
-            <div className="absolute top-full z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg">
+            <div className="absolute top-full z-20 mt-1 w-full rounded-md border border-soft surface shadow-lg">
               <button
                 onClick={() => {
                   setToonNieuw(true)
                   setZoekresultaten([])
                 }}
-                className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-blue-600 hover:bg-blue-50"
+                className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-indigo-600 dark:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 + Nieuwe schutter toevoegen: &quot;{zoekterm}&quot;
               </button>
@@ -202,24 +202,24 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
 
       {/* Schutters van geselecteerd gilde */}
       {gildeFilter !== '' && zoekresultaten.length > 0 && (
-        <div className="mb-4 rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div className="border-b border-slate-100 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-500">
+        <div className="mb-4 rounded-md border border-soft surface shadow-sm overflow-hidden">
+          <div className="border-b border-soft surface-muted px-4 py-2 text-xs font-medium text-muted">
             {zoekresultaten.length} schutter{zoekresultaten.length !== 1 ? 's' : ''} beschikbaar om in te schrijven
           </div>
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {zoekresultaten.map((s) => (
               <button
                 key={s.id}
                 onClick={() => schrijfIn(s)}
-                className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-blue-50"
+                className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800/50"
               >
-                <span className="font-medium text-slate-800">
+                <span className="font-medium text-primary">
                   {s.voornaam} {s.naam}
                 </span>
-                <span className="flex items-center gap-3 text-xs text-slate-500">
+                <span className="flex items-center gap-3 text-xs text-muted">
                   <span>{s.type_boog}</span>
                   <span>{s.afstand}m</span>
-                  <span className="rounded bg-blue-600 px-2 py-0.5 text-white">+ Inschrijven</span>
+                  <span className="rounded bg-indigo-600 dark:bg-indigo-500 px-2 py-0.5 text-white">+ Inschrijven</span>
                 </span>
               </button>
             ))}
@@ -227,15 +227,15 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
         </div>
       )}
       {gildeFilter !== '' && zoekresultaten.length === 0 && (
-        <p className="mb-4 text-sm text-slate-400">
+        <p className="mb-4 text-sm text-muted">
           Alle schutters van dit gilde zijn al ingeschreven.
         </p>
       )}
 
       {/* Formulier nieuwe schutter */}
       {toonNieuw && (
-        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <h3 className="mb-3 font-medium text-slate-800">Nieuwe schutter toevoegen</h3>
+        <div className="mb-4 rounded-md border border-soft surface-muted p-4">
+          <h3 className="mb-3 font-medium text-primary">Nieuwe schutter toevoegen</h3>
           <SchutterFormulier
             initieel={null}
             onOpslaan={handleNieuweSchutter}
@@ -248,55 +248,48 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
       )}
 
       {/* Inschrijvingslijst */}
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-md border border-soft surface shadow-sm">
         <table className="w-full text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50">
+          <thead className="border-b border-soft surface-muted">
             <tr>
-              <th className="px-3 py-3 text-left font-medium text-slate-500">#</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-600">Naam</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-600">Gilde</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-600">Boog</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-600">Afstand</th>
-              <th className="px-4 py-3 text-center font-medium text-slate-600">1e helft dubbel</th>
-              <th className="px-4 py-3 text-center font-medium text-slate-600">2e helft dubbel</th>
+              <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted">#</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted">Naam</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted">Gilde</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted">Boog</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted">Afstand</th>
+              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wide text-muted">1e helft dubbel</th>
+              <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wide text-muted">2e helft dubbel</th>
               <th className="w-16 px-4 py-3"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {inschrijvingen.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-slate-400">
+                <td colSpan={8} className="px-4 py-8 text-center text-muted">
                   Nog geen schutters ingeschreven. Zoek hierboven naar een schutter.
                 </td>
               </tr>
             )}
             {inschrijvingen.map((i) => (
-              <tr key={i.id} className="hover:bg-slate-50">
-                <td className="px-3 py-2.5 text-slate-400">{i.aanmeldvolgorde}</td>
-                <td className="px-4 py-2.5 font-medium text-slate-800">
+              <tr key={i.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                <td className="px-3 py-2.5 text-muted">{i.aanmeldvolgorde}</td>
+                <td className="px-4 py-2.5 font-medium text-primary">
                   {i.voornaam} {i.naam}
                 </td>
-                <td className="px-4 py-2.5 text-slate-600">{i.gilde_naam ?? '—'}</td>
+                <td className="px-4 py-2.5 text-muted">{i.gilde_naam ?? '—'}</td>
                 <td className="px-4 py-2.5">
-                  <span className={`rounded px-2 py-0.5 text-xs font-medium ${boogkleur[i.type_boog]}`}>
+                  <span className="inline-flex items-center gap-1.5 text-xs text-muted">
+                    <span className={`h-1.5 w-1.5 rounded-full ${boogStip[i.type_boog] ?? 'bg-slate-400'}`} />
                     {i.type_boog}
                   </span>
                 </td>
-                <td className="px-4 py-2.5">
-                  {i.afstand !== 25 ? (
-                    <span className={`rounded px-2 py-0.5 text-xs font-medium ${afstandkleur[i.afstand]}`}>
-                      {i.afstand}m
-                    </span>
-                  ) : (
-                    <span className="text-slate-600">{i.afstand}m</span>
-                  )}
-                </td>
+                <td className={`px-4 py-2.5 text-xs ${afstandKleur[i.afstand]}`}>{i.afstand}m</td>
                 <td className="px-4 py-2.5 text-center">
                   <input
                     type="checkbox"
                     checked={!!i.dubbel_eerste_helft}
                     onChange={() => toggleDubbel(i, 'dubbel_eerste_helft')}
-                    className="h-4 w-4 cursor-pointer accent-blue-600"
+                    className="h-4 w-4 cursor-pointer accent-indigo-600"
                   />
                 </td>
                 <td className="px-4 py-2.5 text-center">
@@ -304,13 +297,13 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
                     type="checkbox"
                     checked={!!i.dubbel_tweede_helft}
                     onChange={() => toggleDubbel(i, 'dubbel_tweede_helft')}
-                    className="h-4 w-4 cursor-pointer accent-blue-600"
+                    className="h-4 w-4 cursor-pointer accent-indigo-600"
                   />
                 </td>
                 <td className="px-4 py-2.5">
                   <button
                     onClick={() => setVerwijderBevestig(i.id)}
-                    className="text-red-500 hover:underline"
+                    className="text-red-500 dark:text-red-400 hover:underline"
                   >
                     ✕
                   </button>
@@ -320,29 +313,23 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-right text-xs text-slate-400">
+      <p className="mt-2 text-right text-xs text-muted">
         {inschrijvingen.length} schutter{inschrijvingen.length !== 1 ? 's' : ''} ingeschreven
       </p>
 
       {/* Modal: verwijder bevestiging */}
       {verwijderBevestig !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-            <h2 className="mb-2 text-lg font-semibold text-slate-800">Inschrijving verwijderen?</h2>
-            <p className="mb-5 text-sm text-slate-600">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="w-full max-w-sm surface border border-soft rounded-md p-6 shadow-lg">
+            <h2 className="mb-2 text-lg font-semibold text-primary">Inschrijving verwijderen?</h2>
+            <p className="mb-5 text-sm text-muted">
               De schutter wordt uitgeschreven uit deze wedstrijd. Het schuttersfiche blijft bewaard.
             </p>
             <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setVerwijderBevestig(null)}
-                className="rounded border border-slate-300 px-4 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-              >
+              <button onClick={() => setVerwijderBevestig(null)} className="btn-secondary">
                 Annuleer
               </button>
-              <button
-                onClick={() => handleVerwijder(verwijderBevestig)}
-                className="rounded bg-red-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-red-700"
-              >
+              <button onClick={() => handleVerwijder(verwijderBevestig)} className="btn-danger">
                 Verwijder
               </button>
             </div>

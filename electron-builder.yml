@@ -1,0 +1,25 @@
+appId: com.targetassignment
+productName: Doelindeling
+directories:
+  buildResources: resources
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.*}'
+asarUnpack:
+  - resources/**
+  - node_modules/better-sqlite3/**
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  executableName: Doelindeling
+nsis:
+  artifactName: Doelindeling-Setup-${version}.exe
+  shortcutName: Doelindeling
+  uninstallDisplayName: Doelindeling
+  createDesktopShortcut: always

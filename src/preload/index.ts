@@ -4,7 +4,9 @@ contextBridge.exposeInMainWorld('api', {
   // Gilden
   gilden: {
     getAll: () => ipcRenderer.invoke('gilden:getAll'),
-    create: (naam: string) => ipcRenderer.invoke('gilden:create', naam)
+    getMetSchutters: () => ipcRenderer.invoke('gilden:getMetSchutters'),
+    create: (naam: string) => ipcRenderer.invoke('gilden:create', naam),
+    deleteLege: () => ipcRenderer.invoke('gilden:deleteLege')
   },
 
   // Schutters

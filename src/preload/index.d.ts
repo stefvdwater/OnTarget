@@ -5,7 +5,9 @@ declare global {
     api: {
       gilden: {
         getAll: () => Promise<any[]>
+        getMetSchutters: () => Promise<any[]>
         create: (naam: string) => Promise<any>
+        deleteLege: () => Promise<{ verwijderd: number }>
       }
       schutters: {
         getAll: () => Promise<any[]>

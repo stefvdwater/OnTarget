@@ -73,11 +73,29 @@ export default function SchutterFormulier({
   const [gilden, setGilden] = useState<Gilde[]>([])
 
   useEffect(() => {
-    window.api.gilden.getAll().then((g) => {
-      setGilden(g)
-      if (!bestaand && gildeId == null && g.length > 0) setGildeId(g[0].id)
+    // Toon enkel gilden met minstens één schutter, zodat verlaten gilden
+    // niet als suggestie verschijnen.
+    Promise.all([
+      window.api.gilden.getMetSchutters(),
+      // Fallback: bij bewerken kan de huidige schutter het enige lid zijn
+      // van een gilde — dat gilde moet wel zichtbaar blijven.
+      bestaand?.gilde_id != null ? window.api.gilden.getAll() : Promise.resolve([])
+    ]).then(([metSchutters, alle]) => {
+      const lijst: Gilde[] = [...metSchutters]
+      if (bestaand?.gilde_id != null) {
+        const aanwezig = lijst.some((g) => g.id === bestaand.gilde_id)
+        if (!aanwezig) {
+          const eigen = (alle as Gilde[]).find((g) => g.id === bestaand.gilde_id)
+          if (eigen) {
+            lijst.push(eigen)
+            lijst.sort((a, b) => a.naam.localeCompare(b.naam))
+          }
+        }
+      }
+      setGilden(lijst)
+      if (!bestaand && gildeId == null && lijst.length > 0) setGildeId(lijst[0].id)
     })
-  }, [])
+  }, [bestaand?.id, bestaand?.gilde_id])
 
   const finaleTitel = titel ?? (bestaand ? 'Bewerk schutter' : 'Nieuwe schutter')
   const finaleBevestig =

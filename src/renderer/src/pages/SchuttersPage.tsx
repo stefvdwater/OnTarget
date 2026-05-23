@@ -35,6 +35,9 @@ export default function SchuttersPage(): JSX.Element {
   const [verwijderBevestig, setVerwijderBevestig] = useState<Schutter | null>(null)
   const [verwijderAllesBevestig, setVerwijderAllesBevestig] = useState(false)
   const [verwijderAllesBezig, setVerwijderAllesBezig] = useState(false)
+  const [legeGildenBevestig, setLegeGildenBevestig] = useState(false)
+  const [legeGildenBezig, setLegeGildenBezig] = useState(false)
+  const [aantalLegeGilden, setAantalLegeGilden] = useState(0)
   const [importBezig, setImportBezig] = useState(false)
   const [importResultaat, setImportResultaat] = useState<ImportResultaat | null>(null)
   const [importSessie, setImportSessie] = useState<ImportSessie | null>(null)
@@ -58,8 +61,13 @@ export default function SchuttersPage(): JSX.Element {
   }, [filterOpen, ioOpen])
 
   async function laadSchutters(): Promise<void> {
-    const data = await window.api.schutters.getAll()
+    const [data, alleGilden, metSchutters] = await Promise.all([
+      window.api.schutters.getAll(),
+      window.api.gilden.getAll(),
+      window.api.gilden.getMetSchutters()
+    ])
     setSchutters(data)
+    setAantalLegeGilden(alleGilden.length - metSchutters.length)
   }
 
   const actieveFilters =
@@ -128,6 +136,14 @@ export default function SchuttersPage(): JSX.Element {
     laadSchutters()
   }
 
+  async function handleVerwijderLegeGilden(): Promise<void> {
+    setLegeGildenBezig(true)
+    await window.api.gilden.deleteLege()
+    setLegeGildenBezig(false)
+    setLegeGildenBevestig(false)
+    laadSchutters()
+  }
+
   // ── CSV export ────────────────────────────────────────
   function handleExport(): void {
     setIoOpen(false)
@@ -184,28 +200,31 @@ export default function SchuttersPage(): JSX.Element {
       return
     }
 
-    const huidigeGilden: Gilde[] = await window.api.gilden.getAll()
+    // Voor autocomplete alleen gilden tonen die al schutters hebben — verlaten
+    // gilden zijn ruis voor de gebruiker. Bij commit gebruiken we wél de
+    // volledige lijst voor dedup (zie commitImportRijen).
+    const gildenSuggestie: Gilde[] = await window.api.gilden.getMetSchutters()
     // Altijd review-modal tonen zodat de gebruiker zelfs zonder conflicten kan
     // controleren wat geïmporteerd wordt.
-    setImportSessie({ rijen: parseResult.rijen, bekendeGilden: huidigeGilden })
+    setImportSessie({ rijen: parseResult.rijen, bekendeGilden: gildenSuggestie })
   }
 
   async function bevestigImportReview(gecorrigeerd: ImportRij[]): Promise<void> {
     if (!importSessie) return
     setImportBezig(true)
-    const resultaat = await commitImportRijen(gecorrigeerd, importSessie.bekendeGilden)
+    const resultaat = await commitImportRijen(gecorrigeerd)
     setImportBezig(false)
     setImportSessie(null)
     setImportResultaat(resultaat)
     laadSchutters()
   }
 
-  async function commitImportRijen(
-    rijen: ImportRij[],
-    bekendeGilden: Gilde[]
-  ): Promise<ImportResultaat> {
+  async function commitImportRijen(rijen: ImportRij[]): Promise<ImportResultaat> {
+    // Voor dedup gebruiken we de volledige gilde-lijst (inclusief verlaten
+    // gilden), zodat we geen duplicaat aanmaken bij een naam-match.
+    const alleGilden: Gilde[] = await window.api.gilden.getAll()
     const gildeMap = new Map<string, number>()
-    for (const g of bekendeGilden) gildeMap.set(g.naam.toLowerCase(), g.id)
+    for (const g of alleGilden) gildeMap.set(g.naam.toLowerCase(), g.id)
 
     let toegevoegd = 0
     let nieuweGilden = 0
@@ -450,9 +469,8 @@ export default function SchuttersPage(): JSX.Element {
         <header>
           <h2>Gevarenzone</h2>
           <p>
-            Onomkeerbare actie — alle schutters worden permanent verwijderd, samen met
-            alle gilden, inschrijvingen en doelindelingen. Wedstrijden zelf blijven
-            behouden.
+            Onomkeerbare acties — gebruik alleen wanneer je echt opnieuw wilt beginnen.
+            Wedstrijden zelf blijven steeds behouden.
           </p>
         </header>
         <div className="config-actions">
@@ -462,6 +480,23 @@ export default function SchuttersPage(): JSX.Element {
             disabled={schutters.length === 0}
           >
             Alle schutters verwijderen
+          </button>
+          <button
+            className="btn"
+            onClick={() => setLegeGildenBevestig(true)}
+            disabled={aantalLegeGilden === 0}
+            title={
+              aantalLegeGilden === 0
+                ? 'Geen lege gilden om op te ruimen'
+                : `${aantalLegeGilden} lege gilde${aantalLegeGilden !== 1 ? 'n' : ''} opruimen`
+            }
+          >
+            Lege gilden verwijderen
+            {aantalLegeGilden > 0 && (
+              <span className="mono" style={{ marginLeft: 4, opacity: 0.7 }}>
+                ({aantalLegeGilden})
+              </span>
+            )}
           </button>
         </div>
       </section>
@@ -496,9 +531,9 @@ export default function SchuttersPage(): JSX.Element {
             <header className="modal-head">Alle schutters verwijderen?</header>
             <div className="modal-text">
               <strong className="mono">{schutters.length}</strong> schutter
-              {schutters.length !== 1 ? 's' : ''}, alle gilden en alle inschrijvingen +
-              doelindelingen worden permanent verwijderd. Wedstrijden zelf blijven
-              behouden. Deze actie kan niet ongedaan gemaakt worden.
+              {schutters.length !== 1 ? 's' : ''} en al hun inschrijvingen +
+              doelindelingen worden permanent verwijderd. Gilden en wedstrijden zelf
+              blijven behouden. Deze actie kan niet ongedaan gemaakt worden.
             </div>
             <div className="modal-actions">
               <button
@@ -514,6 +549,35 @@ export default function SchuttersPage(): JSX.Element {
                 disabled={verwijderAllesBezig}
               >
                 {verwijderAllesBezig ? 'Bezig…' : 'Definitief verwijderen'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {legeGildenBevestig && (
+        <div className="modal-backdrop" onClick={() => setLegeGildenBevestig(false)}>
+          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
+            <header className="modal-head">Lege gilden verwijderen?</header>
+            <div className="modal-text">
+              <strong className="mono">{aantalLegeGilden}</strong> gilde
+              {aantalLegeGilden !== 1 ? 'n' : ''} zonder schutters worden permanent
+              verwijderd. Gilden met minstens één schutter blijven uiteraard behouden.
+            </div>
+            <div className="modal-actions">
+              <button
+                className="btn"
+                onClick={() => setLegeGildenBevestig(false)}
+                disabled={legeGildenBezig}
+              >
+                Annuleer
+              </button>
+              <button
+                className="btn danger"
+                onClick={handleVerwijderLegeGilden}
+                disabled={legeGildenBezig}
+              >
+                {legeGildenBezig ? 'Bezig…' : 'Verwijderen'}
               </button>
             </div>
           </div>

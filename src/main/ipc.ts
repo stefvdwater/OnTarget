@@ -62,9 +62,29 @@ ipcMain.handle('gilden:getAll', () =>
   queryAll('SELECT * FROM gilden ORDER BY naam')
 )
 
+// Geeft alleen gilden terug die minstens één schutter hebben — voor
+// suggestie-lijsten waar verlaten gilden ruis zijn.
+ipcMain.handle('gilden:getMetSchutters', () =>
+  queryAll(`
+    SELECT g.*
+    FROM gilden g
+    WHERE EXISTS (SELECT 1 FROM schutters s WHERE s.gilde_id = g.id)
+    ORDER BY g.naam
+  `)
+)
+
 ipcMain.handle('gilden:create', (_, naam: string) =>
   run('INSERT INTO gilden (naam) VALUES (?)', [naam])
 )
+
+// Verwijdert gilden zonder schutters; retourneert het aantal verwijderde rijen.
+ipcMain.handle('gilden:deleteLege', () => {
+  const result = run(`
+    DELETE FROM gilden
+    WHERE NOT EXISTS (SELECT 1 FROM schutters s WHERE s.gilde_id = gilden.id)
+  `)
+  return { verwijderd: result.changes }
+})
 
 // ── Schutters ─────────────────────────────────────────────
 ipcMain.handle('schutters:getAll', () =>
@@ -109,14 +129,13 @@ ipcMain.handle('schutters:delete', (_, id: number) =>
 
 ipcMain.handle('schutters:deleteAll', () => {
   // Wipe alle schutters én afhankelijke records (inschrijvingen, indeling,
-  // vergrendelde_doelen) plus gilden zodat de database in een volledig schone
-  // staat blijft. Wedstrijden zelf blijven bestaan.
+  // vergrendelde_doelen). Gilden en wedstrijden blijven bewaard — die hebben
+  // hun eigen cleanup-acties.
   transaction(() => {
     run('DELETE FROM indeling')
     run('DELETE FROM vergrendelde_doelen')
     run('DELETE FROM inschrijvingen')
     run('DELETE FROM schutters')
-    run('DELETE FROM gilden')
   })
   return { ok: true }
 })

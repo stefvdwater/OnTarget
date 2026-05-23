@@ -22,9 +22,11 @@ doelen en aanmeldvolgorde.
   worden bij commit automatisch aangemaakt.
 - **CSV-export** van het volledige ledenbestand met dezelfde header — een
   export is direct weer importeerbaar.
-- **Bulk-acties**: demo-data laden (100 voorbeeld-schutters) en
-  Gevarenzone-knop om alle schutters in één keer te wissen (inclusief
-  cascading inschrijvingen en doelindelingen, in één transactie).
+- **Bulk-acties**: demo-data laden (100 voorbeeld-schutters), Gevarenzone-knop
+  om alle schutters in één keer te wissen (cascadeert naar inschrijvingen en
+  doelindelingen in één transactie; gilden en wedstrijden blijven behouden),
+  en een aparte knop om alleen verlaten gilden (zonder schutters) op te
+  ruimen.
 - **Wedstrijdbeheer**: wedstrijden aanmaken, configureren (datum, locatie,
   aantal doelen per zone, compound-startdoel) en verwijderen via de
   Configuratie-tab.
@@ -203,3 +205,6 @@ Bij wijzigingen aan de **database**:
   [`src/preload/index.d.ts`](src/preload/index.d.ts)).
 - Voor bulk-acties: gebruik `transaction(() => { … })` zodat alles in één
   transactie wordt gepleegd (zie `schutters:deleteAll` of `demo:laad`).
+- Aparte cleanup-IPC's voor afhankelijke tabellen: `gilden:deleteLege`
+  verwijdert alleen gilden zonder schutters, `gilden:getMetSchutters` levert
+  de filter-lijst voor de UI.

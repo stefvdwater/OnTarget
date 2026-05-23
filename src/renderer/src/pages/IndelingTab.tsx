@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   DndContext,
   DragEndEvent,
@@ -16,7 +16,6 @@ import { voegConflictenToe } from '../algoritme/conflicten'
 import SchutterKaart from '../components/SchutterKaart'
 import DoelKolom from '../components/DoelKolom'
 import NietIngedeeldBalk from '../components/NietIngedeeldBalk'
-import { useRegisterMenuActions } from '../hooks/MenuContext'
 
 interface Props {
   wedstrijd: Wedstrijd
@@ -26,8 +25,8 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
   const [doelen, setDoelen] = useState<DoelMetConflicten[]>([])
   const [nietIngedeeld, setNietIngedeeld] = useState<DoelSlot[]>([])
   const [actiefSlot, setActiefSlot] = useState<DoelSlot | null>(null)
-  const [opgeslagen, setOpgeslagen] = useState(false)
   const [bevestigAuto, setBevestigAuto] = useState(false)
+  const [totaalInschrijvingen, setTotaalInschrijvingen] = useState(0)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
@@ -35,23 +34,16 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
     laadIndeling()
   }, [wedstrijd.id])
 
-  useRegisterMenuActions({
-    autoIndeling: () => voerAutoIn(),
-    opslaan: () => slaOp(doelen)
-  })
-
   async function laadIndeling(): Promise<void> {
     const rijen = await window.api.indeling.getByWedstrijd(wedstrijd.id)
+    const inschrijvingen: Inschrijving[] = await window.api.inschrijvingen.getByWedstrijd(wedstrijd.id)
+    setTotaalInschrijvingen(inschrijvingen.length)
 
     if (rijen.length === 0) {
-      // Nog geen indeling: toon alle ingeschreven als niet-ingedeeld
-      const inschrijvingen: Inschrijving[] = await window.api.inschrijvingen.getByWedstrijd(wedstrijd.id)
       const legeDoelen = maakLegeDoelen(wedstrijd)
       setDoelen(legeDoelen)
       setNietIngedeeld(inschrijvingen.map((i, idx) => inschrijvingNaarSlot(i, idx)))
     } else {
-      // Herstel opgeslagen indeling
-      const config = cfgVanW(wedstrijd)
       const alleDoelen = maakLegeDoelen(wedstrijd)
 
       rijen.forEach((r: any) => {
@@ -73,10 +65,14 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
         }
       })
 
-      // Sorteer schutters per doel op positie
       alleDoelen.forEach((d) => d.schutters.sort((a, b) => a.positie - b.positie))
       setDoelen(voegConflictenToe(alleDoelen as Doel[]))
-      setNietIngedeeld([])
+
+      const ingedeeldIds = new Set(rijen.map((r: any) => r.schutter_id))
+      const nogIn = inschrijvingen
+        .filter((i) => !ingedeeldIds.has(i.schutter_id))
+        .map((i, idx) => inschrijvingNaarSlot(i, idx))
+      setNietIngedeeld(nogIn)
     }
   }
 
@@ -94,7 +90,6 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
     const vergrendeldeDoelen = await window.api.indeling.getVergrendeldeDoelen(wedstrijd.id)
     const vergrendeldeSet = new Set<number>(vergrendeldeDoelen)
 
-    // Filter niet-vergrendelde inschrijvingen
     const vergrendeldeSchutterIds = new Set(
       doelen
         .filter((d) => vergrendeldeSet.has(d.nummer))
@@ -107,7 +102,6 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
     const config = cfgVanW(wedstrijd)
     const resultaat = berekenIndeling(vrijeInschrijvingen as any, config)
 
-    // Voeg vergrendelde doelen terug samen
     const alleDoelen = resultaat.doelen.map((d) => {
       if (vergrendeldeSet.has(d.nummer)) {
         const huidig = doelen.find((h) => h.nummer === d.nummer)
@@ -117,19 +111,20 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
     })
 
     setDoelen(alleDoelen)
-    setNietIngedeeld(resultaat.nietIngedeeld.map((s, i) => ({
-      schutter_id: s.schutter_id,
-      voornaam: s.voornaam,
-      naam: s.naam,
-      gilde_naam: s.gilde_naam,
-      type_boog: s.type_boog,
-      afstand: s.afstand,
-      leeftijdscategorie: s.leeftijdscategorie,
-      dubbel_eerste_helft: !!s.dubbel_eerste_helft,
-      dubbel_tweede_helft: !!s.dubbel_tweede_helft,
-      positie: i
-    })))
-    setOpgeslagen(false)
+    setNietIngedeeld(
+      resultaat.nietIngedeeld.map((s, i) => ({
+        schutter_id: s.schutter_id,
+        voornaam: s.voornaam,
+        naam: s.naam,
+        gilde_naam: s.gilde_naam,
+        type_boog: s.type_boog,
+        afstand: s.afstand,
+        leeftijdscategorie: s.leeftijdscategorie,
+        dubbel_eerste_helft: !!s.dubbel_eerste_helft,
+        dubbel_tweede_helft: !!s.dubbel_tweede_helft,
+        positie: i
+      }))
+    )
     await slaOp(alleDoelen)
   }
 
@@ -144,23 +139,20 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
       }))
     )
     await window.api.indeling.save(wedstrijd.id, rijen)
-    setOpgeslagen(true)
   }
 
-  // ── Drag & Drop ───────────────────────────────────────────
+  // ── Drag & Drop ──────────────────────────────────────────
 
-  function vindSlot(id: string): { doel: DoelMetConflicten | null; slot: DoelSlot | null } {
+  function vindSlot(id: string): DoelSlot | null {
     for (const d of doelen) {
       const slot = d.schutters.find((s) => `${d.nummer}-${s.schutter_id}` === id)
-      if (slot) return { doel: d, slot }
+      if (slot) return slot
     }
-    const inSlot = nietIngedeeld.find((s) => `niet-${s.schutter_id}` === id)
-    return { doel: null, slot: inSlot ?? null }
+    return nietIngedeeld.find((s) => `niet-${s.schutter_id}` === id) ?? null
   }
 
   function onDragStart(event: DragStartEvent): void {
-    const { slot } = vindSlot(event.active.id as string)
-    setActiefSlot(slot)
+    setActiefSlot(vindSlot(event.active.id as string))
   }
 
   function onDragEnd(event: DragEndEvent): void {
@@ -171,14 +163,12 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
     const activeId = active.id as string
     const overId = over.id as string
 
-    // Bepaal bron
     const vanNietIngedeeld = activeId.startsWith('niet-')
     const bronSchutterId = vanNietIngedeeld
       ? parseInt(activeId.replace('niet-', ''))
       : parseInt(activeId.split('-')[1])
     const bronDoelNr = vanNietIngedeeld ? null : parseInt(activeId.split('-')[0])
 
-    // Bepaal bestemming
     const naarNietIngedeeld = overId === 'niet-ingedeeld'
     const naarDoelNr = overId.startsWith('doel-') ? parseInt(overId.replace('doel-', '')) : null
 
@@ -191,22 +181,34 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
 
   function verplaatsNaarNietIngedeeld(schutterId: number, vanDoelNr: number | null): void {
     if (vanDoelNr === null) return
-    const nieuweDoelen = doelen.map((d) => {
-      if (d.nummer !== vanDoelNr) return d
-      return { ...d, schutters: d.schutters.filter((s) => s.schutter_id !== schutterId) }
-    })
-    const slot = doelen.find((d) => d.nummer === vanDoelNr)?.schutters.find((s) => s.schutter_id === schutterId)
-    if (slot) setNietIngedeeld((prev) => [...prev, slot])
+    const slot = doelen
+      .find((d) => d.nummer === vanDoelNr)
+      ?.schutters.find((s) => s.schutter_id === schutterId)
+    if (!slot) return
+    const nieuweDoelen = doelen.map((d) =>
+      d.nummer === vanDoelNr
+        ? { ...d, schutters: d.schutters.filter((s) => s.schutter_id !== schutterId) }
+        : d
+    )
+    setNietIngedeeld((prev) => [...prev, slot])
     const metConflicten = voegConflictenToe(nieuweDoelen as Doel[])
     setDoelen(metConflicten)
     slaOp(metConflicten)
   }
 
-  function verplaatsNaarDoel(schutterId: number, vanDoelNr: number | null, naarDoelNr: number): void {
+  function verplaatsNaarDoel(
+    schutterId: number,
+    vanDoelNr: number | null,
+    naarDoelNr: number
+  ): void {
+    const doelDest = doelen.find((d) => d.nummer === naarDoelNr)
+    if (!doelDest || doelDest.vergrendeld) return
+
     let slot: DoelSlot | undefined
 
     let nieuweDoelen = doelen.map((d) => {
       if (vanDoelNr !== null && d.nummer === vanDoelNr) {
+        if (d.vergrendeld) return d
         slot = d.schutters.find((s) => s.schutter_id === schutterId)
         return { ...d, schutters: d.schutters.filter((s) => s.schutter_id !== schutterId) }
       }
@@ -214,7 +216,6 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
     })
 
     if (!slot) {
-      // Van niet-ingedeeld
       slot = nietIngedeeld.find((s) => s.schutter_id === schutterId)
       if (!slot) return
       setNietIngedeeld((prev) => prev.filter((s) => s.schutter_id !== schutterId))
@@ -223,8 +224,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
     nieuweDoelen = nieuweDoelen.map((d) => {
       if (d.nummer !== naarDoelNr) return d
       if (d.schutters.some((s) => s.schutter_id === schutterId)) return d
-      const nieuwePositie = d.schutters.length
-      return { ...d, schutters: [...d.schutters, { ...slot!, positie: nieuwePositie }] }
+      return { ...d, schutters: [...d.schutters, { ...slot!, positie: d.schutters.length }] }
     })
 
     const metConflicten = voegConflictenToe(nieuweDoelen as Doel[])
@@ -241,72 +241,160 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
     await window.api.indeling.toggleDoelVergrendeld(wedstrijd.id, doelNr, vergrendeld)
   }
 
+  function leegmaken(): void {
+    if (!confirm('Alle niet-vergrendelde doelen leegmaken?')) return
+    const teVerplaatsen: DoelSlot[] = []
+    const nieuweDoelen = doelen.map((d) => {
+      if (d.vergrendeld) return d
+      teVerplaatsen.push(...d.schutters)
+      return { ...d, schutters: [] }
+    })
+    setNietIngedeeld((prev) =>
+      [...prev, ...teVerplaatsen].sort((a, b) => a.schutter_id - b.schutter_id)
+    )
+    const metConflicten = voegConflictenToe(nieuweDoelen as Doel[])
+    setDoelen(metConflicten)
+    slaOp(metConflicten)
+  }
+
+  function toggleAlleVergrendeld(): void {
+    const allesVergrendeld = doelen.length > 0 && doelen.every((d) => d.vergrendeld)
+    const nieuweStatus = !allesVergrendeld
+    const nieuweDoelen = doelen.map((d) => ({ ...d, vergrendeld: nieuweStatus }))
+    setDoelen(nieuweDoelen)
+    // Persist per doel
+    for (const d of nieuweDoelen) {
+      window.api.indeling.toggleDoelVergrendeld(wedstrijd.id, d.nummer, nieuweStatus)
+    }
+  }
+
   // ── Render ────────────────────────────────────────────────
 
+  const aantalIngedeeld = doelen.reduce((s, d) => s + d.schutters.length, 0)
+  const totaal = aantalIngedeeld + nietIngedeeld.length
   const totaalConflicten = doelen.reduce((s, d) => s + d.conflicten.length, 0)
+  const allesVergrendeld = doelen.length > 0 && doelen.every((d) => d.vergrendeld)
+
+  const doelenPerZone = useMemo(() => {
+    return {
+      '25m': doelen.filter((d) => d.zone === '25m'),
+      compound: doelen.filter((d) => d.zone === 'compound'),
+      '18m': doelen.filter((d) => d.zone === '18m'),
+      '12m': doelen.filter((d) => d.zone === '12m')
+    }
+  }, [doelen])
+
+  // Merge 25m en compound in één zone-blok zoals in de design (compound staat tussen 25m doelen)
+  const doelen25mEnCompound = useMemo(() => {
+    return doelen.filter((d) => d.zone === '25m' || d.zone === 'compound').sort((a, b) => a.nummer - b.nummer)
+  }, [doelen])
 
   return (
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      <div className="flex h-[calc(100vh-220px)] gap-4">
-        {/* Linker balk: niet-ingedeelde schutters */}
-        <NietIngedeeldBalk slots={nietIngedeeld} />
-
-        {/* Rechter zone: doelmatrix */}
-        <div className="flex flex-1 flex-col overflow-hidden">
-          {/* Actiebalk */}
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <button onClick={voerAutoIn} className="btn-primary">
-                Auto-indeling
-              </button>
-              <button onClick={() => slaOp(doelen)} className="btn-secondary">
-                Opslaan
-              </button>
-              {opgeslagen && (
-                <span className="text-xs text-emerald-600 dark:text-emerald-400">✓ Opgeslagen</span>
-              )}
-            </div>
-            {totaalConflicten > 0 && (
-              <span className="text-sm text-amber-600 dark:text-amber-400">
-                ⚠ {totaalConflicten} aandachtspunt{totaalConflicten > 1 ? 'en' : ''}
-              </span>
-            )}
-          </div>
-
-          {/* Doelen grid */}
-          <div className="flex-1 overflow-auto">
-            <div className="grid auto-rows-min grid-cols-5 gap-2 pb-4">
-              {doelen.map((doel) => (
-                <DoelKolom
-                  key={doel.nummer}
-                  doel={doel}
-                  onVergrendel={() => toggleVergrendel(doel.nummer)}
-                />
-              ))}
-            </div>
-          </div>
+      {/* Actiebalk */}
+      <div className="indeling-bar">
+        <div className="progress-text">
+          <span className="big">{aantalIngedeeld}</span>
+          <span>van {totaalInschrijvingen || totaal} schutters ingedeeld</span>
         </div>
+        {totaalConflicten > 0 && (
+          <span className="chip chip-yellow">
+            ⚠ {totaalConflicten} aandachtspunt{totaalConflicten > 1 ? 'en' : ''}
+          </span>
+        )}
+        <div style={{ flex: 1 }} />
+        <button className="btn btn-ghost btn-sm" onClick={leegmaken}>
+          <IconX /> Leegmaken
+        </button>
+        <button
+          className="btn"
+          onClick={toggleAlleVergrendeld}
+          title={allesVergrendeld ? 'Alle doelen ontgrendelen' : 'Alle doelen vergrendelen'}
+        >
+          {allesVergrendeld ? <IconUnlock /> : <IconLock />}
+          {allesVergrendeld ? 'Doelen ontgrendelen' : 'Doelen vergrendelen'}
+        </button>
+        <button className="btn btn-accent-yellow" onClick={voerAutoIn}>
+          <IconMagic /> Automatisch indelen
+        </button>
       </div>
 
-      {/* Drag overlay */}
+      {/* Indeling layout */}
+      <div className="indeling-layout">
+        <NietIngedeeldBalk slots={nietIngedeeld} totaal={totaalInschrijvingen || totaal} />
+
+        <main>
+          {doelen25mEnCompound.length > 0 && (
+            <section className="doelen-zone">
+              <div className="doelen-zone-head">
+                <h2>25 meter</h2>
+                <span className="zone-tag">{doelen25mEnCompound.length} doelen</span>
+              </div>
+              <div className="doelen-grid">
+                {doelen25mEnCompound.map((d) => (
+                  <DoelKolom
+                    key={d.nummer}
+                    doel={d}
+                    onVergrendel={() => toggleVergrendel(d.nummer)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+          {doelenPerZone['18m'].length > 0 && (
+            <section className="doelen-zone">
+              <div className="doelen-zone-head">
+                <h2>18 meter</h2>
+                <span className="zone-tag">{doelenPerZone['18m'].length} doelen</span>
+              </div>
+              <div className="doelen-grid">
+                {doelenPerZone['18m'].map((d) => (
+                  <DoelKolom
+                    key={d.nummer}
+                    doel={d}
+                    onVergrendel={() => toggleVergrendel(d.nummer)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+          {doelenPerZone['12m'].length > 0 && (
+            <section className="doelen-zone">
+              <div className="doelen-zone-head">
+                <h2>12 meter</h2>
+                <span className="zone-tag">{doelenPerZone['12m'].length} doelen</span>
+              </div>
+              <div className="doelen-grid">
+                {doelenPerZone['12m'].map((d) => (
+                  <DoelKolom
+                    key={d.nummer}
+                    doel={d}
+                    onVergrendel={() => toggleVergrendel(d.nummer)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+        </main>
+      </div>
+
       <DragOverlay>
         {actiefSlot && <SchutterKaart slot={actiefSlot} draggableId="overlay" compact />}
       </DragOverlay>
 
-      {/* Bevestiging Auto */}
       {bevestigAuto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-sm surface border border-soft rounded-md p-6 shadow-lg">
-            <h2 className="mb-2 text-lg font-semibold text-primary">Indeling herberekenen?</h2>
-            <p className="mb-5 text-sm text-muted">
+        <div className="modal-backdrop" onClick={() => setBevestigAuto(false)}>
+          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
+            <header className="modal-head">Indeling herberekenen?</header>
+            <div className="modal-text">
               De huidige indeling wordt overschreven. Vergrendelde doelen blijven bewaard.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setBevestigAuto(false)} className="btn-secondary">
+            </div>
+            <div className="modal-actions">
+              <button className="btn" onClick={() => setBevestigAuto(false)}>
                 Annuleer
               </button>
-              <button onClick={runAuto} className="btn-primary">
-                Herbereken
+              <button className="btn btn-accent-yellow" onClick={runAuto}>
+                <IconMagic /> Herbereken
               </button>
             </div>
           </div>
@@ -351,4 +439,76 @@ function inschrijvingNaarSlot(i: Inschrijving, idx: number): DoelSlot {
     dubbel_tweede_helft: !!i.dubbel_tweede_helft,
     positie: idx
   }
+}
+
+function IconX(): JSX.Element {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
+function IconLock(): JSX.Element {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </svg>
+  )
+}
+
+function IconUnlock(): JSX.Element {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 7.4-2" />
+    </svg>
+  )
+}
+
+function IconMagic(): JSX.Element {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m15 4 1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2Z" />
+      <path d="M4 20 14 10" />
+      <path d="m20 16 .8 1.6L22.4 18.4l-1.6.8L20 21l-.8-1.8L17.6 18.4l1.6-.8L20 16Z" />
+    </svg>
+  )
 }

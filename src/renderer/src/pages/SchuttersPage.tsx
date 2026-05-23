@@ -1,61 +1,89 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Schutter, SchutterFormData } from '../types'
 import SchutterFormulier from '../components/SchutterFormulier'
-import { useRegisterMenuActions } from '../hooks/MenuContext'
 
-type Modal = { type: 'nieuw' } | { type: 'bewerk'; schutter: Schutter } | null
+type Modal = { type: 'nieuw'; zoek: string } | { type: 'bewerk'; schutter: Schutter } | null
 
 export default function SchuttersPage(): JSX.Element {
   const [schutters, setSchutters] = useState<Schutter[]>([])
-  const [zoekterm, setZoekterm] = useState('')
+  const [zoek, setZoek] = useState('')
+  const [filterBoog, setFilterBoog] = useState('alle')
+  const [filterAfstand, setFilterAfstand] = useState('alle')
   const [modal, setModal] = useState<Modal>(null)
-  const [verwijderBevestig, setVerwijderBevestig] = useState<number | null>(null)
-  const [demoBezig, setDemoBezig] = useState(false)
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [ioOpen, setIoOpen] = useState(false)
   const [demoBevestig, setDemoBevestig] = useState(false)
+  const [demoBezig, setDemoBezig] = useState(false)
+  const filterRef = useRef<HTMLDivElement>(null)
+  const ioRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     laadSchutters()
   }, [])
 
-  useRegisterMenuActions({
-    demoData: () => setDemoBevestig(true)
-  })
+  useEffect(() => {
+    if (!filterOpen && !ioOpen) return
+    const onDown = (e: MouseEvent): void => {
+      if (filterOpen && filterRef.current && !filterRef.current.contains(e.target as Node))
+        setFilterOpen(false)
+      if (ioOpen && ioRef.current && !ioRef.current.contains(e.target as Node)) setIoOpen(false)
+    }
+    window.addEventListener('mousedown', onDown)
+    return () => window.removeEventListener('mousedown', onDown)
+  }, [filterOpen, ioOpen])
 
   async function laadSchutters(): Promise<void> {
     const data = await window.api.schutters.getAll()
     setSchutters(data)
   }
 
-  const gefilterd = schutters.filter((s) => {
-    const q = zoekterm.toLowerCase()
-    return (
-      s.naam.toLowerCase().includes(q) ||
-      s.voornaam.toLowerCase().includes(q) ||
-      (s.gilde_naam ?? '').toLowerCase().includes(q)
-    )
-  })
+  const actieveFilters =
+    (filterBoog !== 'alle' ? 1 : 0) + (filterAfstand !== 'alle' ? 1 : 0)
 
-  async function handleOpslaan(data: SchutterFormData): Promise<void> {
-    let gilde_id = data.gilde_id
+  function wisFilters(): void {
+    setFilterBoog('alle')
+    setFilterAfstand('alle')
+  }
 
-    if (data.gilde_naam_nieuw.trim()) {
-      const result = await window.api.gilden.create(data.gilde_naam_nieuw.trim())
-      gilde_id = result.lastInsertRowid
+  const gilden = useMemo(() => {
+    const m = new Map<number, string>()
+    for (const s of schutters) {
+      if (s.gilde_id != null && s.gilde_naam) m.set(s.gilde_id, s.gilde_naam)
     }
+    return m.size
+  }, [schutters])
 
+  const lijst = useMemo(() => {
+    const q = zoek.trim().toLowerCase()
+    return schutters.filter((s) => {
+      if (filterBoog !== 'alle' && s.type_boog !== filterBoog) return false
+      if (filterAfstand !== 'alle' && String(s.afstand) !== filterAfstand) return false
+      if (q) {
+        const hay = `${s.voornaam} ${s.naam} ${s.gilde_naam ?? ''}`.toLowerCase()
+        if (!hay.includes(q)) return false
+      }
+      return true
+    })
+  }, [schutters, zoek, filterBoog, filterAfstand])
+
+  async function handleBevestig(data: SchutterFormData): Promise<void> {
+    let gilde_id = data.gilde_id
+    if (data.gilde_naam_nieuw.trim()) {
+      const r = await window.api.gilden.create(data.gilde_naam_nieuw.trim())
+      gilde_id = r.lastInsertRowid
+    }
     if (modal?.type === 'bewerk') {
       await window.api.schutters.update({ ...data, gilde_id, id: modal.schutter.id })
     } else {
       await window.api.schutters.create({ ...data, gilde_id })
     }
-
     setModal(null)
     laadSchutters()
   }
 
   async function handleVerwijder(id: number): Promise<void> {
     await window.api.schutters.delete(id)
-    setVerwijderBevestig(null)
+    setModal(null)
     laadSchutters()
   }
 
@@ -68,144 +96,387 @@ export default function SchuttersPage(): JSX.Element {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
-      {/* Header */}
-      <div className="mb-5 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-primary">Schutters</h1>
-        <div className="flex gap-2">
-          <button onClick={() => setDemoBevestig(true)} className="btn-secondary">
-            Demo data laden
-          </button>
-          <button onClick={() => setModal({ type: 'nieuw' })} className="btn-primary">
-            + Nieuwe schutter
+    <>
+      <div className="page-head">
+        <div>
+          <h1>Schutters</h1>
+          <div className="sub">
+            {schutters.length} geregistreerde schutters in {gilden} gilden
+          </div>
+        </div>
+        <div className="page-actions">
+          <div className="search">
+            <IconSearch />
+            <input
+              className="input"
+              placeholder="Zoek op naam of gilde…"
+              value={zoek}
+              onChange={(e) => setZoek(e.target.value)}
+            />
+          </div>
+
+          <div className="filter-dropdown" ref={filterRef}>
+            <button
+              className={'btn' + (filterOpen ? ' btn-active' : '')}
+              onClick={() => setFilterOpen((o) => !o)}
+            >
+              <IconFilter /> Filter
+              {actieveFilters > 0 && <span className="filter-count">{actieveFilters}</span>}
+            </button>
+            {filterOpen && (
+              <div className="filter-panel" onMouseDown={(e) => e.stopPropagation()}>
+                <label>
+                  <span>Boogtype</span>
+                  <select
+                    className="select"
+                    value={filterBoog}
+                    onChange={(e) => setFilterBoog(e.target.value)}
+                  >
+                    <option value="alle">Alle boogtypes</option>
+                    <option value="Recurve">Recurve</option>
+                    <option value="Compound">Compound</option>
+                    <option value="Barebow">Barebow</option>
+                    <option value="Andere">Andere</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Afstand</span>
+                  <select
+                    className="select"
+                    value={filterAfstand}
+                    onChange={(e) => setFilterAfstand(e.target.value)}
+                  >
+                    <option value="alle">Alle afstanden</option>
+                    <option value="25">25m</option>
+                    <option value="18">18m</option>
+                    <option value="12">12m</option>
+                  </select>
+                </label>
+                <div className="filter-panel-actions">
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={wisFilters}
+                    disabled={actieveFilters === 0}
+                  >
+                    Wis filters
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="filter-dropdown" ref={ioRef}>
+            <button
+              className={'btn' + (ioOpen ? ' btn-active' : '')}
+              onClick={() => setIoOpen((o) => !o)}
+            >
+              <IconExchange /> Importeren / Exporteren
+              <IconChevron />
+            </button>
+            {ioOpen && (
+              <div className="menu-panel" onMouseDown={(e) => e.stopPropagation()}>
+                <button className="menu-item" onClick={() => setIoOpen(false)} disabled>
+                  <IconUpload />
+                  <span>
+                    <span className="menu-label">Importeren</span>
+                    <span className="menu-sub">Schutters uit CSV inladen</span>
+                  </span>
+                </button>
+                <button className="menu-item" onClick={() => setIoOpen(false)} disabled>
+                  <IconDownload />
+                  <span>
+                    <span className="menu-label">Exporteren</span>
+                    <span className="menu-sub">Volledige lijst als CSV</span>
+                  </span>
+                </button>
+                <button
+                  className="menu-item"
+                  onClick={() => {
+                    setIoOpen(false)
+                    setDemoBevestig(true)
+                  }}
+                >
+                  <IconSparkle />
+                  <span>
+                    <span className="menu-label">Demo-data laden</span>
+                    <span className="menu-sub">Reset met 100 voorbeeld-schutters</span>
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          <button className="btn btn-primary" onClick={() => setModal({ type: 'nieuw', zoek })}>
+            <IconPlus /> Nieuwe schutter
           </button>
         </div>
       </div>
 
-      {/* Zoekbalk */}
-      <input
-        type="text"
-        placeholder="Zoek op naam of gilde..."
-        value={zoekterm}
-        onChange={(e) => setZoekterm(e.target.value)}
-        className="input mb-4"
-      />
-
-      {/* Tabel */}
-      <div className="overflow-hidden rounded-md border border-soft surface shadow-sm">
-        <table className="w-full text-sm">
-          <thead className="border-b border-soft surface-muted">
+      <div className="card">
+        <table className="table">
+          <thead>
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted">Naam</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted">Gilde</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted">Boog</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted">Categorie</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted">Afstand</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted">G</th>
-              <th className="w-24 px-4 py-3"></th>
+              <th style={{ width: '24%' }}>Naam</th>
+              <th style={{ width: '26%' }}>Gilde</th>
+              <th>Boogtype</th>
+              <th>Leeftijdscategorie</th>
+              <th>Geslacht</th>
+              <th>Afstand</th>
+              <th style={{ width: 80 }}></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-            {gefilterd.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-muted">
-                  {zoekterm ? 'Geen schutters gevonden.' : 'Nog geen schutters toegevoegd.'}
+          <tbody>
+            {lijst.map((s) => (
+              <tr key={s.id}>
+                <td>
+                  <strong>
+                    {s.voornaam} {s.naam}
+                  </strong>
                 </td>
-              </tr>
-            )}
-            {gefilterd.map((s) => (
-              <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                <td className="px-4 py-2.5 font-medium text-primary">
-                  {s.voornaam} {s.naam}
+                <td>{s.gilde_naam ?? '—'}</td>
+                <td>
+                  <BoogChip boog={s.type_boog} />
                 </td>
-                <td className="px-4 py-2.5 text-muted">{s.gilde_naam ?? '—'}</td>
-                <td className="px-4 py-2.5 text-muted">{s.type_boog}</td>
-                <td className="px-4 py-2.5 text-muted">{s.leeftijdscategorie}</td>
-                <td className="px-4 py-2.5 text-muted">{s.afstand}m</td>
-                <td className="px-4 py-2.5 text-muted">{s.geslacht}</td>
-                <td className="px-4 py-2.5">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setModal({ type: 'bewerk', schutter: s })}
-                      className="text-indigo-600 dark:text-indigo-400 hover:underline"
-                    >
-                      Bewerk
-                    </button>
-                    <button
-                      onClick={() => setVerwijderBevestig(s.id)}
-                      className="text-red-500 dark:text-red-400 hover:underline"
-                    >
-                      Verwijder
-                    </button>
-                  </div>
+                <td>{s.leeftijdscategorie}</td>
+                <td className="mono">{s.geslacht}</td>
+                <td className="mono">{s.afstand}m</td>
+                <td>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => setModal({ type: 'bewerk', schutter: s })}
+                  >
+                    Bewerken
+                  </button>
                 </td>
               </tr>
             ))}
+            {lijst.length === 0 && (
+              <tr>
+                <td
+                  colSpan={7}
+                  style={{ textAlign: 'center', padding: 32, color: 'var(--muted)' }}
+                >
+                  {zoek || actieveFilters > 0
+                    ? 'Geen schutters gevonden.'
+                    : 'Nog geen schutters toegevoegd.'}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Teller */}
-      <p className="mt-2 text-right text-xs text-muted">
-        {gefilterd.length} van {schutters.length} schutters
-      </p>
-
-      {/* Modal: nieuw / bewerk */}
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-lg surface border border-soft rounded-md p-6 shadow-lg">
-            <h2 className="mb-4 text-lg font-semibold text-primary">
-              {modal.type === 'nieuw' ? 'Nieuwe schutter' : 'Schutter bewerken'}
-            </h2>
-            <SchutterFormulier
-              initieel={modal.type === 'bewerk' ? modal.schutter : null}
-              onOpslaan={handleOpslaan}
-              onAnnuleer={() => setModal(null)}
-            />
-          </div>
-        </div>
+        <Modal onClose={() => setModal(null)}>
+          <SchutterFormulier
+            bestaand={modal.type === 'bewerk' ? modal.schutter : null}
+            initieelZoek={modal.type === 'nieuw' ? modal.zoek : ''}
+            onAnnuleer={() => setModal(null)}
+            onBevestig={handleBevestig}
+            onVerwijder={
+              modal.type === 'bewerk' ? () => handleVerwijder(modal.schutter.id) : undefined
+            }
+          />
+        </Modal>
       )}
 
-      {/* Modal: demo data bevestiging */}
       {demoBevestig && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-sm surface border border-soft rounded-md p-6 shadow-lg">
-            <h2 className="mb-2 text-lg font-semibold text-primary">Demo data laden?</h2>
-            <p className="mb-5 text-sm text-muted">
-              Dit verwijdert <strong>alle bestaande schutters en gilden</strong> en laadt 100 demo-schutters
-              verdeeld over 11 gilden. Wedstrijden en inschrijvingen worden ook gewist.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setDemoBevestig(false)} className="btn-secondary">
+        <div className="modal-backdrop" onClick={() => setDemoBevestig(false)}>
+          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
+            <header className="modal-head">Demo data laden?</header>
+            <div className="modal-text">
+              Dit verwijdert <strong>alle bestaande schutters en gilden</strong> en laadt
+              demo-schutters. Wedstrijden en inschrijvingen worden ook gewist.
+            </div>
+            <div className="modal-actions">
+              <button className="btn" onClick={() => setDemoBevestig(false)}>
                 Annuleer
               </button>
-              <button onClick={handleLaadDemo} disabled={demoBezig} className="btn-primary">
+              <button className="btn btn-primary" onClick={handleLaadDemo} disabled={demoBezig}>
                 {demoBezig ? 'Bezig…' : 'Demo data laden'}
               </button>
             </div>
           </div>
         </div>
       )}
+    </>
+  )
+}
 
-      {/* Modal: verwijder bevestiging */}
-      {verwijderBevestig !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-sm surface border border-soft rounded-md p-6 shadow-lg">
-            <h2 className="mb-2 text-lg font-semibold text-primary">Schutter verwijderen?</h2>
-            <p className="mb-5 text-sm text-muted">
-              Deze schutter wordt permanent verwijderd uit het schuttersbestand.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setVerwijderBevestig(null)} className="btn-secondary">
-                Annuleer
-              </button>
-              <button onClick={() => handleVerwijder(verwijderBevestig)} className="btn-danger">
-                Verwijder
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+function Modal({
+  onClose,
+  children
+}: {
+  onClose: () => void
+  children: React.ReactNode
+}): JSX.Element {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-body" onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
     </div>
+  )
+}
+
+function BoogChip({ boog }: { boog: string }): JSX.Element {
+  const cls =
+    boog === 'Recurve'
+      ? 'chip chip-blue'
+      : boog === 'Compound'
+        ? 'chip chip-red'
+        : boog === 'Barebow'
+          ? 'chip chip-yellow'
+          : 'chip'
+  return (
+    <span className={cls}>
+      <span className="chip-dot" />
+      {boog}
+    </span>
+  )
+}
+
+function IconSearch(): JSX.Element {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+  )
+}
+
+function IconPlus(): JSX.Element {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+function IconFilter(): JSX.Element {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 5h18l-7 9v6l-4-2v-4L3 5Z" />
+    </svg>
+  )
+}
+
+function IconExchange(): JSX.Element {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 7h14M14 4l3 3-3 3M21 17H7M10 14l-3 3 3 3" />
+    </svg>
+  )
+}
+
+function IconUpload(): JSX.Element {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 20V8M6 12l6-6 6 6M4 3h16" />
+    </svg>
+  )
+}
+
+function IconDownload(): JSX.Element {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 4v12M6 12l6 6 6-6M4 21h16" />
+    </svg>
+  )
+}
+
+function IconSparkle(): JSX.Element {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3Z" />
+      <path d="M19 14l.7 2.1L22 17l-2.3.9L19 20l-.7-2.1L16 17l2.3-.9L19 14Z" />
+    </svg>
+  )
+}
+
+function IconChevron(): JSX.Element {
+  return (
+    <svg
+      width="10"
+      height="10"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
   )
 }

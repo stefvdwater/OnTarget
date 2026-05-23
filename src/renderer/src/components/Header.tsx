@@ -1,7 +1,3 @@
-import { useState } from 'react'
-import MenuDropdown, { type MenuItem } from './MenuDropdown'
-import type { MenuActions } from '../hooks/MenuContext'
-
 type Pagina = 'wedstrijden' | 'schutters'
 
 interface Props {
@@ -9,159 +5,58 @@ interface Props {
   onSwitch: (p: Pagina) => void
   isDark: boolean
   onToggleDark: () => void
-  actions: MenuActions
 }
 
-export default function Header({
-  pagina,
-  onSwitch,
-  isDark,
-  onToggleDark,
-  actions
-}: Props): JSX.Element {
-  const [overOpen, setOverOpen] = useState(false)
-
-  const bestand: MenuItem[] = [
-    {
-      label: 'Nieuwe wedstrijd…',
-      onClick: () => {
-        onSwitch('wedstrijden')
-        actions.nieuweWedstrijd?.()
-      },
-      disabled: !actions.nieuweWedstrijd && pagina !== 'wedstrijden'
-    },
-    { label: 'Importeer schutters…', disabled: true },
-    { label: 'Exporteer naar PDF', disabled: true },
-    { divider: true, label: '' },
-    { label: 'Afsluiten', onClick: () => window.close() }
-  ]
-
-  const start: MenuItem[] = [
-    {
-      label: 'Auto-indeling',
-      onClick: actions.autoIndeling,
-      disabled: !actions.autoIndeling
-    },
-    {
-      label: 'Opslaan',
-      onClick: actions.opslaan,
-      disabled: !actions.opslaan
-    },
-    { divider: true, label: '' },
-    {
-      label: 'Demo-data laden',
-      onClick: actions.demoData,
-      disabled: !actions.demoData
-    }
-  ]
-
-  const beeld: MenuItem[] = [
-    { label: 'Donkere modus', onClick: onToggleDark, checked: isDark },
-    { divider: true, label: '' },
-    {
-      label: 'Wedstrijden',
-      onClick: () => onSwitch('wedstrijden'),
-      checked: pagina === 'wedstrijden'
-    },
-    {
-      label: 'Schutters',
-      onClick: () => onSwitch('schutters'),
-      checked: pagina === 'schutters'
-    }
-  ]
-
-  const help: MenuItem[] = [
-    { label: 'Documentatie', disabled: true },
-    { label: 'Over OnTarget', onClick: () => setOverOpen(true) }
-  ]
-
+export default function Header({ pagina, onSwitch, isDark, onToggleDark }: Props): JSX.Element {
   return (
-    <>
-      {/* Rij 1 — Menubalk */}
-      <nav className="flex h-9 items-stretch surface border-b border-soft select-none">
-        <div className="flex items-center pl-3 pr-4">
-          <span className="text-sm font-semibold tracking-tight text-primary">OnTarget</span>
-        </div>
-        <MenuDropdown label="Bestand" items={bestand} />
-        <MenuDropdown label="Start" items={start} />
-        <MenuDropdown label="Beeld" items={beeld} />
-        <MenuDropdown label="Help" items={help} />
-        <div className="flex-1" />
+    <header className="topbar">
+      <button
+        type="button"
+        className="brand brand-button"
+        onClick={() => onSwitch('wedstrijden')}
+        title="Naar wedstrijden"
+      >
+        <TargetMark className="brand-mark" />
+        <span>OnTarget</span>
+      </button>
+      <nav className="nav">
         <button
+          className={'nav-item' + (pagina === 'wedstrijden' ? ' active' : '')}
+          onClick={() => onSwitch('wedstrijden')}
+        >
+          Wedstrijden
+        </button>
+        <button
+          className={'nav-item' + (pagina === 'schutters' ? ' active' : '')}
+          onClick={() => onSwitch('schutters')}
+        >
+          Schutters
+        </button>
+      </nav>
+      <div className="topbar-spacer" />
+      <div className="topbar-right">
+        <button
+          className="theme-toggle"
           onClick={onToggleDark}
           aria-label="Donkere modus wisselen"
           title={isDark ? 'Lichte modus' : 'Donkere modus'}
-          className="flex items-center justify-center px-3 text-primary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         >
           {isDark ? <IconZon /> : <IconMaan />}
         </button>
-      </nav>
-
-      {/* Rij 2 — Sub-nav */}
-      <div className="flex h-9 items-stretch surface-muted border-b border-soft select-none">
-        <SubTab
-          label="Wedstrijden"
-          active={pagina === 'wedstrijden'}
-          onClick={() => onSwitch('wedstrijden')}
-        />
-        <SubTab
-          label="Schutters"
-          active={pagina === 'schutters'}
-          onClick={() => onSwitch('schutters')}
-        />
       </div>
-
-      {overOpen && <OverModal onClose={() => setOverOpen(false)} />}
-    </>
+    </header>
   )
 }
 
-function SubTab({
-  label,
-  active,
-  onClick
-}: {
-  label: string
-  active: boolean
-  onClick: () => void
-}): JSX.Element {
+function TargetMark({ className }: { className?: string }): JSX.Element {
   return (
-    <button
-      onClick={onClick}
-      className={`relative px-4 text-sm transition-colors ${
-        active
-          ? 'text-primary font-medium'
-          : 'text-muted hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800'
-      }`}
-    >
-      {label}
-      {active && (
-        <span className="pointer-events-none absolute inset-x-3 bottom-0 h-0.5 bg-indigo-600 dark:bg-indigo-400" />
-      )}
-    </button>
-  )
-}
-
-function OverModal({ onClose }: { onClose: () => void }): JSX.Element {
-  return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="surface border border-soft rounded-md shadow-lg max-w-sm w-full p-6"
-      >
-        <h2 className="text-lg font-semibold text-primary mb-2">OnTarget</h2>
-        <p className="text-sm text-muted mb-1">Doelindelingsapp voor boogschietwedstrijden.</p>
-        <p className="text-sm text-muted mb-4">Versie 0.1.0</p>
-        <div className="flex justify-end">
-          <button onClick={onClose} className="btn-secondary">
-            Sluiten
-          </button>
-        </div>
-      </div>
-    </div>
+    <svg width="28" height="28" viewBox="0 0 32 32" fill="none" className={className} aria-hidden="true">
+      <circle cx="16" cy="16" r="15" fill="#1c1917" />
+      <circle cx="16" cy="16" r="11.5" fill="#1d70b8" />
+      <circle cx="16" cy="16" r="8" fill="#e63946" />
+      <circle cx="16" cy="16" r="4.5" fill="#f5c518" />
+      <circle cx="16" cy="16" r="1.2" fill="#fff" />
+    </svg>
   )
 }
 

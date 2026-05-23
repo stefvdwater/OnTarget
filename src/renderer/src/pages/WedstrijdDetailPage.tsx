@@ -1,73 +1,148 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Wedstrijd } from '../types'
 import InschrijvingenTab from './InschrijvingenTab'
 import IndelingTab from './IndelingTab'
+import ConfiguratieTab from './ConfiguratieTab'
+import AfdrukkenTab from './AfdrukkenTab'
 
 interface Props {
   wedstrijd: Wedstrijd
-  onTerug: () => void
-  onBewerk: (w: Wedstrijd) => void
+  initialTab?: Tab
+  onTerug: (verwijderd?: boolean) => void
 }
 
-type Tab = 'inschrijvingen' | 'indeling'
+type Tab = 'configuratie' | 'inschrijvingen' | 'indeling' | 'afdrukken'
 
-export default function WedstrijdDetailPage({ wedstrijd, onTerug, onBewerk }: Props): JSX.Element {
-  const [tab, setTab] = useState<Tab>('inschrijvingen')
+export default function WedstrijdDetailPage({
+  wedstrijd,
+  initialTab = 'inschrijvingen',
+  onTerug
+}: Props): JSX.Element {
+  const [tab, setTab] = useState<Tab>(initialTab)
+  const [huidig, setHuidig] = useState<Wedstrijd>(wedstrijd)
+  const [aantalInschrijvingen, setAantalInschrijvingen] = useState(0)
+
+  useEffect(() => {
+    setHuidig(wedstrijd)
+  }, [wedstrijd.id])
+
+  useEffect(() => {
+    window.api.inschrijvingen
+      .getByWedstrijd(huidig.id)
+      .then((rs) => setAantalInschrijvingen(rs.length))
+  }, [huidig.id, tab])
 
   function formatDatum(datum: string): string {
-    return new Date(datum).toLocaleDateString('nl-BE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
+    const [y, m, d] = datum.split('-')
+    const maanden = [
+      'januari',
+      'februari',
+      'maart',
+      'april',
+      'mei',
+      'juni',
+      'juli',
+      'augustus',
+      'september',
+      'oktober',
+      'november',
+      'december'
+    ]
+    return `${parseInt(d, 10)} ${maanden[parseInt(m, 10) - 1]} ${y}`
   }
 
-  const tabCls = (t: Tab): string =>
-    `px-5 py-2 text-sm font-medium border-b-2 transition ${
-      tab === t
-        ? 'border-indigo-600 dark:border-indigo-400 text-primary'
-        : 'border-transparent text-muted hover:text-primary'
-    }`
+  async function handleConfigUpdate(patch: Partial<Wedstrijd>): Promise<void> {
+    const nieuw: Wedstrijd = { ...huidig, ...patch }
+    setHuidig(nieuw)
+    await window.api.wedstrijden.update(nieuw)
+  }
+
+  async function handleVerwijder(): Promise<void> {
+    await window.api.wedstrijden.delete(huidig.id)
+    onTerug(true)
+  }
 
   return (
-    <div className="mx-auto max-w-7xl">
-      {/* Header */}
-      <div className="mb-4 flex items-start justify-between">
+    <>
+      <div className="crumb">
+        <button onClick={() => onTerug()}>
+          <IconArrowLeft /> Wedstrijden
+        </button>
+        <span>/</span>
+        <span>{huidig.naam}</span>
+      </div>
+
+      <div className="page-head">
         <div>
-          <button
-            onClick={onTerug}
-            className="mb-1 flex items-center gap-1 text-sm text-muted hover:text-primary"
-          >
-            ← Terug naar overzicht
-          </button>
-          <h1 className="text-2xl font-semibold text-primary">{wedstrijd.naam}</h1>
-          <p className="mt-0.5 text-sm text-muted">
-            {formatDatum(wedstrijd.datum)}
-            {wedstrijd.locatie ? ` · ${wedstrijd.locatie}` : ''}
-            {' · '}
-            {wedstrijd.aantal_doelen} doelen
-            {wedstrijd.aantal_doelen_18m > 0 ? ` (${wedstrijd.aantal_doelen_18m}× 18m)` : ''}
-            {wedstrijd.aantal_doelen_12m > 0 ? ` (${wedstrijd.aantal_doelen_12m}× 12m)` : ''}
-          </p>
+          <h1>{huidig.naam}</h1>
+          <div className="sub">
+            {formatDatum(huidig.datum)}
+            {huidig.locatie ? ` · ${huidig.locatie}` : ''} · {huidig.aantal_doelen} doelen
+          </div>
         </div>
-        <button onClick={() => onBewerk(wedstrijd)} className="btn-secondary">
-          Wedstrijd bewerken
-        </button>
       </div>
 
-      {/* Tabbladen */}
-      <div className="mb-5 flex border-b border-soft">
-        <button className={tabCls('inschrijvingen')} onClick={() => setTab('inschrijvingen')}>
-          Inschrijvingen
-        </button>
-        <button className={tabCls('indeling')} onClick={() => setTab('indeling')}>
-          Doelindeling
-        </button>
+      <div className="tabs">
+        <Tab label="Configuratie" actief={tab === 'configuratie'} onClick={() => setTab('configuratie')} />
+        <Tab
+          label={
+            <>
+              Inschrijvingen{' '}
+              <span className="mono" style={{ color: 'var(--muted)', marginLeft: 4 }}>
+                {aantalInschrijvingen}
+              </span>
+            </>
+          }
+          actief={tab === 'inschrijvingen'}
+          onClick={() => setTab('inschrijvingen')}
+        />
+        <Tab label="Indeling" actief={tab === 'indeling'} onClick={() => setTab('indeling')} />
+        <Tab label="Afdrukken" actief={tab === 'afdrukken'} onClick={() => setTab('afdrukken')} />
       </div>
 
-      {/* Inhoud */}
-      {tab === 'inschrijvingen' && <InschrijvingenTab wedstrijd={wedstrijd} />}
-      {tab === 'indeling' && <IndelingTab wedstrijd={wedstrijd} />}
-    </div>
+      {tab === 'configuratie' && (
+        <ConfiguratieTab
+          wedstrijd={huidig}
+          onUpdate={handleConfigUpdate}
+          onVerwijder={handleVerwijder}
+        />
+      )}
+      {tab === 'inschrijvingen' && <InschrijvingenTab wedstrijd={huidig} />}
+      {tab === 'indeling' && <IndelingTab wedstrijd={huidig} />}
+      {tab === 'afdrukken' && <AfdrukkenTab />}
+    </>
+  )
+}
+
+function Tab({
+  label,
+  actief,
+  onClick
+}: {
+  label: React.ReactNode
+  actief: boolean
+  onClick: () => void
+}): JSX.Element {
+  return (
+    <button className={'tab' + (actief ? ' active' : '')} onClick={onClick}>
+      {label}
+    </button>
+  )
+}
+
+function IconArrowLeft(): JSX.Element {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m12 19-7-7 7-7M19 12H5" />
+    </svg>
   )
 }

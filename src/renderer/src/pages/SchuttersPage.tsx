@@ -32,6 +32,9 @@ export default function SchuttersPage(): JSX.Element {
   const [ioOpen, setIoOpen] = useState(false)
   const [demoBevestig, setDemoBevestig] = useState(false)
   const [demoBezig, setDemoBezig] = useState(false)
+  const [verwijderBevestig, setVerwijderBevestig] = useState<Schutter | null>(null)
+  const [verwijderAllesBevestig, setVerwijderAllesBevestig] = useState(false)
+  const [verwijderAllesBezig, setVerwijderAllesBezig] = useState(false)
   const [importBezig, setImportBezig] = useState(false)
   const [importResultaat, setImportResultaat] = useState<ImportResultaat | null>(null)
   const [importSessie, setImportSessie] = useState<ImportSessie | null>(null)
@@ -117,6 +120,14 @@ export default function SchuttersPage(): JSX.Element {
     laadSchutters()
   }
 
+  async function handleVerwijderAlles(): Promise<void> {
+    setVerwijderAllesBezig(true)
+    await window.api.schutters.deleteAll()
+    setVerwijderAllesBezig(false)
+    setVerwijderAllesBevestig(false)
+    laadSchutters()
+  }
+
   // ── CSV export ────────────────────────────────────────
   function handleExport(): void {
     setIoOpen(false)
@@ -174,18 +185,9 @@ export default function SchuttersPage(): JSX.Element {
     }
 
     const huidigeGilden: Gilde[] = await window.api.gilden.getAll()
-
-    // Heeft minstens één rij een conflict? Dan review-modal.
-    const heeftConflict = parseResult.rijen.some((r) => !valideerImportRij(r).ok)
-    if (heeftConflict) {
-      setImportSessie({ rijen: parseResult.rijen, bekendeGilden: huidigeGilden })
-      return
-    }
-
-    // Alle rijen geldig → meteen committen.
-    const resultaat = await commitImportRijen(parseResult.rijen, huidigeGilden)
-    setImportResultaat(resultaat)
-    laadSchutters()
+    // Altijd review-modal tonen zodat de gebruiker zelfs zonder conflicten kan
+    // controleren wat geïmporteerd wordt.
+    setImportSessie({ rijen: parseResult.rijen, bekendeGilden: huidigeGilden })
   }
 
   async function bevestigImportReview(gecorrigeerd: ImportRij[]): Promise<void> {
@@ -389,7 +391,7 @@ export default function SchuttersPage(): JSX.Element {
               <th>Leeftijdscategorie</th>
               <th>Geslacht</th>
               <th>Afstand</th>
-              <th style={{ width: 80 }}></th>
+              <th style={{ width: 150 }}></th>
             </tr>
           </thead>
           <tbody>
@@ -408,12 +410,22 @@ export default function SchuttersPage(): JSX.Element {
                 <td className="mono">{s.geslacht}</td>
                 <td className="mono">{s.afstand}m</td>
                 <td>
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => setModal({ type: 'bewerk', schutter: s })}
-                  >
-                    Bewerken
-                  </button>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => setModal({ type: 'bewerk', schutter: s })}
+                    >
+                      Bewerken
+                    </button>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      style={{ color: 'var(--red)' }}
+                      onClick={() => setVerwijderBevestig(s)}
+                      title="Schutter verwijderen"
+                    >
+                      Verwijder
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -432,6 +444,26 @@ export default function SchuttersPage(): JSX.Element {
           </tbody>
         </table>
       </div>
+
+      {/* Gevarenzone */}
+      <section className="config-card danger" style={{ marginTop: 28 }}>
+        <header>
+          <h2>Gevarenzone</h2>
+          <p>
+            Onomkeerbare actie — alle schutters worden permanent verwijderd, samen met al
+            hun inschrijvingen en doelindelingen.
+          </p>
+        </header>
+        <div className="config-actions">
+          <button
+            className="btn danger"
+            onClick={() => setVerwijderAllesBevestig(true)}
+            disabled={schutters.length === 0}
+          >
+            Alle schutters verwijderen
+          </button>
+        </div>
+      </section>
 
       {modal && (
         <Modal onClose={() => setModal(null)}>
@@ -455,6 +487,65 @@ export default function SchuttersPage(): JSX.Element {
           onAnnuleer={() => setImportSessie(null)}
           onBevestig={bevestigImportReview}
         />
+      )}
+
+      {verwijderAllesBevestig && (
+        <div className="modal-backdrop" onClick={() => setVerwijderAllesBevestig(false)}>
+          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
+            <header className="modal-head">Alle schutters verwijderen?</header>
+            <div className="modal-text">
+              <strong className="mono">{schutters.length}</strong> schutter
+              {schutters.length !== 1 ? 's' : ''} en al hun inschrijvingen en
+              doelindelingen worden permanent verwijderd. Deze actie kan niet ongedaan
+              gemaakt worden.
+            </div>
+            <div className="modal-actions">
+              <button
+                className="btn"
+                onClick={() => setVerwijderAllesBevestig(false)}
+                disabled={verwijderAllesBezig}
+              >
+                Annuleer
+              </button>
+              <button
+                className="btn danger"
+                onClick={handleVerwijderAlles}
+                disabled={verwijderAllesBezig}
+              >
+                {verwijderAllesBezig ? 'Bezig…' : 'Definitief verwijderen'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {verwijderBevestig && (
+        <div className="modal-backdrop" onClick={() => setVerwijderBevestig(null)}>
+          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
+            <header className="modal-head">Schutter verwijderen?</header>
+            <div className="modal-text">
+              <strong>
+                {verwijderBevestig.voornaam} {verwijderBevestig.naam}
+              </strong>{' '}
+              wordt permanent verwijderd, samen met al diens inschrijvingen en
+              doelindelingen.
+            </div>
+            <div className="modal-actions">
+              <button className="btn" onClick={() => setVerwijderBevestig(null)}>
+                Annuleer
+              </button>
+              <button
+                className="btn danger"
+                onClick={async () => {
+                  await handleVerwijder(verwijderBevestig.id)
+                  setVerwijderBevestig(null)
+                }}
+              >
+                Verwijder
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {importResultaat && (

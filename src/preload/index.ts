@@ -13,7 +13,8 @@ contextBridge.exposeInMainWorld('api', {
     search: (query: string) => ipcRenderer.invoke('schutters:search', query),
     create: (schutter: object) => ipcRenderer.invoke('schutters:create', schutter),
     update: (schutter: object) => ipcRenderer.invoke('schutters:update', schutter),
-    delete: (id: number) => ipcRenderer.invoke('schutters:delete', id)
+    delete: (id: number) => ipcRenderer.invoke('schutters:delete', id),
+    deleteAll: () => ipcRenderer.invoke('schutters:deleteAll')
   },
 
   // Wedstrijden

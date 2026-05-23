@@ -82,7 +82,19 @@ export default function ImportReviewModal({
   onAnnuleer,
   onBevestig
 }: Props): JSX.Element {
-  const [bewerkt, setBewerkt] = useState<ImportRij[]>(() => rijen.map((r) => ({ ...r })))
+  // Conflicten bovenaan zodat de gebruiker niet moet zoeken; relatieve volgorde
+  // van conflict-rijen en geldige rijen blijft onderling behouden. Na opening blijft
+  // de volgorde stabiel, ook als een rij intussen geldig wordt door bewerking.
+  const [bewerkt, setBewerkt] = useState<ImportRij[]>(() => {
+    const kopie = rijen.map((r) => ({ ...r }))
+    const conflict: ImportRij[] = []
+    const ok: ImportRij[] = []
+    for (const r of kopie) {
+      if (valideerImportRij(r).ok) ok.push(r)
+      else conflict.push(r)
+    }
+    return [...conflict, ...ok]
+  })
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {

@@ -107,6 +107,18 @@ ipcMain.handle('schutters:delete', (_, id: number) =>
   run('DELETE FROM schutters WHERE id = ?', [id])
 )
 
+ipcMain.handle('schutters:deleteAll', () => {
+  // Wipe alle schutters én afhankelijke records (inschrijvingen, indeling,
+  // vergrendelde_doelen) zodat de database in een consistente staat blijft.
+  transaction(() => {
+    run('DELETE FROM indeling')
+    run('DELETE FROM vergrendelde_doelen')
+    run('DELETE FROM inschrijvingen')
+    run('DELETE FROM schutters')
+  })
+  return { ok: true }
+})
+
 // ── Wedstrijden ───────────────────────────────────────────
 ipcMain.handle('wedstrijden:getAll', () =>
   queryAll('SELECT * FROM wedstrijden ORDER BY datum DESC')

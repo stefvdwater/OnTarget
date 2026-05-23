@@ -13,6 +13,7 @@ declare global {
         create: (schutter: object) => Promise<any>
         update: (schutter: object) => Promise<any>
         delete: (id: number) => Promise<any>
+        deleteAll: () => Promise<{ ok: boolean }>
       }
       wedstrijden: {
         getAll: () => Promise<any[]>

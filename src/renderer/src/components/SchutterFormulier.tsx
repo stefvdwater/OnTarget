@@ -22,6 +22,28 @@ const CATEGORIEËN: SchutterFormData['leeftijdscategorie'][] = [
   'Veteraan'
 ]
 
+// Regels voor leeftijdscategorie ↔ afstand ↔ boogtype.
+// Aspirant heeft geen beperkingen.
+export const VAST_25M: SchutterFormData['leeftijdscategorie'][] = ['Junior', 'Senior', 'Veteraan']
+export const VAST_KORT: SchutterFormData['leeftijdscategorie'][] = ['Jeugd']
+
+export function afstandToegestaan(
+  cat: SchutterFormData['leeftijdscategorie'],
+  afstand: SchutterFormData['afstand']
+): boolean {
+  if (VAST_25M.includes(cat)) return afstand === 25
+  if (VAST_KORT.includes(cat)) return afstand === 12 || afstand === 18
+  return true // Aspirant
+}
+
+export function categorieToegestaan(
+  cat: SchutterFormData['leeftijdscategorie'],
+  typeBoog: SchutterFormData['type_boog']
+): boolean {
+  if (typeBoog === 'Compound' && cat === 'Veteraan') return false
+  return true
+}
+
 export default function SchutterFormulier({
   bestaand,
   initieelZoek = '',
@@ -62,6 +84,24 @@ export default function SchutterFormulier({
     bevestigLabel ?? (bestaand ? 'Wijzigingen opslaan' : 'Schutter aanmaken')
 
   const kanOpslaan = voornaam.trim().length > 0 && naam.trim().length > 0
+
+  function kiesCategorie(c: SchutterFormData['leeftijdscategorie']): void {
+    // Compound + Veteraan kan niet: het filter onder categorie-select voorkomt dit al,
+    // maar wanneer een bestaande schutter wordt geladen via een ongeldige combo kan dit toch
+    // gebeuren. We laten dat geval consistent door bij Veteraan + Compound de boog niet aan
+    // te raken hier (dat gebeurt in kiesBoogtype).
+    if (VAST_25M.includes(c) && afstand !== 25) setAfstand(25)
+    else if (VAST_KORT.includes(c) && afstand === 25) setAfstand(18)
+    // Aspirant: behoud huidige afstand
+    setLeeftijd(c)
+  }
+
+  function kiesBoogtype(t: SchutterFormData['type_boog']): void {
+    if (t === 'Compound' && leeftijdscategorie === 'Veteraan') setLeeftijd('Senior')
+    setTypeBoog(t)
+  }
+
+  const beschikbareCategorieën = CATEGORIEËN.filter((c) => categorieToegestaan(c, typeBoog))
 
   function submit(e: React.FormEvent): void {
     e.preventDefault()
@@ -179,7 +219,7 @@ export default function SchutterFormulier({
           <select
             className="select"
             value={typeBoog}
-            onChange={(e) => setTypeBoog(e.target.value as SchutterFormData['type_boog'])}
+            onChange={(e) => kiesBoogtype(e.target.value as SchutterFormData['type_boog'])}
           >
             <option>Recurve</option>
             <option>Compound</option>
@@ -192,11 +232,9 @@ export default function SchutterFormulier({
           <select
             className="select"
             value={leeftijdscategorie}
-            onChange={(e) =>
-              setLeeftijd(e.target.value as SchutterFormData['leeftijdscategorie'])
-            }
+            onChange={(e) => kiesCategorie(e.target.value as SchutterFormData['leeftijdscategorie'])}
           >
-            {CATEGORIEËN.map((c) => (
+            {beschikbareCategorieën.map((c) => (
               <option key={c}>{c}</option>
             ))}
           </select>
@@ -222,16 +260,32 @@ export default function SchutterFormulier({
         <label>
           <span>Afstand</span>
           <div className="segmented">
-            {([12, 18, 25] as const).map((a) => (
-              <button
-                key={a}
-                type="button"
-                className={afstand === a ? 'on' : ''}
-                onClick={() => setAfstand(a)}
-              >
-                {a}m
-              </button>
-            ))}
+            {([12, 18, 25] as const).map((a) => {
+              const toegestaan = afstandToegestaan(leeftijdscategorie, a)
+              return (
+                <button
+                  key={a}
+                  type="button"
+                  className={afstand === a ? 'on' : ''}
+                  onClick={() => setAfstand(a)}
+                  disabled={!toegestaan}
+                  title={
+                    toegestaan
+                      ? undefined
+                      : leeftijdscategorie === 'Jeugd'
+                        ? 'Jeugd-schutters schieten op 12m of 18m'
+                        : `${leeftijdscategorie}-schutters schieten op 25m`
+                  }
+                  style={
+                    toegestaan
+                      ? undefined
+                      : { opacity: 0.4, cursor: 'not-allowed', pointerEvents: 'auto' }
+                  }
+                >
+                  {a}m
+                </button>
+              )
+            })}
           </div>
         </label>
       </div>

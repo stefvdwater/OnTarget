@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Gilde, Schutter, SchutterFormData } from '../types'
-import SchutterFormulier from '../components/SchutterFormulier'
+import SchutterFormulier, {
+  afstandToegestaan,
+  categorieToegestaan
+} from '../components/SchutterFormulier'
+import ImportReviewModal, {
+  type ImportRij,
+  valideerImportRij
+} from '../components/ImportReviewModal'
 
 type Modal = { type: 'nieuw'; zoek: string } | { type: 'bewerk'; schutter: Schutter } | null
 
@@ -8,6 +15,11 @@ interface ImportResultaat {
   toegevoegd: number
   fouten: string[]
   nieuweGilden: number
+}
+
+interface ImportSessie {
+  rijen: ImportRij[]
+  bekendeGilden: Gilde[]
 }
 
 export default function SchuttersPage(): JSX.Element {
@@ -22,6 +34,7 @@ export default function SchuttersPage(): JSX.Element {
   const [demoBezig, setDemoBezig] = useState(false)
   const [importBezig, setImportBezig] = useState(false)
   const [importResultaat, setImportResultaat] = useState<ImportResultaat | null>(null)
+  const [importSessie, setImportSessie] = useState<ImportSessie | null>(null)
   const filterRef = useRef<HTMLDivElement>(null)
   const ioRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -152,72 +165,59 @@ export default function SchuttersPage(): JSX.Element {
 
     setImportBezig(true)
     const tekst = await bestand.text()
-    const result = await importeerCSV(tekst)
-    setImportResultaat(result)
+    const parseResult = parseImportTekst(tekst)
     setImportBezig(false)
+
+    if (!parseResult.ok) {
+      setImportResultaat({ toegevoegd: 0, nieuweGilden: 0, fouten: parseResult.fouten })
+      return
+    }
+
+    const huidigeGilden: Gilde[] = await window.api.gilden.getAll()
+
+    // Heeft minstens één rij een conflict? Dan review-modal.
+    const heeftConflict = parseResult.rijen.some((r) => !valideerImportRij(r).ok)
+    if (heeftConflict) {
+      setImportSessie({ rijen: parseResult.rijen, bekendeGilden: huidigeGilden })
+      return
+    }
+
+    // Alle rijen geldig → meteen committen.
+    const resultaat = await commitImportRijen(parseResult.rijen, huidigeGilden)
+    setImportResultaat(resultaat)
     laadSchutters()
   }
 
-  async function importeerCSV(tekst: string): Promise<ImportResultaat> {
-    const rijen = parseCSV(tekst)
-    if (rijen.length === 0) return { toegevoegd: 0, fouten: ['Bestand is leeg'], nieuweGilden: 0 }
+  async function bevestigImportReview(gecorrigeerd: ImportRij[]): Promise<void> {
+    if (!importSessie) return
+    setImportBezig(true)
+    const resultaat = await commitImportRijen(gecorrigeerd, importSessie.bekendeGilden)
+    setImportBezig(false)
+    setImportSessie(null)
+    setImportResultaat(resultaat)
+    laadSchutters()
+  }
 
-    const header = rijen[0].map((h) => h.trim().toLowerCase())
-    const idx = {
-      voornaam: header.indexOf('voornaam'),
-      naam: header.indexOf('naam'),
-      gilde: header.indexOf('gilde_naam'),
-      boog: header.indexOf('type_boog'),
-      cat: header.indexOf('leeftijdscategorie'),
-      geslacht: header.indexOf('geslacht'),
-      afstand: header.indexOf('afstand')
-    }
-    const ontbrekend = Object.entries(idx)
-      .filter(([, v]) => v === -1)
-      .map(([k]) => k)
-    if (ontbrekend.length > 0) {
-      return {
-        toegevoegd: 0,
-        nieuweGilden: 0,
-        fouten: [`Ontbrekende kolommen in CSV: ${ontbrekend.join(', ')}`]
-      }
-    }
-
-    // Cache van gilden op naam (case-insensitive) voor matchen / aanmaken
-    const huidigeGilden: Gilde[] = await window.api.gilden.getAll()
+  async function commitImportRijen(
+    rijen: ImportRij[],
+    bekendeGilden: Gilde[]
+  ): Promise<ImportResultaat> {
     const gildeMap = new Map<string, number>()
-    for (const g of huidigeGilden) gildeMap.set(g.naam.toLowerCase(), g.id)
+    for (const g of bekendeGilden) gildeMap.set(g.naam.toLowerCase(), g.id)
 
     let toegevoegd = 0
     let nieuweGilden = 0
     const fouten: string[] = []
 
-    for (let r = 1; r < rijen.length; r++) {
-      const rij = rijen[r]
-      if (rij.every((c) => c.trim() === '')) continue // lege regel
-
-      const voornaam = rij[idx.voornaam]?.trim() ?? ''
-      const naam = rij[idx.naam]?.trim() ?? ''
-      if (!voornaam || !naam) {
-        fouten.push(`Rij ${r + 1}: voornaam of naam ontbreekt`)
-        continue
-      }
-      const gildeNaam = rij[idx.gilde]?.trim() ?? ''
-      const typeBoog = (rij[idx.boog]?.trim() ?? 'Recurve') as Schutter['type_boog']
-      const cat = (rij[idx.cat]?.trim() ?? 'Senior') as Schutter['leeftijdscategorie']
-      const geslacht = (rij[idx.geslacht]?.trim().toUpperCase() ?? 'M') as Schutter['geslacht']
-      const afstand = Number(rij[idx.afstand]?.trim() ?? '25') as Schutter['afstand']
-
-      if (!['Recurve', 'Compound', 'Barebow', 'Andere'].includes(typeBoog)) {
-        fouten.push(`Rij ${r + 1}: ongeldig boogtype "${typeBoog}"`)
-        continue
-      }
-      if (![12, 18, 25].includes(afstand)) {
-        fouten.push(`Rij ${r + 1}: ongeldige afstand "${afstand}"`)
+    for (const rij of rijen) {
+      const v = valideerImportRij(rij)
+      if (!v.ok) {
+        fouten.push(`Rij ${rij.regel}: ${v.redenen.join(' · ')}`)
         continue
       }
 
       let gildeId: number | null = null
+      const gildeNaam = rij.gilde_naam.trim()
       if (gildeNaam) {
         const sleutel = gildeNaam.toLowerCase()
         if (gildeMap.has(sleutel)) {
@@ -232,17 +232,17 @@ export default function SchuttersPage(): JSX.Element {
 
       try {
         await window.api.schutters.create({
-          voornaam,
-          naam,
+          voornaam: rij.voornaam.trim(),
+          naam: rij.naam.trim(),
           gilde_id: gildeId,
-          type_boog: typeBoog,
-          leeftijdscategorie: cat,
-          geslacht,
-          afstand
+          type_boog: rij.type_boog,
+          leeftijdscategorie: rij.leeftijdscategorie,
+          geslacht: rij.geslacht,
+          afstand: rij.afstand
         })
         toegevoegd++
       } catch (err) {
-        fouten.push(`Rij ${r + 1}: ${(err as Error).message}`)
+        fouten.push(`Rij ${rij.regel}: ${(err as Error).message}`)
       }
     }
 
@@ -445,6 +445,16 @@ export default function SchuttersPage(): JSX.Element {
             }
           />
         </Modal>
+      )}
+
+      {importSessie && (
+        <ImportReviewModal
+          rijen={importSessie.rijen}
+          bekendeGilden={importSessie.bekendeGilden}
+          bezig={importBezig}
+          onAnnuleer={() => setImportSessie(null)}
+          onBevestig={bevestigImportReview}
+        />
       )}
 
       {importResultaat && (
@@ -702,6 +712,49 @@ function IconChevron(): JSX.Element {
 }
 
 // ── CSV helpers ─────────────────────────────────────────
+
+type ParseResultaat =
+  | { ok: true; rijen: ImportRij[] }
+  | { ok: false; fouten: string[] }
+
+function parseImportTekst(tekst: string): ParseResultaat {
+  const rijen = parseCSV(tekst)
+  if (rijen.length === 0) return { ok: false, fouten: ['Bestand is leeg'] }
+
+  const header = rijen[0].map((h) => h.trim().toLowerCase())
+  const idx = {
+    voornaam: header.indexOf('voornaam'),
+    naam: header.indexOf('naam'),
+    gilde: header.indexOf('gilde_naam'),
+    boog: header.indexOf('type_boog'),
+    cat: header.indexOf('leeftijdscategorie'),
+    geslacht: header.indexOf('geslacht'),
+    afstand: header.indexOf('afstand')
+  }
+  const ontbrekend = Object.entries(idx)
+    .filter(([, v]) => v === -1)
+    .map(([k]) => k)
+  if (ontbrekend.length > 0) {
+    return { ok: false, fouten: [`Ontbrekende kolommen in CSV: ${ontbrekend.join(', ')}`] }
+  }
+
+  const result: ImportRij[] = []
+  for (let r = 1; r < rijen.length; r++) {
+    const rij = rijen[r]
+    if (rij.every((c) => c.trim() === '')) continue // lege regel overslaan
+    result.push({
+      regel: r + 1,
+      voornaam: rij[idx.voornaam]?.trim() ?? '',
+      naam: rij[idx.naam]?.trim() ?? '',
+      gilde_naam: rij[idx.gilde]?.trim() ?? '',
+      type_boog: (rij[idx.boog]?.trim() ?? '') as ImportRij['type_boog'],
+      leeftijdscategorie: (rij[idx.cat]?.trim() ?? '') as ImportRij['leeftijdscategorie'],
+      geslacht: (rij[idx.geslacht]?.trim().toUpperCase() ?? '') as ImportRij['geslacht'],
+      afstand: Number(rij[idx.afstand]?.trim() ?? '0') as ImportRij['afstand']
+    })
+  }
+  return { ok: true, rijen: result }
+}
 
 function csvEscape(waarde: string): string {
   if (waarde == null) return ''

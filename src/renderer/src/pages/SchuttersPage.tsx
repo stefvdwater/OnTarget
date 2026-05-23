@@ -450,8 +450,9 @@ export default function SchuttersPage(): JSX.Element {
         <header>
           <h2>Gevarenzone</h2>
           <p>
-            Onomkeerbare actie — alle schutters worden permanent verwijderd, samen met al
-            hun inschrijvingen en doelindelingen.
+            Onomkeerbare actie — alle schutters worden permanent verwijderd, samen met
+            alle gilden, inschrijvingen en doelindelingen. Wedstrijden zelf blijven
+            behouden.
           </p>
         </header>
         <div className="config-actions">
@@ -495,9 +496,9 @@ export default function SchuttersPage(): JSX.Element {
             <header className="modal-head">Alle schutters verwijderen?</header>
             <div className="modal-text">
               <strong className="mono">{schutters.length}</strong> schutter
-              {schutters.length !== 1 ? 's' : ''} en al hun inschrijvingen en
-              doelindelingen worden permanent verwijderd. Deze actie kan niet ongedaan
-              gemaakt worden.
+              {schutters.length !== 1 ? 's' : ''}, alle gilden en alle inschrijvingen +
+              doelindelingen worden permanent verwijderd. Wedstrijden zelf blijven
+              behouden. Deze actie kan niet ongedaan gemaakt worden.
             </div>
             <div className="modal-actions">
               <button

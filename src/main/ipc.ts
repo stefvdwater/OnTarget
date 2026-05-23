@@ -109,12 +109,14 @@ ipcMain.handle('schutters:delete', (_, id: number) =>
 
 ipcMain.handle('schutters:deleteAll', () => {
   // Wipe alle schutters én afhankelijke records (inschrijvingen, indeling,
-  // vergrendelde_doelen) zodat de database in een consistente staat blijft.
+  // vergrendelde_doelen) plus gilden zodat de database in een volledig schone
+  // staat blijft. Wedstrijden zelf blijven bestaan.
   transaction(() => {
     run('DELETE FROM indeling')
     run('DELETE FROM vergrendelde_doelen')
     run('DELETE FROM inschrijvingen')
     run('DELETE FROM schutters')
+    run('DELETE FROM gilden')
   })
   return { ok: true }
 })

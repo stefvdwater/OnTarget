@@ -3,3 +3,6 @@ out
 dist
 *.db
 .env
+
+# Lokaal test-bestand met echte schutters-data, niet committen
+schutters-herselt.csv

@@ -223,36 +223,38 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
           </div>
         </div>
         <div className="beschikbaar-paneel-list">
-          {!nieuwOpen &&
-            beschikbaar.map((s) => (
-              <div key={s.id} className="beschikbaar-row">
-                <div className="info">
-                  <div className="nm">
-                    {s.voornaam} {s.naam}
-                  </div>
-                  <div className="sub">
-                    {gildeKort(s.gilde_naam)} · {s.type_boog} · {s.afstand}m
-                  </div>
+          {beschikbaar.map((s) => (
+            <div key={s.id} className="beschikbaar-row">
+              <div className="info">
+                <div className="nm">
+                  {s.voornaam} {s.naam}
                 </div>
-                <button
-                  className="add"
-                  onClick={() => voegToe(s.id)}
-                  title="Inschrijven"
-                  type="button"
-                >
-                  <IconPlus />
-                </button>
+                <div className="sub">
+                  {gildeKort(s.gilde_naam)} · {s.type_boog} · {s.afstand}m
+                </div>
               </div>
-            ))}
+              <button
+                className="add"
+                onClick={() => voegToe(s.id)}
+                title="Inschrijven"
+                type="button"
+              >
+                <IconPlus />
+              </button>
+            </div>
+          ))}
 
-          {!nieuwOpen && beschikbaar.length === 0 && zoek.trim() === '' && (
+          {beschikbaar.length === 0 && zoek.trim() === '' && (
             <div className="empty-state">
               <div className="big">Iedereen ingeschreven</div>
-              <div>Geen schutters meer beschikbaar.</div>
+              <div style={{ marginBottom: 14 }}>Geen schutters meer beschikbaar.</div>
+              <button className="btn btn-primary btn-sm" onClick={() => setNieuwOpen(true)}>
+                <IconPlus /> Nieuwe schutter aanmaken
+              </button>
             </div>
           )}
 
-          {!nieuwOpen && beschikbaar.length === 0 && zoek.trim() !== '' && (
+          {beschikbaar.length === 0 && zoek.trim() !== '' && (
             <div className="empty-state">
               <div className="big">Geen schutter gevonden</div>
               <div style={{ marginBottom: 14 }}>
@@ -263,18 +265,43 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
               </button>
             </div>
           )}
-
-          {nieuwOpen && (
-            <SchutterFormulier
-              initieelZoek={zoek}
-              titel="Nieuwe schutter"
-              bevestigLabel="Aanmaken & inschrijven"
-              onAnnuleer={() => setNieuwOpen(false)}
-              onBevestig={maakNieuw}
-            />
-          )}
         </div>
       </aside>
+
+      {nieuwOpen && (
+        <Modal onClose={() => setNieuwOpen(false)}>
+          <SchutterFormulier
+            initieelZoek={zoek}
+            titel="Nieuwe schutter"
+            bevestigLabel="Aanmaken & inschrijven"
+            onAnnuleer={() => setNieuwOpen(false)}
+            onBevestig={maakNieuw}
+          />
+        </Modal>
+      )}
+    </div>
+  )
+}
+
+function Modal({
+  onClose,
+  children
+}: {
+  onClose: () => void
+  children: React.ReactNode
+}): JSX.Element {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-body" onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
     </div>
   )
 }

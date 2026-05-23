@@ -1205,6 +1205,69 @@ input:focus-visible,
   padding-top: 8px;
 }
 
+/* ─── Aandachtspunten hover tooltip ──────────────────── */
+
+.aandachtspunten-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.aandachtspunten-wrap .aandachtspunten-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 40;
+  display: none;
+  min-width: 280px;
+  max-width: 380px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  box-shadow: 0 14px 36px -16px rgba(0, 0, 0, 0.25);
+  font-size: 12.5px;
+  color: var(--text);
+  white-space: normal;
+  text-align: left;
+  font-weight: 400;
+}
+.aandachtspunten-wrap:hover .aandachtspunten-popover,
+.aandachtspunten-wrap:focus-within .aandachtspunten-popover {
+  display: block;
+}
+.aandachtspunten-popover h4 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.aandachtspunten-popover ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.aandachtspunten-popover li {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 8px;
+  align-items: baseline;
+}
+.aandachtspunten-popover li .doel-ref {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.aandachtspunten-popover li .berichten {
+  color: var(--text-2);
+  line-height: 1.4;
+}
+
 /* ─── Generic menu dropdown ──────────────────────────── */
 
 .menu-panel {

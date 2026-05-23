@@ -298,8 +298,25 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
           <span>van {totaalInschrijvingen || totaal} schutters ingedeeld</span>
         </div>
         {totaalConflicten > 0 && (
-          <span className="chip chip-yellow">
-            ⚠ {totaalConflicten} aandachtspunt{totaalConflicten > 1 ? 'en' : ''}
+          <span className="aandachtspunten-wrap" tabIndex={0}>
+            <span className="chip chip-yellow" style={{ cursor: 'help' }}>
+              ⚠ {totaalConflicten} aandachtspunt{totaalConflicten > 1 ? 'en' : ''}
+            </span>
+            <div className="aandachtspunten-popover" role="tooltip">
+              <h4>Aandachtspunten per doel</h4>
+              <ul>
+                {doelen
+                  .filter((d) => d.conflicten.length > 0)
+                  .map((d) => (
+                    <li key={d.nummer}>
+                      <span className="doel-ref">Doel {String(d.nummer).padStart(2, '0')}</span>
+                      <span className="berichten">
+                        {d.conflicten.map((c) => c.bericht).join(' · ')}
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
           </span>
         )}
         <div style={{ flex: 1 }} />

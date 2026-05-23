@@ -62,6 +62,13 @@ export default function WedstrijdDetailPage({
     onTerug(true)
   }
 
+  const tabLabel: Record<Tab, string> = {
+    configuratie: 'Configuratie',
+    inschrijvingen: 'Inschrijvingen',
+    indeling: 'Indeling',
+    afdrukken: 'Afdrukken'
+  }
+
   return (
     <>
       <div className="crumb">
@@ -69,7 +76,11 @@ export default function WedstrijdDetailPage({
           <IconArrowLeft /> Wedstrijden
         </button>
         <span>/</span>
-        <span>{huidig.naam}</span>
+        <button onClick={() => setTab('inschrijvingen')} title="Naar Inschrijvingen">
+          {huidig.naam}
+        </button>
+        <span>/</span>
+        <span style={{ color: 'var(--text-2)' }}>{tabLabel[tab]}</span>
       </div>
 
       <div className="page-head">

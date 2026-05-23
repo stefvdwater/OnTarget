@@ -22,7 +22,7 @@ export default function DoelKolom({ doel, onVergrendel }: Props): JSX.Element {
       ? ''
       : maxBeurten >= 4 && maxBeurten <= 5
         ? 'ok'
-        : maxBeurten > 5
+        : maxBeurten === 6
           ? 'warn'
           : ''
 
@@ -43,7 +43,12 @@ export default function DoelKolom({ doel, onVergrendel }: Props): JSX.Element {
           {doel.zone === '12m' && <span className="doel-tag">12m</span>}
         </div>
         <div className="doel-actions">
-          <span className={'doel-bezetting ' + bezKlasse}>{bezetting}/5</span>
+          <span
+            className={'doel-bezetting ' + bezKlasse}
+            title={`${bezetting} schutter${bezetting !== 1 ? 's' : ''} · ${beurtenEerste}/${beurtenTweede} beurten`}
+          >
+            {maxBeurten}/6
+          </span>
           <button
             className={'lock-btn' + (doel.vergrendeld ? ' active' : '')}
             onClick={onVergrendel}

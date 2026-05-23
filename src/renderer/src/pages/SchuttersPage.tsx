@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { Schutter, SchutterFormData } from '../types'
+import type { Gilde, Schutter, SchutterFormData } from '../types'
 import SchutterFormulier from '../components/SchutterFormulier'
 
 type Modal = { type: 'nieuw'; zoek: string } | { type: 'bewerk'; schutter: Schutter } | null
+
+interface ImportResultaat {
+  toegevoegd: number
+  fouten: string[]
+  nieuweGilden: number
+}
 
 export default function SchuttersPage(): JSX.Element {
   const [schutters, setSchutters] = useState<Schutter[]>([])
@@ -14,8 +20,11 @@ export default function SchuttersPage(): JSX.Element {
   const [ioOpen, setIoOpen] = useState(false)
   const [demoBevestig, setDemoBevestig] = useState(false)
   const [demoBezig, setDemoBezig] = useState(false)
+  const [importBezig, setImportBezig] = useState(false)
+  const [importResultaat, setImportResultaat] = useState<ImportResultaat | null>(null)
   const filterRef = useRef<HTMLDivElement>(null)
   const ioRef = useRef<HTMLDivElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     laadSchutters()
@@ -93,6 +102,151 @@ export default function SchuttersPage(): JSX.Element {
     await window.api.demo.laad()
     setDemoBezig(false)
     laadSchutters()
+  }
+
+  // ── CSV export ────────────────────────────────────────
+  function handleExport(): void {
+    setIoOpen(false)
+    const kolommen = [
+      'voornaam',
+      'naam',
+      'gilde_naam',
+      'type_boog',
+      'leeftijdscategorie',
+      'geslacht',
+      'afstand'
+    ]
+    const rijen = schutters.map((s) => [
+      s.voornaam,
+      s.naam,
+      s.gilde_naam ?? '',
+      s.type_boog,
+      s.leeftijdscategorie,
+      s.geslacht,
+      String(s.afstand)
+    ])
+    const csv = [kolommen, ...rijen].map((r) => r.map(csvEscape).join(',')).join('\r\n')
+    // UTF-8 BOM zodat Excel non-ASCII tekens correct toont
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const datum = new Date().toISOString().slice(0, 10)
+    a.download = `schutters-${datum}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  // ── CSV import ────────────────────────────────────────
+  function handleImportKies(): void {
+    setIoOpen(false)
+    fileRef.current?.click()
+  }
+
+  async function handleImportBestand(e: React.ChangeEvent<HTMLInputElement>): Promise<void> {
+    const bestand = e.target.files?.[0]
+    e.target.value = '' // reset zodat hetzelfde bestand opnieuw kan
+    if (!bestand) return
+
+    setImportBezig(true)
+    const tekst = await bestand.text()
+    const result = await importeerCSV(tekst)
+    setImportResultaat(result)
+    setImportBezig(false)
+    laadSchutters()
+  }
+
+  async function importeerCSV(tekst: string): Promise<ImportResultaat> {
+    const rijen = parseCSV(tekst)
+    if (rijen.length === 0) return { toegevoegd: 0, fouten: ['Bestand is leeg'], nieuweGilden: 0 }
+
+    const header = rijen[0].map((h) => h.trim().toLowerCase())
+    const idx = {
+      voornaam: header.indexOf('voornaam'),
+      naam: header.indexOf('naam'),
+      gilde: header.indexOf('gilde_naam'),
+      boog: header.indexOf('type_boog'),
+      cat: header.indexOf('leeftijdscategorie'),
+      geslacht: header.indexOf('geslacht'),
+      afstand: header.indexOf('afstand')
+    }
+    const ontbrekend = Object.entries(idx)
+      .filter(([, v]) => v === -1)
+      .map(([k]) => k)
+    if (ontbrekend.length > 0) {
+      return {
+        toegevoegd: 0,
+        nieuweGilden: 0,
+        fouten: [`Ontbrekende kolommen in CSV: ${ontbrekend.join(', ')}`]
+      }
+    }
+
+    // Cache van gilden op naam (case-insensitive) voor matchen / aanmaken
+    const huidigeGilden: Gilde[] = await window.api.gilden.getAll()
+    const gildeMap = new Map<string, number>()
+    for (const g of huidigeGilden) gildeMap.set(g.naam.toLowerCase(), g.id)
+
+    let toegevoegd = 0
+    let nieuweGilden = 0
+    const fouten: string[] = []
+
+    for (let r = 1; r < rijen.length; r++) {
+      const rij = rijen[r]
+      if (rij.every((c) => c.trim() === '')) continue // lege regel
+
+      const voornaam = rij[idx.voornaam]?.trim() ?? ''
+      const naam = rij[idx.naam]?.trim() ?? ''
+      if (!voornaam || !naam) {
+        fouten.push(`Rij ${r + 1}: voornaam of naam ontbreekt`)
+        continue
+      }
+      const gildeNaam = rij[idx.gilde]?.trim() ?? ''
+      const typeBoog = (rij[idx.boog]?.trim() ?? 'Recurve') as Schutter['type_boog']
+      const cat = (rij[idx.cat]?.trim() ?? 'Senior') as Schutter['leeftijdscategorie']
+      const geslacht = (rij[idx.geslacht]?.trim().toUpperCase() ?? 'M') as Schutter['geslacht']
+      const afstand = Number(rij[idx.afstand]?.trim() ?? '25') as Schutter['afstand']
+
+      if (!['Recurve', 'Compound', 'Barebow', 'Andere'].includes(typeBoog)) {
+        fouten.push(`Rij ${r + 1}: ongeldig boogtype "${typeBoog}"`)
+        continue
+      }
+      if (![12, 18, 25].includes(afstand)) {
+        fouten.push(`Rij ${r + 1}: ongeldige afstand "${afstand}"`)
+        continue
+      }
+
+      let gildeId: number | null = null
+      if (gildeNaam) {
+        const sleutel = gildeNaam.toLowerCase()
+        if (gildeMap.has(sleutel)) {
+          gildeId = gildeMap.get(sleutel)!
+        } else {
+          const res = await window.api.gilden.create(gildeNaam)
+          gildeId = res.lastInsertRowid
+          gildeMap.set(sleutel, gildeId!)
+          nieuweGilden++
+        }
+      }
+
+      try {
+        await window.api.schutters.create({
+          voornaam,
+          naam,
+          gilde_id: gildeId,
+          type_boog: typeBoog,
+          leeftijdscategorie: cat,
+          geslacht,
+          afstand
+        })
+        toegevoegd++
+      } catch (err) {
+        fouten.push(`Rij ${r + 1}: ${(err as Error).message}`)
+      }
+    }
+
+    return { toegevoegd, nieuweGilden, fouten }
   }
 
   return (
@@ -175,14 +329,20 @@ export default function SchuttersPage(): JSX.Element {
             </button>
             {ioOpen && (
               <div className="menu-panel" onMouseDown={(e) => e.stopPropagation()}>
-                <button className="menu-item" onClick={() => setIoOpen(false)} disabled>
+                <button className="menu-item" onClick={handleImportKies} disabled={importBezig}>
                   <IconUpload />
                   <span>
-                    <span className="menu-label">Importeren</span>
+                    <span className="menu-label">
+                      {importBezig ? 'Bezig met importeren…' : 'Importeren'}
+                    </span>
                     <span className="menu-sub">Schutters uit CSV inladen</span>
                   </span>
                 </button>
-                <button className="menu-item" onClick={() => setIoOpen(false)} disabled>
+                <button
+                  className="menu-item"
+                  onClick={handleExport}
+                  disabled={schutters.length === 0}
+                >
                   <IconDownload />
                   <span>
                     <span className="menu-label">Exporteren</span>
@@ -204,6 +364,13 @@ export default function SchuttersPage(): JSX.Element {
                 </button>
               </div>
             )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".csv,text/csv"
+              style={{ display: 'none' }}
+              onChange={handleImportBestand}
+            />
           </div>
 
           <button className="btn btn-primary" onClick={() => setModal({ type: 'nieuw', zoek })}>
@@ -278,6 +445,59 @@ export default function SchuttersPage(): JSX.Element {
             }
           />
         </Modal>
+      )}
+
+      {importResultaat && (
+        <div className="modal-backdrop" onClick={() => setImportResultaat(null)}>
+          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
+            <header className="modal-head">Import-resultaat</header>
+            <div className="modal-text">
+              <p style={{ marginBottom: 8 }}>
+                <strong className="mono">{importResultaat.toegevoegd}</strong> schutter
+                {importResultaat.toegevoegd !== 1 ? 's' : ''} toegevoegd.
+                {importResultaat.nieuweGilden > 0 && (
+                  <>
+                    {' '}
+                    <strong className="mono">{importResultaat.nieuweGilden}</strong> nieuw
+                    {importResultaat.nieuweGilden !== 1 ? 'e gilden' : ' gilde'} aangemaakt.
+                  </>
+                )}
+              </p>
+              {importResultaat.fouten.length > 0 && (
+                <>
+                  <p style={{ marginTop: 12, color: 'var(--red-deep)' }}>
+                    {importResultaat.fouten.length} fout
+                    {importResultaat.fouten.length !== 1 ? 'en' : ''}:
+                  </p>
+                  <ul
+                    style={{
+                      marginTop: 6,
+                      paddingLeft: 18,
+                      maxHeight: 200,
+                      overflowY: 'auto',
+                      fontSize: 12.5,
+                      color: 'var(--text-2)'
+                    }}
+                  >
+                    {importResultaat.fouten.slice(0, 30).map((f, i) => (
+                      <li key={i}>{f}</li>
+                    ))}
+                    {importResultaat.fouten.length > 30 && (
+                      <li style={{ color: 'var(--muted)' }}>
+                        … en nog {importResultaat.fouten.length - 30}
+                      </li>
+                    )}
+                  </ul>
+                </>
+              )}
+            </div>
+            <div className="modal-actions">
+              <button className="btn btn-primary" onClick={() => setImportResultaat(null)}>
+                Sluiten
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {demoBevestig && (
@@ -479,4 +699,67 @@ function IconChevron(): JSX.Element {
       <path d="m6 9 6 6 6-6" />
     </svg>
   )
+}
+
+// ── CSV helpers ─────────────────────────────────────────
+
+function csvEscape(waarde: string): string {
+  if (waarde == null) return ''
+  const s = String(waarde)
+  if (/[",\r\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"'
+  return s
+}
+
+/**
+ * Parser voor CSV met quoted fields (RFC 4180-stijl). Ondersteunt embedded
+ * komma's, dubbele aanhalingstekens (escaped als "") en CRLF/LF regeleindes.
+ */
+function parseCSV(tekst: string): string[][] {
+  // Verwijder eventuele UTF-8 BOM
+  if (tekst.charCodeAt(0) === 0xfeff) tekst = tekst.slice(1)
+
+  const rijen: string[][] = []
+  let rij: string[] = []
+  let veld = ''
+  let inQuotes = false
+
+  for (let i = 0; i < tekst.length; i++) {
+    const c = tekst[i]
+
+    if (inQuotes) {
+      if (c === '"') {
+        if (tekst[i + 1] === '"') {
+          veld += '"'
+          i++
+        } else {
+          inQuotes = false
+        }
+      } else {
+        veld += c
+      }
+      continue
+    }
+
+    if (c === '"') {
+      inQuotes = true
+    } else if (c === ',') {
+      rij.push(veld)
+      veld = ''
+    } else if (c === '\r') {
+      // negeer; LF erna closet de rij
+    } else if (c === '\n') {
+      rij.push(veld)
+      rijen.push(rij)
+      rij = []
+      veld = ''
+    } else {
+      veld += c
+    }
+  }
+  // laatste veld/rij flushen
+  if (veld.length > 0 || rij.length > 0) {
+    rij.push(veld)
+    rijen.push(rij)
+  }
+  return rijen
 }

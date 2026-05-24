@@ -425,7 +425,7 @@ export default function SchuttersPage(): JSX.Element {
                 <td>
                   <BoogChip boog={s.type_boog} />
                 </td>
-                <td>{categorieLabel(s.leeftijdscategorie, s.geslacht)}</td>
+                <td>{categorieLabel(s)}</td>
                 <td className="mono">{s.afstand}m</td>
                 <td>
                   <div style={{ display: 'flex', gap: 4 }}>

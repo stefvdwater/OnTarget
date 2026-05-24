@@ -138,6 +138,30 @@ De pure validator zit in
 `afstandToegestaan` / `categorieToegestaan` uit
 [`SchutterFormulier.tsx`](src/renderer/src/components/SchutterFormulier.tsx).
 
+## Label-conventie (weergave)
+
+Het geslacht wordt intern als `M` / `V` bewaard maar in de UI altijd via één
+centrale helper getoond (`categorieLabel` in
+[`src/renderer/src/lib/labels.ts`](src/renderer/src/lib/labels.ts)). Geslacht
+wordt enkelvoud weergegeven (**Heer** / **Dame**) en gecombineerd met de
+leeftijdscategorie volgens onderstaande regels:
+
+| Categorie | Heer | Dame |
+|---|---|---|
+| Aspirant | Aspirant | Aspirant |
+| Jeugd | Jeugd | Jeugd |
+| Junior | Junior | Junior |
+| Senior | Senior | Dame |
+| Veteraan | Veteraan Heer | Veteraan Dame |
+
+Override voor Compound: bij `type_boog = Compound` wordt **Senior** Heer/Dame
+afgekort tot enkel "Heer" / "Dame" (overige categorieën volgen de defaultregel;
+Veteraan + Compound is geblokkeerd door de validatie).
+
+Hetzelfde label wordt gebruikt in de schutterstabel, de inschrijvingenlijst
+en de schutterskaartjes in het indelingsvenster — voeg geen ad-hoc varianten
+toe, breid de helper uit als de regels wijzigen.
+
 ## CSV-formaat
 
 Voor import/export van het schuttersbestand:

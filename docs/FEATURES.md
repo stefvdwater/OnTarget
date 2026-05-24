@@ -8,7 +8,9 @@
   - Gilde
   - Type boog: Recurve, Compound, Barebow, Andere
   - Leeftijdscategorie: Aspirant, Jeugd, Junior, Senior, Veteraan
-  - Geslacht: M / V
+  - Geslacht: M / V (opgeslagen als `M`/`V`; in de UI getoond als **Heer** /
+    **Dame**, gecombineerd met leeftijdscategorie tot één label volgens de
+    [label-conventie](../README.md#label-conventie-weergave))
   - Afstand: 12m, 18m, 25m
 - Schutters doorzoeken en filteren.
 

@@ -25,10 +25,7 @@ export default function SchutterKaart({
   }
 
   const fullNaam = `${slot.voornaam} ${slot.naam}`
-  const catLabel = categorieLabel(
-    slot.leeftijdscategorie as 'Aspirant' | 'Jeugd' | 'Junior' | 'Senior' | 'Veteraan',
-    slot.geslacht
-  )
+  const catLabel = categorieLabel(slot)
   const d1 = slot.dubbel_eerste_helft
   const d2 = slot.dubbel_tweede_helft
   const dubbelLabel = d1 && d2 ? 'Dubbel' : d1 ? 'Dubbel 1e' : d2 ? 'Dubbel 2e' : null

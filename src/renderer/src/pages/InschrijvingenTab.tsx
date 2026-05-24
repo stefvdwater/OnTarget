@@ -155,7 +155,7 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
                   <td>
                     <BoogChip boog={i.type_boog} />
                   </td>
-                  <td>{categorieLabel(i.leeftijdscategorie, i.geslacht)}</td>
+                  <td>{categorieLabel(i)}</td>
                   <td className="mono">{i.afstand}m</td>
                   <td>
                     <div className="dubbel-cell">

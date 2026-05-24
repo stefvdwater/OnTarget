@@ -1,4 +1,5 @@
-import { useDraggable } from '@dnd-kit/core'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import type { DoelSlot } from '../algoritme/types'
 
 interface Props {
@@ -14,7 +15,13 @@ export default function SchutterKaart({
   compact = false,
   conflict = false
 }: Props): JSX.Element {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: draggableId })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: draggableId
+  })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition
+  }
 
   const fullNaam = `${slot.voornaam} ${slot.naam}`
   const d1 = slot.dubbel_eerste_helft
@@ -38,6 +45,7 @@ export default function SchutterKaart({
   return (
     <div
       ref={setNodeRef}
+      style={style}
       {...listeners}
       {...attributes}
       className={className}

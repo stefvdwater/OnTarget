@@ -1,4 +1,5 @@
 import { useDroppable } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { DoelMetConflicten } from '../algoritme/types'
 import SchutterKaart from './SchutterKaart'
 
@@ -67,15 +68,20 @@ export default function DoelKolom({ doel, onVergrendel }: Props): JSX.Element {
             'Sleep schutters hierheen'
           )
         ) : (
-          doel.schutters.map((s) => (
-            <SchutterKaart
-              key={s.schutter_id}
-              slot={s}
-              draggableId={`${doel.nummer}-${s.schutter_id}`}
-              compact
-              conflict={heeftConflicten}
-            />
-          ))
+          <SortableContext
+            items={doel.schutters.map((s) => `${doel.nummer}-${s.schutter_id}`)}
+            strategy={verticalListSortingStrategy}
+          >
+            {doel.schutters.map((s) => (
+              <SchutterKaart
+                key={s.schutter_id}
+                slot={s}
+                draggableId={`${doel.nummer}-${s.schutter_id}`}
+                compact
+                conflict={heeftConflicten}
+              />
+            ))}
+          </SortableContext>
         )}
       </div>
 

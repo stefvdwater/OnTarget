@@ -8,6 +8,7 @@ import {
   useSensor,
   useSensors
 } from '@dnd-kit/core'
+import { arrayMove } from '@dnd-kit/sortable'
 import type { Inschrijving, Wedstrijd } from '../types'
 import type { Doel, DoelMetConflicten, DoelSlot } from '../algoritme/types'
 import { berekenIndeling } from '../algoritme/indeling'
@@ -175,14 +176,36 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
       : parseInt(activeId.split('-')[1])
     const bronDoelNr = vanNietIngedeeld ? null : parseInt(activeId.split('-')[0])
 
-    const naarNietIngedeeld = overId === 'niet-ingedeeld'
-    const naarDoelNr = overId.startsWith('doel-') ? parseInt(overId.replace('doel-', '')) : null
-
-    if (naarNietIngedeeld) {
+    if (overId === 'niet-ingedeeld') {
       verplaatsNaarNietIngedeeld(bronSchutterId, bronDoelNr)
-    } else if (naarDoelNr !== null) {
-      verplaatsNaarDoel(bronSchutterId, bronDoelNr, naarDoelNr)
+      return
     }
+
+    if (overId.startsWith('doel-')) {
+      const naarDoelNr = parseInt(overId.replace('doel-', ''))
+      verplaatsNaarDoel(bronSchutterId, bronDoelNr, naarDoelNr)
+      return
+    }
+
+    // Drop op een schutter-slot: format "{doelNr}-{schutterId}"
+    const slotOver = parseSlotId(overId)
+    if (slotOver) {
+      verplaatsNaarDoel(bronSchutterId, bronDoelNr, slotOver.doelNr, slotOver.positie)
+    }
+  }
+
+  function parseSlotId(id: string): { doelNr: number; positie: number } | null {
+    if (id.startsWith('doel-') || id.startsWith('niet-')) return null
+    const parts = id.split('-')
+    if (parts.length !== 2) return null
+    const doelNr = parseInt(parts[0])
+    const schutterId = parseInt(parts[1])
+    if (isNaN(doelNr) || isNaN(schutterId)) return null
+    const doel = doelen.find((d) => d.nummer === doelNr)
+    if (!doel) return null
+    const idx = doel.schutters.findIndex((s) => s.schutter_id === schutterId)
+    if (idx === -1) return null
+    return { doelNr, positie: idx }
   }
 
   function verplaatsNaarNietIngedeeld(schutterId: number, vanDoelNr: number | null): void {
@@ -205,10 +228,27 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
   function verplaatsNaarDoel(
     schutterId: number,
     vanDoelNr: number | null,
-    naarDoelNr: number
+    naarDoelNr: number,
+    naarPositie?: number
   ): void {
     const doelDest = doelen.find((d) => d.nummer === naarDoelNr)
     if (!doelDest || doelDest.vergrendeld) return
+
+    // Binnen-doel reorder
+    if (vanDoelNr === naarDoelNr && naarPositie !== undefined) {
+      const bronIdx = doelDest.schutters.findIndex((s) => s.schutter_id === schutterId)
+      if (bronIdx === -1 || bronIdx === naarPositie) return
+      const herschikt = arrayMove(doelDest.schutters, bronIdx, naarPositie)
+      const nieuweDoelen = doelen.map((d) =>
+        d.nummer === naarDoelNr
+          ? { ...d, schutters: herschikt.map((s, i) => ({ ...s, positie: i })) }
+          : d
+      )
+      const metConflicten = voegConflictenToe(nieuweDoelen as Doel[])
+      setDoelen(metConflicten)
+      slaOp(metConflicten)
+      return
+    }
 
     let slot: DoelSlot | undefined
 
@@ -230,7 +270,10 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
     nieuweDoelen = nieuweDoelen.map((d) => {
       if (d.nummer !== naarDoelNr) return d
       if (d.schutters.some((s) => s.schutter_id === schutterId)) return d
-      return { ...d, schutters: [...d.schutters, { ...slot!, positie: d.schutters.length }] }
+      const nieuw = [...d.schutters]
+      const insertIdx = naarPositie ?? nieuw.length
+      nieuw.splice(Math.min(insertIdx, nieuw.length), 0, { ...slot!, positie: 0 })
+      return { ...d, schutters: nieuw.map((s, i) => ({ ...s, positie: i })) }
     })
 
     const metConflicten = voegConflictenToe(nieuweDoelen as Doel[])

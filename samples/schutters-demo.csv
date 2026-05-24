@@ -4,7 +4,7 @@ Marie,Peeters,Gilde De Gulden Pijl,Recurve,Senior,V,25
 Pieter,Claes,Gilde De Gulden Pijl,Barebow,Veteraan,M,25
 Luc,Smeets,Gilde De Gulden Pijl,Compound,Senior,M,25
 An,Willems,Gilde De Gulden Pijl,Recurve,Jeugd,V,18
-Els,Martens,Gilde De Gulden Pijl,Recurve,Aspirant,V,12
+Els,Martens,Gilde De Gulden Pijl,Recurve,Aspirant,V,25
 Marc,Van den Berg,Gilde De Gulden Pijl,Compound,Senior,M,25
 Sofie,De Smedt,Gilde De Gulden Pijl,Recurve,Veteraan,V,25
 Tom,Hermans,Gilde De Gulden Pijl,Barebow,Senior,M,25
@@ -16,7 +16,7 @@ Karen,Wouters,Schuttersgilde Sint-Sebastiaan,Recurve,Senior,V,25
 Frank,Aerts,Schuttersgilde Sint-Sebastiaan,Barebow,Veteraan,M,25
 Lisa,Puts,Schuttersgilde Sint-Sebastiaan,Compound,Senior,V,25
 Joris,Michiels,Schuttersgilde Sint-Sebastiaan,Recurve,Jeugd,M,18
-Sara,Stevens,Schuttersgilde Sint-Sebastiaan,Recurve,Aspirant,V,12
+Sara,Stevens,Schuttersgilde Sint-Sebastiaan,Recurve,Aspirant,V,25
 Bruno,Leclercq,Schuttersgilde Sint-Sebastiaan,Recurve,Senior,M,25
 Inge,Dubois,Schuttersgilde Sint-Sebastiaan,Compound,Senior,V,25
 Wim,Jacobs,Schuttersgilde Sint-Sebastiaan,Barebow,Senior,M,25
@@ -27,7 +27,7 @@ Dirk,Van Acker,Schuttersgilde Sint-Sebastiaan,Compound,Senior,M,25
 Emma,Mertens,Gilde De Vlaamse Boog,Recurve,Senior,V,25
 Rik,Desmet,Gilde De Vlaamse Boog,Recurve,Jeugd,M,25
 Bart,Vandenberghe,Gilde De Vlaamse Boog,Compound,Senior,M,25
-Noor,Declercq,Gilde De Vlaamse Boog,Recurve,Aspirant,V,12
+Noor,Declercq,Gilde De Vlaamse Boog,Recurve,Aspirant,V,25
 Sven,Baert,Gilde De Vlaamse Boog,Barebow,Veteraan,M,25
 Fien,Verhoeven,Gilde De Vlaamse Boog,Recurve,Jeugd,V,18
 Niels,Schoenmaekers,Gilde De Vlaamse Boog,Recurve,Senior,M,25
@@ -35,7 +35,7 @@ Lies,Carlier,Gilde De Vlaamse Boog,Compound,Senior,V,25
 Jonas,Boons,Gilde De Vlaamse Boog,Recurve,Junior,M,25
 Axelle,Heylen,Gilde De Vlaamse Boog,Recurve,Senior,V,25
 Ruben,Kuipers,Gilde De Vlaamse Boog,Barebow,Senior,M,25
-Julie,Saelens,Gilde De Vlaamse Boog,Recurve,Aspirant,V,18
+Julie,Saelens,Gilde De Vlaamse Boog,Recurve,Aspirant,V,25
 Bram,Hellings,Gilde De Vlaamse Boog,Compound,Senior,M,25
 Laura,Lambrechts,Koninklijk Gilde De Notelaer,Recurve,Senior,V,25
 Mathias,Marchal,Koninklijk Gilde De Notelaer,Recurve,Senior,M,25
@@ -47,7 +47,7 @@ Elien,Willems,Koninklijk Gilde De Notelaer,Recurve,Junior,V,25
 Dave,Martens,Koninklijk Gilde De Notelaer,Compound,Senior,M,25
 Inne,Van den Berg,Koninklijk Gilde De Notelaer,Recurve,Senior,V,25
 Tim,De Smedt,Koninklijk Gilde De Notelaer,Barebow,Senior,M,25
-Sien,Hermans,Koninklijk Gilde De Notelaer,Recurve,Aspirant,V,12
+Sien,Hermans,Koninklijk Gilde De Notelaer,Recurve,Aspirant,V,25
 Wout,Bogaert,Koninklijk Gilde De Notelaer,Recurve,Senior,M,25
 Hanne,Thijs,Koninklijk Gilde De Notelaer,Compound,Senior,V,25
 Stijn,Vermeersch,Gilde De Zilveren Pijl,Recurve,Senior,M,25
@@ -58,7 +58,7 @@ Yannick,Puts,Gilde De Zilveren Pijl,Barebow,Veteraan,M,25
 Femke,Michiels,Gilde De Zilveren Pijl,Recurve,Jeugd,V,18
 Jeroen,Stevens,Gilde De Zilveren Pijl,Compound,Senior,M,25
 Anouk,Leclercq,Gilde De Zilveren Pijl,Recurve,Senior,V,25
-Tijs,Dubois,Gilde De Zilveren Pijl,Recurve,Aspirant,M,18
+Tijs,Dubois,Gilde De Zilveren Pijl,Recurve,Aspirant,M,25
 Lotte,Jacobs,Gilde De Zilveren Pijl,Recurve,Senior,V,25
 Lukas,Goossens,Gilde De Zilveren Pijl,Barebow,Senior,M,25
 Marit,De Wolf,Gilde De Zilveren Pijl,Compound,Senior,V,25
@@ -73,7 +73,7 @@ Ilse,Verhoeven,Schuttersgilde De Kempen,Recurve,Senior,V,25
 Thomas,Schoenmaekers,Schuttersgilde De Kempen,Compound,Senior,M,25
 Katrien,Carlier,Schuttersgilde De Kempen,Recurve,Veteraan,V,25
 Andreas,Boons,Schuttersgilde De Kempen,Barebow,Senior,M,25
-Greet,Heylen,Schuttersgilde De Kempen,Recurve,Aspirant,V,12
+Greet,Heylen,Schuttersgilde De Kempen,Recurve,Aspirant,V,25
 Pascal,Kuipers,Gilde Het Gouden Doel,Recurve,Senior,M,25
 Veerle,Saelens,Gilde Het Gouden Doel,Recurve,Senior,V,25
 Mark,Hellings,Gilde Het Gouden Doel,Compound,Senior,M,25
@@ -85,7 +85,7 @@ Linde,Coppens,Gilde Het Gouden Doel,Recurve,Senior,V,25
 Glenn,Hendrickx,Gilde Het Gouden Doel,Barebow,Senior,M,25
 Ellen,Verstraeten,Gilde Het Gouden Doel,Compound,Senior,V,25
 Filip,Smolders,Gilde Het Gouden Doel,Recurve,Veteraan,M,25
-Lore,Engelen,Gilde Het Gouden Doel,Recurve,Aspirant,V,18
+Lore,Engelen,Gilde Het Gouden Doel,Recurve,Aspirant,V,25
 Tom,De Smedt,Gilde De Rode Roos,Recurve,Senior,M,18
 Mieke,Ceulemans,Gilde De Rode Roos,Recurve,Senior,V,25
 Kobe,Geerts,Gilde De Rode Roos,Compound,Senior,M,25
@@ -95,7 +95,7 @@ Sien,Devos,Gilde De Rode Roos,Recurve,Junior,V,25
 Kris,Beckers,Gilde De Rode Roos,Recurve,Senior,M,25
 Eline,Vermeulen,Gilde De Rode Roos,Compound,Senior,V,25
 Jelle,Borremans,Gilde De Rode Roos,Recurve,Senior,M,25
-Iris,Pauwels,Gilde De Rode Roos,Recurve,Aspirant,V,12
+Iris,Pauwels,Gilde De Rode Roos,Recurve,Aspirant,V,25
 Gert,Eeckhout,Gilde De Rode Roos,Recurve,Veteraan,M,25
 Ineke,Janssens,Gilde De Rode Roos,Recurve,Senior,V,25
 Bert,Roeland,Gilde De Rode Roos,Andere,Senior,M,25

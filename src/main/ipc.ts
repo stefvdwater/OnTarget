@@ -40,7 +40,7 @@ ipcMain.handle('demo:laad', () => {
       { voornaam: vrouw(), naam: naam(), gilde_id: gId, type_boog: 'Barebow',  leeftijdscategorie: 'Senior',   geslacht: 'V', afstand: 25 },
       { voornaam: man(), naam: naam(), gilde_id: gId, type_boog: 'Compound', leeftijdscategorie: 'Senior',   geslacht: 'M', afstand: 25 },
       { voornaam: man(), naam: naam(), gilde_id: gId, type_boog: 'Recurve',  leeftijdscategorie: 'Jeugd',    geslacht: 'M', afstand: 18 },
-      { voornaam: vrouw(), naam: naam(), gilde_id: gId, type_boog: 'Recurve',  leeftijdscategorie: 'Aspirant', geslacht: 'V', afstand: 12 },
+      { voornaam: vrouw(), naam: naam(), gilde_id: gId, type_boog: 'Recurve',  leeftijdscategorie: 'Aspirant', geslacht: 'V', afstand: 25 },
     ]
 
     for (const gId of gildeIds) {

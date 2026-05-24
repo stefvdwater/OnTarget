@@ -83,7 +83,7 @@ function schuttersVoorGilde(gildeId) {
     { voornaam: man(),   naam: naam(), gilde_id: gildeId, type_boog: 'Compound', leeftijdscategorie: 'Senior',   geslacht: 'M', afstand: 25 },
     // Jeugd korte afstand
     { voornaam: man(),   naam: naam(), gilde_id: gildeId, type_boog: 'Recurve',  leeftijdscategorie: 'Jeugd',    geslacht: 'M', afstand: 18 },
-    { voornaam: vrouw(), naam: naam(), gilde_id: gildeId, type_boog: 'Recurve',  leeftijdscategorie: 'Aspirant', geslacht: 'V', afstand: 12 },
+    { voornaam: vrouw(), naam: naam(), gilde_id: gildeId, type_boog: 'Recurve',  leeftijdscategorie: 'Aspirant', geslacht: 'V', afstand: 25 },
   ]
 }
 

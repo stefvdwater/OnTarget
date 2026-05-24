@@ -12,9 +12,9 @@ doelen en aanmeldvolgorde.
   leeftijdscategorie en geslacht. Filteren op boogtype + afstand, zoeken op naam
   of gilde. Inline bewerken én verwijderen vanuit de tabel.
 - **Categorie-regels**: het formulier handhaaft automatisch dat Jeugd-schutters
-  op 12m of 18m staan, Junior/Senior/Veteraan op 25m, en dat Compound-schutters
-  geen Veteraan kunnen zijn. Aspirant is vrij. Ongeldige combinaties worden ter
-  plaatse gecorrigeerd of geblokkeerd.
+  op 12m of 18m staan, Aspirant/Junior/Senior/Veteraan op 25m, en dat
+  Compound-schutters geen Veteraan kunnen zijn. Ongeldige combinaties worden
+  ter plaatse gecorrigeerd of geblokkeerd.
 - **CSV-import met review**: bij import wordt een controle-modal getoond met
   alle rijen, ongeacht of er conflicten zijn. Conflicten staan bovenaan en
   worden inline gecorrigeerd; pas wanneer alle rijen geldig zijn kan worden
@@ -126,7 +126,7 @@ controle-modal getoond.
 
 | Categorie | Toegestane afstand | Beperkingen |
 |---|---|---|
-| Aspirant | 12m, 18m of 25m | geen |
+| Aspirant | 25m | — |
 | Jeugd | 12m of 18m | — |
 | Junior | 25m | — |
 | Senior | 25m | — |

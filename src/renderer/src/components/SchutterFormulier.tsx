@@ -23,8 +23,12 @@ const CATEGORIEËN: SchutterFormData['leeftijdscategorie'][] = [
 ]
 
 // Regels voor leeftijdscategorie ↔ afstand ↔ boogtype.
-// Aspirant heeft geen beperkingen.
-export const VAST_25M: SchutterFormData['leeftijdscategorie'][] = ['Junior', 'Senior', 'Veteraan']
+export const VAST_25M: SchutterFormData['leeftijdscategorie'][] = [
+  'Aspirant',
+  'Junior',
+  'Senior',
+  'Veteraan'
+]
 export const VAST_KORT: SchutterFormData['leeftijdscategorie'][] = ['Jeugd']
 
 export function afstandToegestaan(
@@ -33,7 +37,7 @@ export function afstandToegestaan(
 ): boolean {
   if (VAST_25M.includes(cat)) return afstand === 25
   if (VAST_KORT.includes(cat)) return afstand === 12 || afstand === 18
-  return true // Aspirant
+  return true
 }
 
 export function categorieToegestaan(
@@ -110,7 +114,6 @@ export default function SchutterFormulier({
     // te raken hier (dat gebeurt in kiesBoogtype).
     if (VAST_25M.includes(c) && afstand !== 25) setAfstand(25)
     else if (VAST_KORT.includes(c) && afstand === 25) setAfstand(18)
-    // Aspirant: behoud huidige afstand
     setLeeftijd(c)
   }
 

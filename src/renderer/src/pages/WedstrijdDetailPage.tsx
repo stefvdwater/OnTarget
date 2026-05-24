@@ -120,7 +120,7 @@ export default function WedstrijdDetailPage({
       )}
       {tab === 'inschrijvingen' && <InschrijvingenTab wedstrijd={huidig} />}
       {tab === 'indeling' && <IndelingTab wedstrijd={huidig} />}
-      {tab === 'afdrukken' && <AfdrukkenTab />}
+      {tab === 'afdrukken' && <AfdrukkenTab wedstrijd={huidig} />}
     </>
   )
 }

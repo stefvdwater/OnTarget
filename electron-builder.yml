@@ -1,5 +1,5 @@
-appId: com.targetassignment
-productName: Doelindeling
+appId: com.ontarget
+productName: OnTarget
 directories:
   buildResources: resources
 files:
@@ -17,9 +17,9 @@ win:
     - target: nsis
       arch:
         - x64
-  executableName: Doelindeling
+  executableName: OnTarget
 nsis:
-  artifactName: Doelindeling-Setup-${version}.exe
-  shortcutName: Doelindeling
-  uninstallDisplayName: Doelindeling
+  artifactName: OnTarget-Setup-${version}.exe
+  shortcutName: OnTarget
+  uninstallDisplayName: OnTarget
   createDesktopShortcut: always

@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { initDatabase } from './database'
 import './ipc'
+import icon from '../../resources/icon.ico?asset'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -12,6 +13,7 @@ function createWindow(): void {
     minHeight: 700,
     show: false,
     autoHideMenuBar: true,
+    icon,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
@@ -35,7 +37,7 @@ function createWindow(): void {
 }
 
 app.whenReady().then(async () => {
-  electronApp.setAppUserModelId('com.targetassignment')
+  electronApp.setAppUserModelId('com.ontarget')
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)

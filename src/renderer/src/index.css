@@ -1533,3 +1533,301 @@ input:focus-visible,
   display: flex;
   gap: 8px;
 }
+
+/* ─── Afdrukken tab ──────────────────────────────────── */
+
+.afdrukken-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.afdrukken-opties {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 80px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+
+.afdruk-h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.afdruk-sectie {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.afdruk-sectie:last-of-type {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.afdruk-sectie-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.afdruk-sectie-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.afdruk-radio-rij {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.afdruk-radio,
+.afdruk-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.afdruk-radio input,
+.afdruk-check input {
+  cursor: pointer;
+  accent-color: var(--blue);
+}
+
+.afdruk-gildelijst {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: var(--panel-2);
+}
+.afdruk-gildeacties {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.afdruk-fout {
+  margin-top: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  background: var(--red-soft);
+  color: var(--red-deep);
+  border: 1px solid var(--red-soft-border);
+  border-radius: 4px;
+}
+
+.afdruk-knop {
+  margin-top: 8px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* ─── Print-preview wrap ─────────────────────────────── */
+
+.afdrukken-preview-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.afdrukken-preview-meta {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.afdrukken-preview-pagina {
+  background: #f0f0f0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+/* ─── Print document (preview + print) ───────────────── */
+
+.print-root {
+  background: white;
+  color: black;
+  font-family: sans-serif;
+  padding: 14mm;
+  box-shadow: 0 1px 0 #d6d2cb, 0 6px 20px -10px rgba(0, 0, 0, 0.2);
+  /* width/min-height worden inline gezet op basis van A4/A3 + portret/landschap */
+}
+
+.print-header {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #000;
+}
+
+.print-titel {
+  margin: 0;
+  font-size: 18pt;
+  font-weight: 700;
+  color: #000;
+}
+
+.print-subtitel {
+  margin-top: 4px;
+  font-size: 10.5pt;
+  color: #333;
+}
+
+.print-tabel {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 10pt;
+  color: #000;
+}
+.print-tabel th,
+.print-tabel td {
+  border: 1px solid #000;
+  padding: 4px 6px;
+  text-align: left;
+  vertical-align: top;
+}
+.print-tabel thead th {
+  background: #f0f0f0;
+  font-size: 9.5pt;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.print-cel-doel {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.print-gildekop td {
+  background: #e8e8e8;
+  font-size: 10.5pt;
+  border-top: 2px solid #000;
+}
+
+.print-totalen {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #000;
+  font-size: 9.5pt;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #000;
+}
+
+.print-waarschuwingen {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #000;
+  font-size: 9.5pt;
+  color: #000;
+}
+.print-waarschuwingen h3 {
+  margin: 0 0 6px;
+  font-size: 10.5pt;
+}
+.print-waarschuwingen ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.print-waarschuwingen li {
+  margin-bottom: 2px;
+}
+
+/* Footer toont datum (links) en versie (rechts). In de preview onderaan het
+   pagina-blok, bij print via position: fixed onderaan elke pagina (zie
+   @media print). Paginanummers worden niet getoond — Chromium's
+   "Microsoft Print to PDF" rendert @page counter() margin boxes niet
+   betrouwbaar. */
+.print-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid #ccc;
+  font-size: 9pt;
+  color: #555;
+}
+
+/* ─── @media print ───────────────────────────────────── */
+
+@media print {
+  /* Verberg alles op de pagina behalve het printbare deel */
+  body * {
+    visibility: hidden;
+  }
+  .print-root,
+  .print-root * {
+    visibility: visible;
+  }
+  .print-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    min-height: 0 !important;
+    max-width: none;
+    padding: 0;
+    box-shadow: none;
+    border: 0;
+  }
+  .afdrukken-preview-pagina {
+    background: white;
+    border: 0;
+    padding: 0;
+  }
+  .print-tabel thead {
+    display: table-header-group;
+  }
+  .print-tabel tr {
+    page-break-inside: avoid;
+  }
+  .print-tabel,
+  .print-totalen,
+  .print-waarschuwingen {
+    page-break-inside: auto;
+  }
+  /* Footer als fixed element zodat Chromium hem onderaan elke pagina
+     herhaalt bij "Microsoft Print to PDF". Bottom-marge geeft ruimte t.o.v.
+     het @page-margin. */
+  .print-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    padding: 4mm 0 0;
+    border-top: 1px solid #888;
+    background: white;
+    font-size: 9pt;
+    color: #555;
+    display: flex;
+    justify-content: space-between;
+  }
+  /* Ruimte aan de onderkant van de inhoud zodat tekst niet onder de fixed
+     footer schuift. */
+  .print-root {
+    padding-bottom: 18mm;
+  }
+}

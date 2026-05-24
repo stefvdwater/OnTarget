@@ -1,5 +1,8 @@
-import { ipcMain } from 'electron'
+import { app, ipcMain } from 'electron'
 import { queryAll, queryOne, run, transaction } from './database'
+
+// ── App ───────────────────────────────────────────────────
+ipcMain.handle('app:getVersion', () => app.getVersion())
 
 // ── Demo data ─────────────────────────────────────────────
 ipcMain.handle('demo:laad', () => {

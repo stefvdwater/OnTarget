@@ -33,10 +33,10 @@ De streefbezetting van 5 beurten per doel wordt bereikt door per doel
 Per zone (`25m`, `compound`, `18m`, `12m`) afzonderlijk:
 
 ```
-Fase 0 — Setup: aantal actieve doelen bepalen
-Fase 1 — Dubbelschutters plaatsen op eerste doelen
+Fase 0 — Setup: aantal actieve doelen bepalen (over álle zonebeurten)
+Fase 1 — Dubbelschutters plaatsen op de ACHTERSTE actieve doelen
 Fase 2 — Paren vormen per gilde
-Fase 3 — Tweesporen-toewijzing (de "puzzle")
+Fase 3 — Tweesporen-toewijzing (de "puzzle") op de voorste actieve doelen
 Fase 4 — Lone-schutters verdelen
 Fase 5 — R4-hard handhaving (≥ 4 beurten per actief doel)
 Fase 6 — Sortering binnen elk doel
@@ -47,7 +47,8 @@ Fase 6 — Sortering binnen elk doel
 ## 3. Fase 0 — Setup
 
 1. `pool` = alle niet-vergrendelde doelen van de zone, in volgorde.
-2. Bereken totaal beurten `B`:
+2. Bereken totaal beurten `B` over **alle** schutters in de zone
+   (dubbelaars + normalen):
    ```
    B = Σ schutter.beurten   waarbij beurten = (vol-dubbel ? 2 : 1)
    ```
@@ -59,24 +60,46 @@ Fase 6 — Sortering binnen elk doel
    - `⌊B/4⌋` = nooit meer doelen dan we op ≥ 4 beurten kunnen brengen
      (R4-hard).
    - Uitzondering: als `B < 4`, dan `aantalActief = 1`.
-4. `actieveDoelen = pool.slice(0, aantalActief)`.
+4. Garandeer dat alle dubbel-groepen een doel krijgen:
+   ```
+   aantalActief = min(|pool|, max(aantalActief, M))
+   ```
+   waarbij `M` = aantal dubbel-groepen uit `groepeerdeDubbelaars`.
+5. `actieveDoelen = pool.slice(0, aantalActief)`.
+6. Splits in twee blokken:
+   ```
+   dubbelStart   = aantalActief − M           (≥ 0)
+   dubbelDoelen  = actieveDoelen.slice(dubbelStart)   // de achterste M
+   normaalDoelen = actieveDoelen.slice(0, dubbelStart) // de voorste
+   ```
+
+Belangrijk: omdat `B` over **alle** beurten wordt berekend (incl. de
+4 beurten/half van vol-dubbelaars), worden de dubbel-doelen meegerekend
+in `aantalActief`. Dubbelaars staan dus altijd op een doel dat ook
+effectief wordt gevuld — niet op fysiek lege doelen achteraan de zone.
 
 ---
 
 ## 4. Fase 1 — Dubbelschutters (R7, R8, R13)
 
-Identiek aan v1. Groepering via `groepeerdeDubbelaars`:
+Groepering via `groepeerdeDubbelaars`:
 
 - **Vol-dubbelaars** in paren van 2 (4 beurten + 1 normaal = 5).
 - **EH + TH** gekoppeld, bij voorkeur uit verschillende gilden.
 - Resterende EH of TH afzonderlijk op één doel.
 
-Per groep wordt het volgende vrije doel gebruikt. Verplichte normalen
-voor rusttijd (R8) worden via `kiesNormalenVoorDubbeldoel` toegevoegd.
-Doel wordt aangevuld tot 5 beurten met respect voor R5 (max 2 per gilde),
-met fallback waar nodig om R10 (5 beurten) te halen.
+Plaatsing: groep `i` gaat op `dubbelDoelen[i]`. Met andere woorden, de
+vroegst aangemelde groep komt op het **laagste van de achterste M
+actieve doelen** (R9 binnen het dubbel-blok), en de laatst aangemelde
+groep komt op het hoogste/achterste doel van de zone.
 
-Na fase 1: `dubbelCursor` = aantal door fase 1 gevulde doelen.
+Per dubbeldoel worden verplichte normalen voor rusttijd (R8) toegevoegd
+via `kiesNormalenVoorDubbeldoel`. Daarna wordt het doel aangevuld tot
+5 beurten met respect voor R5 (max 2 per gilde), met fallback waar
+nodig om R10 (5 beurten) te halen.
+
+Na fase 1: de dubbel-doelen zijn gevuld; resterende normalen gaan in
+fase 2–3 naar `normaalDoelen`.
 
 ---
 
@@ -97,7 +120,8 @@ schutters)` zodat we later op vroege schutter kunnen sorteren.
 
 ## 6. Fase 3 — Tweesporen-toewijzing
 
-`Tnorm = aantalActief - dubbelCursor` = aantal doelen voor normalen.
+`Tnorm = |normaalDoelen| = aantalActief − M` = aantal doelen voor normalen
+(de voorste actieve doelen van de zone).
 
 ### 6.1 LPT bin-packing: gilden over 2 sporen verdelen
 
@@ -133,9 +157,9 @@ van eenzelfde gilde aaneengesloten blijven (R10).
 
 ```
 voor i = 0 .. min(|spoorA|, Tnorm) - 1:
-  plaats spoorA[i].schutters op actieveDoelen[dubbelCursor + i]
+  plaats spoorA[i].schutters op normaalDoelen[i]
 voor i = 0 .. min(|spoorB|, Tnorm) - 1:
-  plaats spoorB[i].schutters op actieveDoelen[dubbelCursor + i]
+  plaats spoorB[i].schutters op normaalDoelen[i]
 ```
 
 ### 6.4 Randgeval: spoor langer dan Tnorm
@@ -232,7 +256,7 @@ Bij conflicterende regels:
 2. **R3** Max 6 beurten (hard)
 3. **R3** Vergrendelde doelen respecteren (hard)
 4. **R4-hard** Min 4 beurten per doel (hard, uitz. zone-totaal < 4)
-5. **R7** Dubbelschutters op eerste doelen
+5. **R7** Dubbelschutters op de laatste actieve doelen van hun zone
 6. **R9** Aanmeldvolgorde → doelvolgorde
 7. **R10** Streef 5 beurten per doel
 8. **R10b** Gelijke verdeling
@@ -261,5 +285,5 @@ Verwacht gedrag voor de scenario's uit [ALGORITHM_SPEC.md §7](ALGORITHM_SPEC.md
 4. Controleer visueel:
    - Laatste doelen hebben ≥ 2 gilden.
    - Paren van eenzelfde gilde liggen op naburige doelen.
-   - Dubbelschutters staan vooraan op eerste doel(en) van hun zone.
+   - Dubbelschutters staan op de laatste actieve doel(en) van hun zone — niet op fysiek lege doelen achteraan.
    - Geen doel onder 4 beurten (tenzij zone-totaal < 4).

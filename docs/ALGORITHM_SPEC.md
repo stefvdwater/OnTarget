@@ -41,7 +41,7 @@ zie [ALGORITME_v2.0.md](ALGORITME_v2.0.md).
 | R4 | **Streef naar 5 beurten** per doel per helft | Ideale bezetting |
 | R5 | **Maximaal 2 schutters van hetzelfde gilde** per doel | Zachte bovengrens; zie §6 voor uitzonderingen |
 | R6 | **Minimaal 2 verschillende gilden** per doel | Uitzondering: §6 |
-| R7 | **Dubbelschutters op de eerste doelen** van hun zone | Zodat publiek/jury hen vroeg kan noteren |
+| R7 | **Dubbelschutters op de laatste actieve doelen** van hun zone | Achteraan in het gevulde blok, niet op fysiek lege doelen |
 | R8 | Schutters met een **lagere aanmeldvolgorde op een lager doelnummer** | Registratievolgorde → doelvolgorde |
 | R9 | **Gelijkmatige verdeling**: alle doelen zo gelijk mogelijk gevuld | Voorkeur voor 4 boven 6 als er meer doelen beschikbaar zijn |
 | R10 | Schutters van hetzelfde gilde op **aaneengesloten doelen** | Niet verspreid over de hele zaal |
@@ -75,9 +75,9 @@ Als de compound-zone minder dan 3 schutters heeft, worden die schutters toegevoe
 
 ## 5. Dubbelschutters
 
-### 5.1 Groepering
+### 5.1 Groepering en plaatsing
 
-Dubbelschutters komen altijd op de **eerste doelen** van hun zone (R7).
+Dubbelschutters komen altijd op de **laatste actieve doelen** van hun zone (R7) — dat wil zeggen, op de achterste M doelen van het gebruikte (gevulde) blok, **niet** op fysiek lege doelen helemaal achteraan de zone. Concreet: als de zone er N actieve doelen heeft en M dubbelgroepen, dan staan de dubbelgroepen op `actieveDoelen[N-M .. N-1]`. De vroegst aangemelde groep komt op het laagste van die M doelen.
 
 Groepeer ze als volgt:
 - **Vol-dubbelaars** (EH + TH): maximaal 2 per doel. Twee vol-dubbelaars bezetten 4 beurten per helft; er is nog ruimte voor 1 normale schutter (→ 5 beurten).
@@ -332,7 +332,7 @@ Bij conflicterende regels geldt deze prioriteit (hoog → laag):
 2. Max 6 beurten (R2) — harde regel
 3. Vergrendelde doelen respecteren (R3)
 4. Min 4 beurten per doel (R4-hard) — harde regel, uitzondering: onvoldoende beurten in zone
-4. Dubbelschutters op eerste doelen (R7)
+4. Dubbelschutters op de laatste actieve doelen van hun zone (R7)
 5. Registratievolgorde → doelvolgorde (R8)
 6. Streef 5 beurten per doel (R4)
 7. Gelijke verdeling over doelen (R9), voorkeur 4 boven 6

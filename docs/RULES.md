@@ -8,10 +8,11 @@
 
 De doelen worden in deze volgorde ingedeeld (van voor naar achter):
 
-1. **Dubbelschutters** — worden op de **eerste doelen** van hun zone geplaatst (geen apart type doel, enkel een plaatsingsvoorkeur).
-2. **25m doelen** — ingedeeld op aanmeldvolgorde, met compound doelen op een manueel aan te geven positie.
-3. **18m doelen** — na de 25m doelen.
-4. **12m doelen** — helemaal achteraan.
+1. **25m doelen** — ingedeeld op aanmeldvolgorde, met compound doelen op een manueel aan te geven positie.
+2. **18m doelen** — na de 25m doelen.
+3. **12m doelen** — helemaal achteraan.
+
+Binnen elke zone staan **dubbelschutters achteraan** op de **laatste actieve doelen** van die zone (geen apart type doel, enkel een plaatsingsvoorkeur). Belangrijk: "laatste actieve doelen" betekent de laatste doelen die effectief gevuld worden — niet de fysiek laatste doelen van de zone. Voorbeeld: bij 100 doelen en 20 schutters worden er typisch 4 doelen gebruikt; dubbelschutters komen dan op doel 4, niet op doel 100.
 
 Het aantal doelen per afstand en het totaal aantal doelen zijn configureerbaar per wedstrijd.
 
@@ -54,7 +55,7 @@ Het aantal doelen per afstand en het totaal aantal doelen zijn configureerbaar p
 
 Dubbel schieten is wanneer een schutter een gemiste wedstrijd inhaalt in dezelfde sessie.
 
-- Dubbelschutters worden op het **eerste doel van hun zone** geplaatst.
+- Dubbelschutters worden op het **laatste actieve doel van hun zone** geplaatst (zie *Volgorde van de doelen* hierboven). Lege doelen achteraan een zone tellen niet mee — dubbelschutters komen altijd op een doel dat ook effectief gebruikt wordt.
 - De gilderegel (minstens 2 verschillende gilden, ~2 per gilde) geldt ook voor doelen met dubbelschutters.
 
 ### Volledig dubbel schieten

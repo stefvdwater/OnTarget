@@ -26,11 +26,11 @@ Regels zijn gegroepeerd per prioriteitsniveau. Hogere niveaus overrulen lagere n
 
 ## Niveau 2 — Sterke voorkeuren (zo weinig mogelijk afwijken)
 
-**R6.** Doelvolgorde van voor naar achter: dubbeldoelen → 25m normaal → 25m compound → 18m → 12m.
+**R6.** Doelvolgorde van voor naar achter (per zone): 25m normaal → 25m compound → 18m → 12m. Binnen elke zone staan **dubbeldoelen achteraan** (op de laatste actieve doelen van die zone).
 - Het compound startdoel is manueel configureerbaar door de organisatie.
 - De aanmeldvolgorde is enkel relevant **binnen dezelfde zone** — een 18m-schutter die vroeg aanmeldt staat toch achteraan omdat 18m altijd achteraan is.
 
-**R7.** Dubbelschutters worden op de **eerste doelen van hun zone** geplaatst.
+**R7.** Dubbelschutters worden op de **laatste actieve doelen van hun zone** geplaatst — dus op de achterkant van het gevulde blok, **niet** op fysiek lege doelen helemaal achteraan de zone. Wanneer er meerdere dubbelgroepen zijn, krijgt de vroegst aangemelde groep het laagste van die achterste doelen (R9 binnen het dubbel-blok).
 
 **R8.** Dubbelschutters worden **samen** op één doel geplaatst.
 - Bij **2 of meer dubbelschutters** op een doel: minstens **1 normale schutter** verplicht voor voldoende rusttijd.

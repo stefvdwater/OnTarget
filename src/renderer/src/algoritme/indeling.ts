@@ -372,36 +372,17 @@ function handhaafMin4Beurten(actieveDoelen: Doel[], totaleBeurten: number): void
 
 function verdeelNormalen(
   schutters: Schutter[],
-  zoneDoelen: Doel[],
-  doelStartIndex: number,
+  actieveDoelen: Doel[],
   nietIngedeeld: Schutter[]
 ): void {
   if (schutters.length === 0) return
 
-  const beschikbareDoelen = zoneDoelen.slice(doelStartIndex).filter((d) => !d.vergrendeld)
-
-  if (beschikbareDoelen.length === 0) {
-    for (const s of schutters) {
-      const doel = zoneDoelen.find((d) => !d.vergrendeld && passtOpDoel(d, s))
-      if (doel) voegToeAanDoel(doel, s)
-      else nietIngedeeld.push(s)
-    }
+  if (actieveDoelen.length === 0) {
+    schutters.forEach((s) => nietIngedeeld.push(s))
     return
   }
 
-  // Fase 0: bepaal aantal actieve doelen (R4, R4-hard, R10)
   const totaleBeurten = schutters.reduce((sum, s) => sum + (isVolDubbel(s) ? 2 : 1), 0)
-  let aantalActief: number
-  if (totaleBeurten < 4) {
-    aantalActief = 1
-  } else {
-    aantalActief = Math.min(
-      beschikbareDoelen.length,
-      Math.max(1, Math.ceil(totaleBeurten / 5)),
-      Math.max(1, Math.floor(totaleBeurten / 4))
-    )
-  }
-  const actieveDoelen = beschikbareDoelen.slice(0, aantalActief)
 
   // Fase 2: paren vormen per gilde
   const { parenPerGilde, lones } = vormParen(schutters)
@@ -447,17 +428,48 @@ function verwerkZone(
 
   const dubbelaars = schutters.filter(isDubbel)
   const normalen = schutters.filter((s) => !isDubbel(s))
-  const gebruikteIds = new Set<number>()
-  let doelCursor = 0
+  const dubbelGroepen = groepeerdeDubbelaars(dubbelaars)
+  const M = dubbelGroepen.length
 
-  // Fase A: Dubbelaars op eerste doel(en) (R7, R8, R13)
-  for (const groep of groepeerdeDubbelaars(dubbelaars)) {
-    if (doelCursor >= zoneDoelen.length) {
+  const beschikbareDoelen = zoneDoelen.filter((d) => !d.vergrendeld)
+
+  if (beschikbareDoelen.length === 0) {
+    schutters.forEach((s) => nietIngedeeld.push(s))
+    return
+  }
+
+  // Fase 0: bepaal aantal actieve doelen op basis van ALLE zonebeurten (R4, R4-hard, R10)
+  const totaleBeurten = schutters.reduce((sum, s) => sum + (isVolDubbel(s) ? 2 : 1), 0)
+  let aantalActief: number
+  if (totaleBeurten < 4) {
+    aantalActief = Math.min(1, beschikbareDoelen.length)
+  } else {
+    aantalActief = Math.min(
+      beschikbareDoelen.length,
+      Math.max(1, Math.ceil(totaleBeurten / 5)),
+      Math.max(1, Math.floor(totaleBeurten / 4))
+    )
+  }
+  // Garandeer dat alle dubbel-groepen passen, voor zover capaciteit toelaat
+  aantalActief = Math.min(beschikbareDoelen.length, Math.max(aantalActief, M))
+
+  const actieveDoelen = beschikbareDoelen.slice(0, aantalActief)
+  const dubbelStart = Math.max(0, aantalActief - M)
+  const dubbelDoelen = actieveDoelen.slice(dubbelStart)
+  const normaalDoelen = actieveDoelen.slice(0, dubbelStart)
+
+  const gebruikteIds = new Set<number>()
+
+  // Fase A: Dubbelaars op de achterste actieve doelen (R7, R8, R13)
+  // Volgorde: vroegst aangemelde groep op het laagste dubbeldoel (R9 binnen het achter-blok)
+  for (let i = 0; i < dubbelGroepen.length; i++) {
+    const groep = dubbelGroepen[i]
+    if (i >= dubbelDoelen.length) {
       groep.forEach((s) => nietIngedeeld.push(s))
       continue
     }
 
-    const doel = zoneDoelen[doelCursor++]
+    const doel = dubbelDoelen[i]
     groep.forEach((s) => voegToeAanDoel(doel, s))
 
     // Verplichte normalen (R8) — begrensd door beschikbare ruimte tot 5 beurten
@@ -493,9 +505,13 @@ function verwerkZone(
     }
   }
 
-  // Fase B: Resterende normalen (R9, R10, R10b)
+  // Fase B: Resterende normalen op de voorste actieve doelen (R9, R10, R10b)
   const restNormalen = normalen.filter((s) => !gebruikteIds.has(s.schutter_id))
-  verdeelNormalen(restNormalen, zoneDoelen, doelCursor, nietIngedeeld)
+  if (normaalDoelen.length === 0) {
+    restNormalen.forEach((s) => nietIngedeeld.push(s))
+  } else {
+    verdeelNormalen(restNormalen, normaalDoelen, nietIngedeeld)
+  }
 }
 
 // ─── Sortering binnen een doel ────────────────────────────────────────────────

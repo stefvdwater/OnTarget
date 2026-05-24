@@ -37,10 +37,15 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
   async function laadIndeling(): Promise<void> {
     const rijen = await window.api.indeling.getByWedstrijd(wedstrijd.id)
     const inschrijvingen: Inschrijving[] = await window.api.inschrijvingen.getByWedstrijd(wedstrijd.id)
+    const vergrendeldeDoelen = await window.api.indeling.getVergrendeldeDoelen(wedstrijd.id)
+    const vergrendeldeSet = new Set<number>(vergrendeldeDoelen)
     setTotaalInschrijvingen(inschrijvingen.length)
 
     if (rijen.length === 0) {
       const legeDoelen = maakLegeDoelen(wedstrijd)
+      legeDoelen.forEach((d) => {
+        d.vergrendeld = vergrendeldeSet.has(d.nummer)
+      })
       setDoelen(legeDoelen)
       setNietIngedeeld(inschrijvingen.map((i, idx) => inschrijvingNaarSlot(i, idx)))
     } else {
@@ -61,11 +66,13 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
             dubbel_tweede_helft: !!r.dubbel_tweede_helft,
             positie: r.positie
           })
-          if (r.vergrendeld) doel.vergrendeld = true
         }
       })
 
-      alleDoelen.forEach((d) => d.schutters.sort((a, b) => a.positie - b.positie))
+      alleDoelen.forEach((d) => {
+        d.schutters.sort((a, b) => a.positie - b.positie)
+        d.vergrendeld = vergrendeldeSet.has(d.nummer)
+      })
       setDoelen(voegConflictenToe(alleDoelen as Doel[]))
 
       const ingedeeldIds = new Set(rijen.map((r: any) => r.schutter_id))
@@ -134,8 +141,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
         wedstrijd_id: wedstrijd.id,
         doel_nummer: d.nummer,
         schutter_id: s.schutter_id,
-        positie: s.positie,
-        vergrendeld: d.vergrendeld ? 1 : 0
+        positie: s.positie
       }))
     )
     await window.api.indeling.save(wedstrijd.id, rijen)

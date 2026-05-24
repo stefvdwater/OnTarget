@@ -37,7 +37,6 @@ declare global {
       indeling: {
         getByWedstrijd: (wedstrijd_id: number) => Promise<any[]>
         save: (wedstrijd_id: number, indeling: object[]) => Promise<void>
-        toggleVergrendeld: (id: number, vergrendeld: boolean) => Promise<any>
         toggleDoelVergrendeld: (wedstrijd_id: number, doel_nummer: number, vergrendeld: boolean) => Promise<void>
         getVergrendeldeDoelen: (wedstrijd_id: number) => Promise<number[]>
       }

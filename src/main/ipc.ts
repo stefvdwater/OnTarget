@@ -230,22 +230,19 @@ ipcMain.handle('indeling:getByWedstrijd', (_, wedstrijd_id: number) =>
 
 ipcMain.handle('indeling:save', (_, wedstrijd_id: number, rijen: any[]) => {
   transaction(() => {
-    // Verwijder niet-vergrendelde rijen
-    run('DELETE FROM indeling WHERE wedstrijd_id=? AND vergrendeld=0', [wedstrijd_id])
-    // Voeg nieuwe rijen in
+    // Verwijder alle rijen voor deze wedstrijd — lock-state leeft in vergrendelde_doelen.
+    // React-state stuurt vergrendelde schutters telkens mee, dus volledig wissen + opnieuw
+    // wegschrijven is veilig en voorkomt stale rijen.
+    run('DELETE FROM indeling WHERE wedstrijd_id=?', [wedstrijd_id])
     for (const rij of rijen) {
       run(
-        `INSERT OR REPLACE INTO indeling (wedstrijd_id, doel_nummer, schutter_id, positie, vergrendeld)
-         VALUES (?, ?, ?, ?, ?)`,
-        [wedstrijd_id, rij.doel_nummer, rij.schutter_id, rij.positie, rij.vergrendeld ? 1 : 0]
+        `INSERT INTO indeling (wedstrijd_id, doel_nummer, schutter_id, positie, vergrendeld)
+         VALUES (?, ?, ?, ?, 0)`,
+        [wedstrijd_id, rij.doel_nummer, rij.schutter_id, rij.positie]
       )
     }
   })
 })
-
-ipcMain.handle('indeling:toggleVergrendeld', (_, id: number, vergrendeld: boolean) =>
-  run('UPDATE indeling SET vergrendeld=? WHERE id=?', [vergrendeld ? 1 : 0, id])
-)
 
 ipcMain.handle('indeling:toggleDoelVergrendeld', (_, wedstrijd_id: number, doel_nummer: number, vergrendeld: boolean) => {
   if (vergrendeld) {

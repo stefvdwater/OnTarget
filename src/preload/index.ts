@@ -50,8 +50,6 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('indeling:getByWedstrijd', wedstrijd_id),
     save: (wedstrijd_id: number, indeling: object[]) =>
       ipcRenderer.invoke('indeling:save', wedstrijd_id, indeling),
-    toggleVergrendeld: (id: number, vergrendeld: boolean) =>
-      ipcRenderer.invoke('indeling:toggleVergrendeld', id, vergrendeld),
     toggleDoelVergrendeld: (wedstrijd_id: number, doel_nummer: number, vergrendeld: boolean) =>
       ipcRenderer.invoke('indeling:toggleDoelVergrendeld', wedstrijd_id, doel_nummer, vergrendeld),
     getVergrendeldeDoelen: (wedstrijd_id: number) =>

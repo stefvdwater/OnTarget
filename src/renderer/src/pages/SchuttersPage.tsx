@@ -8,6 +8,7 @@ import ImportReviewModal, {
   type ImportRij,
   valideerImportRij
 } from '../components/ImportReviewModal'
+import { categorieLabel } from '../lib/labels'
 
 type Modal = { type: 'nieuw'; zoek: string } | { type: 'bewerk'; schutter: Schutter } | null
 
@@ -407,8 +408,7 @@ export default function SchuttersPage(): JSX.Element {
               <th style={{ width: '24%' }}>Naam</th>
               <th style={{ width: '26%' }}>Gilde</th>
               <th>Boogtype</th>
-              <th>Leeftijdscategorie</th>
-              <th>Geslacht</th>
+              <th>Categorie</th>
               <th>Afstand</th>
               <th style={{ width: 150 }}></th>
             </tr>
@@ -425,8 +425,7 @@ export default function SchuttersPage(): JSX.Element {
                 <td>
                   <BoogChip boog={s.type_boog} />
                 </td>
-                <td>{s.leeftijdscategorie}</td>
-                <td className="mono">{s.geslacht}</td>
+                <td>{categorieLabel(s.leeftijdscategorie, s.geslacht)}</td>
                 <td className="mono">{s.afstand}m</td>
                 <td>
                   <div style={{ display: 'flex', gap: 4 }}>
@@ -451,7 +450,7 @@ export default function SchuttersPage(): JSX.Element {
             {lijst.length === 0 && (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={6}
                   style={{ textAlign: 'center', padding: 32, color: 'var(--muted)' }}
                 >
                   {zoek || actieveFilters > 0

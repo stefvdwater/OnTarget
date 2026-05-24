@@ -1,6 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { DoelSlot } from '../algoritme/types'
+import { categorieLabel } from '../lib/labels'
 
 interface Props {
   slot: DoelSlot
@@ -24,6 +25,10 @@ export default function SchutterKaart({
   }
 
   const fullNaam = `${slot.voornaam} ${slot.naam}`
+  const catLabel = categorieLabel(
+    slot.leeftijdscategorie as 'Aspirant' | 'Jeugd' | 'Junior' | 'Senior' | 'Veteraan',
+    slot.geslacht
+  )
   const d1 = slot.dubbel_eerste_helft
   const d2 = slot.dubbel_tweede_helft
   const dubbelLabel = d1 && d2 ? 'Dubbel' : d1 ? 'Dubbel 1e' : d2 ? 'Dubbel 2e' : null
@@ -50,7 +55,7 @@ export default function SchutterKaart({
       {...attributes}
       className={className}
       data-boog={slot.type_boog}
-      title={`${fullNaam} — ${slot.gilde_naam ?? '—'} — ${slot.type_boog} — ${slot.leeftijdscategorie} — ${slot.afstand}m${
+      title={`${fullNaam} — ${slot.gilde_naam ?? '—'} — ${slot.type_boog} — ${catLabel} — ${slot.afstand}m${
         dubbelTitle ? ' — ' + dubbelTitle : ''
       }`}
     >
@@ -65,7 +70,7 @@ export default function SchutterKaart({
           </span>
         )}
       </div>
-      <div className="leeftijd">{slot.leeftijdscategorie}</div>
+      <div className="leeftijd">{catLabel}</div>
       <div className="gilde">{slot.gilde_naam ?? '—'}</div>
       <div className="boog">{slot.type_boog}</div>
     </div>

@@ -10,6 +10,7 @@ export interface DoelSlot {
   type_boog: string
   afstand: number
   leeftijdscategorie: string
+  geslacht: 'M' | 'V'
   dubbel_eerste_helft: boolean
   dubbel_tweede_helft: boolean
   positie: number

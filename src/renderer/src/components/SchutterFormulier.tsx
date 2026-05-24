@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Gilde, Schutter, SchutterFormData } from '../types'
+import { geslachtLabel } from '../lib/labels'
 
 interface Props {
   /** Bestaande schutter om te bewerken; null voor nieuw. */
@@ -273,7 +274,7 @@ export default function SchutterFormulier({
                 className={geslacht === g ? 'on' : ''}
                 onClick={() => setGeslacht(g)}
               >
-                {g}
+                {geslachtLabel(g)}
               </button>
             ))}
           </div>

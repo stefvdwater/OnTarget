@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Inschrijving, Schutter, SchutterFormData, Wedstrijd } from '../types'
 import SchutterFormulier from '../components/SchutterFormulier'
+import { categorieLabel } from '../lib/labels'
 
 interface Props {
   wedstrijd: Wedstrijd
@@ -116,7 +117,7 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
                 <th>Naam</th>
                 <th>Gilde</th>
                 <th>Boog</th>
-                <th>Cat.</th>
+                <th>Categorie</th>
                 <th>Afstand</th>
                 <th style={{ width: 130 }}>
                   Dubbel
@@ -154,7 +155,7 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
                   <td>
                     <BoogChip boog={i.type_boog} />
                   </td>
-                  <td>{i.leeftijdscategorie}</td>
+                  <td>{categorieLabel(i.leeftijdscategorie, i.geslacht)}</td>
                   <td className="mono">{i.afstand}m</td>
                   <td>
                     <div className="dubbel-cell">

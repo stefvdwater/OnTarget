@@ -63,6 +63,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
             type_boog: r.type_boog,
             afstand: r.afstand,
             leeftijdscategorie: r.leeftijdscategorie,
+            geslacht: r.geslacht,
             dubbel_eerste_helft: !!r.dubbel_eerste_helft,
             dubbel_tweede_helft: !!r.dubbel_tweede_helft,
             positie: r.positie
@@ -128,6 +129,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
         type_boog: s.type_boog,
         afstand: s.afstand,
         leeftijdscategorie: s.leeftijdscategorie,
+        geslacht: s.geslacht,
         dubbel_eerste_helft: !!s.dubbel_eerste_helft,
         dubbel_tweede_helft: !!s.dubbel_tweede_helft,
         positie: i
@@ -501,6 +503,7 @@ function inschrijvingNaarSlot(i: Inschrijving, idx: number): DoelSlot {
     type_boog: i.type_boog,
     afstand: i.afstand,
     leeftijdscategorie: i.leeftijdscategorie,
+    geslacht: i.geslacht,
     dubbel_eerste_helft: !!i.dubbel_eerste_helft,
     dubbel_tweede_helft: !!i.dubbel_tweede_helft,
     positie: idx

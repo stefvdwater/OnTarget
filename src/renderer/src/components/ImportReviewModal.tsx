@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Gilde, Schutter } from '../types'
 import { afstandToegestaan, categorieToegestaan } from './SchutterFormulier'
+import { geslachtLabel } from '../lib/labels'
 
 export interface ImportRij {
   regel: number
@@ -273,7 +274,7 @@ function RowEditor({
             </option>
           ))}
         </select>
-        <div className="segmented" style={{ minWidth: 90 }}>
+        <div className="segmented" style={{ minWidth: 120 }}>
           {(['M', 'V'] as const).map((g) => (
             <button
               key={g}
@@ -281,7 +282,7 @@ function RowEditor({
               className={rij.geslacht === g ? 'on' : ''}
               onClick={() => onPatch({ geslacht: g })}
             >
-              {g}
+              {geslachtLabel(g)}
             </button>
           ))}
         </div>

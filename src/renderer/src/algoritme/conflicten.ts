@@ -14,26 +14,30 @@ export function detecteerConflicten(doel: Doel): Conflict[] {
     })
   }
 
-  // Te veel beurten per helft
   const beurtenEerste = berekenBeurten(s, 'eerste')
   const beurtenTweede = berekenBeurten(s, 'tweede')
-  if (beurtenEerste > 6) {
-    conflicten.push({
-      bericht: `Dit doel heeft ${beurtenEerste} beurten in de eerste helft (maximum is 6).`
-    })
-  }
-  if (beurtenTweede > 6) {
-    conflicten.push({
-      bericht: `Dit doel heeft ${beurtenTweede} beurten in de tweede helft (maximum is 6).`
-    })
+
+  const teveel1 = beurtenEerste > 6
+  const teveel2 = beurtenTweede > 6
+  const teweinig1 = beurtenEerste > 0 && beurtenEerste < 4
+  const teweinig2 = beurtenTweede > 0 && beurtenTweede < 4
+
+  if (teveel1 && teveel2) {
+    const aantal = beurtenEerste === beurtenTweede ? `${beurtenEerste}` : `${beurtenEerste} / ${beurtenTweede}`
+    conflicten.push({ bericht: `Te veel beurten (${aantal}).` })
+  } else if (teveel1) {
+    conflicten.push({ bericht: `Te veel beurten in de eerste helft (${beurtenEerste}).` })
+  } else if (teveel2) {
+    conflicten.push({ bericht: `Te veel beurten in de tweede helft (${beurtenTweede}).` })
   }
 
-  // Aanbevolen aantal
-  const max = Math.max(beurtenEerste, beurtenTweede)
-  if (max > 5) {
-    conflicten.push({
-      bericht: 'Dit doel heeft meer schutters dan aanbevolen (ideaal is 5).'
-    })
+  if (teweinig1 && teweinig2) {
+    const aantal = beurtenEerste === beurtenTweede ? `${beurtenEerste}` : `${beurtenEerste} / ${beurtenTweede}`
+    conflicten.push({ bericht: `Te weinig beurten (${aantal}).` })
+  } else if (teweinig1) {
+    conflicten.push({ bericht: `Te weinig beurten in de eerste helft (${beurtenEerste}).` })
+  } else if (teweinig2) {
+    conflicten.push({ bericht: `Te weinig beurten in de tweede helft (${beurtenTweede}).` })
   }
 
   // Verwachte afstand voor deze zone

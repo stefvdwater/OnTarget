@@ -122,13 +122,13 @@ export default function ConfiguratieTab({ wedstrijd, onUpdate, onVerwijder }: Pr
           <Veld label="Startdoel (compound)">
             <input
               type="number"
-              min={1}
+              min={0}
               max={Math.max(1, aantal25m)}
               className="input"
               value={w.compound_startdoel}
               onChange={(e) =>
                 onUpdate({
-                  compound_startdoel: Math.max(1, parseInt(e.target.value || '1', 10))
+                  compound_startdoel: Math.max(0, parseInt(e.target.value || '0', 10))
                 })
               }
             />

@@ -541,9 +541,16 @@ function sorteerSchuttersOpDoel(slots: DoelSlot[], zone: Doel['zone']): DoelSlot
 
 export function berekenIndeling(
   inschrijvingen: Schutter[],
-  config: WedstrijdConfig
+  config: WedstrijdConfig,
+  vergrendeldeDoelNummers: number[] = []
 ): Indelingsresultaat {
   const doelen = maakLegeDoelen(config)
+  if (vergrendeldeDoelNummers.length > 0) {
+    const set = new Set(vergrendeldeDoelNummers)
+    doelen.forEach((d) => {
+      if (set.has(d.nummer)) d.vergrendeld = true
+    })
+  }
   const nietIngedeeld: Schutter[] = []
 
   // Sorteer op aanmeldvolgorde (R9)

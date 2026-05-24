@@ -107,7 +107,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
     )
 
     const config = cfgVanW(wedstrijd)
-    const resultaat = berekenIndeling(vrijeInschrijvingen as any, config)
+    const resultaat = berekenIndeling(vrijeInschrijvingen as any, config, vergrendeldeDoelen)
 
     const alleDoelen = resultaat.doelen.map((d) => {
       if (vergrendeldeSet.has(d.nummer)) {

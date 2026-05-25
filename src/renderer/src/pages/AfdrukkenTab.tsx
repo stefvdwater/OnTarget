@@ -23,7 +23,6 @@ const A4_LANG = 297
 
 export default function AfdrukkenTab({ wedstrijd }: Props): JSX.Element {
   const [doelen, setDoelen] = useState<DoelMetConflicten[]>([])
-  const [appVersie, setAppVersie] = useState<string | null>(null)
 
   // Opties
   const [orientatie, setOrientatie] = useState<Orientatie>('portret')
@@ -48,13 +47,6 @@ export default function AfdrukkenTab({ wedstrijd }: Props): JSX.Element {
   useEffect(() => {
     laadIndeling()
   }, [wedstrijd.id])
-
-  useEffect(() => {
-    window.api.app
-      .getVersion()
-      .then((v) => setAppVersie(v))
-      .catch(() => setAppVersie(null))
-  }, [])
 
   async function laadIndeling(): Promise<void> {
     const rijen = await window.api.indeling.getByWedstrijd(wedstrijd.id)
@@ -153,8 +145,7 @@ export default function AfdrukkenTab({ wedstrijd }: Props): JSX.Element {
   // ── Dynamische @page styling ──────────────────────────
   // Default A4 + de gekozen oriëntatie. De gebruiker kan in de native
   // print-dialoog (bv. Microsoft Print to PDF) altijd een ander formaat
-  // kiezen — dit blok zet enkel de standaardwaarde. Paged margin boxes
-  // gebruiken we niet (zie .print-footer fallback in @media print).
+  // kiezen — dit blok zet enkel de standaardwaarde.
   useEffect(() => {
     const id = 'ontarget-dynamic-page'
     let stijl = document.getElementById(id) as HTMLStyleElement | null
@@ -341,7 +332,6 @@ export default function AfdrukkenTab({ wedstrijd }: Props): JSX.Element {
               wedstrijd={wedstrijd}
               doelen={doelen}
               opties={opties}
-              appVersie={appVersie}
             />
           </div>
         </div>

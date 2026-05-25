@@ -1754,22 +1754,6 @@ input:focus-visible,
   margin-bottom: 2px;
 }
 
-/* Footer toont datum (links) en versie (rechts). In de preview onderaan het
-   pagina-blok, bij print via position: fixed onderaan elke pagina (zie
-   @media print). Paginanummers worden niet getoond — Chromium's
-   "Microsoft Print to PDF" rendert @page counter() margin boxes niet
-   betrouwbaar. */
-.print-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 16px;
-  padding-top: 8px;
-  border-top: 1px solid #ccc;
-  font-size: 9pt;
-  color: #555;
-}
-
 /* ─── @media print ───────────────────────────────────── */
 
 @media print {
@@ -1807,27 +1791,5 @@ input:focus-visible,
   .print-totalen,
   .print-waarschuwingen {
     page-break-inside: auto;
-  }
-  /* Footer als fixed element zodat Chromium hem onderaan elke pagina
-     herhaalt bij "Microsoft Print to PDF". Bottom-marge geeft ruimte t.o.v.
-     het @page-margin. */
-  .print-footer {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin: 0;
-    padding: 4mm 0 0;
-    border-top: 1px solid #888;
-    background: white;
-    font-size: 9pt;
-    color: #555;
-    display: flex;
-    justify-content: space-between;
-  }
-  /* Ruimte aan de onderkant van de inhoud zodat tekst niet onder de fixed
-     footer schuift. */
-  .print-root {
-    padding-bottom: 18mm;
   }
 }

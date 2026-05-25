@@ -42,6 +42,10 @@ doelen en aanmeldvolgorde.
   indeling leegmaken.
 - **Conflictdetectie**: gele waarschuwing per doel én een hover-samenvatting
   bovenaan met alle aandachtspunten over alle doelen.
+- **Afdrukken**: per wedstrijd een live preview van de doelindelingslijst
+  met filters (doel-interval, gilde, afstand), groepering per doel of per
+  gilde, en native print-dialoog (incl. Microsoft Print to PDF) — zie
+  [docs/AFDRUKKEN.md](docs/AFDRUKKEN.md).
 - **Dark mode**: volgt systeemvoorkeur bij eerste start, met handmatige
   toggle (zon/maan-icoon rechts in de topbar) en localStorage-persistentie.
 
@@ -116,6 +120,7 @@ Alle inhoudelijke specificaties staan in [`docs/`](docs/):
 | [RULES_HIERARCHY.md](docs/RULES_HIERARCHY.md) | Regels per prioriteitsniveau (R1–R18) |
 | [ALGORITHM_SPEC.md](docs/ALGORITHM_SPEC.md) | Gewenst gedrag van de indeling (input/output, randgevallen) |
 | [ALGORITME_v2.0.md](docs/ALGORITME_v2.0.md) | Werking van het huidige algoritme (paren + tweesporen-toewijzing) |
+| [AFDRUKKEN.md](docs/AFDRUKKEN.md) | Print-systeem: opties, document-structuur, `@media print`-architectuur |
 
 ## Schutter-validatieregels
 

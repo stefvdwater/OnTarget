@@ -1,11 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
 contextBridge.exposeInMainWorld('api', {
-  // App
-  app: {
-    getVersion: () => ipcRenderer.invoke('app:getVersion')
-  },
-
   // Gilden
   gilden: {
     getAll: () => ipcRenderer.invoke('gilden:getAll'),

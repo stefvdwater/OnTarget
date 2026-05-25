@@ -19,7 +19,6 @@ interface Props {
   wedstrijd: Wedstrijd
   doelen: DoelMetConflicten[]
   opties: PrintOpties
-  appVersie: string | null
 }
 
 const MAANDEN = [
@@ -32,21 +31,11 @@ function formatDatum(datum: string): string {
   return `${parseInt(d, 10)} ${MAANDEN[parseInt(m, 10) - 1]} ${y}`
 }
 
-function formatDatumKort(d: Date): string {
-  const dag = String(d.getDate()).padStart(2, '0')
-  const maand = String(d.getMonth() + 1).padStart(2, '0')
-  return `${dag}/${maand}/${d.getFullYear()}`
-}
-
 export default function PrintDocument({
   wedstrijd,
   doelen,
-  opties,
-  appVersie
+  opties
 }: Props): JSX.Element {
-  const versieTxt = appVersie ? `OnTarget v${appVersie}` : 'OnTarget'
-  const vandaag = formatDatumKort(new Date())
-
   // Verzamel alle (gefilterde) ingedeelde schutters voor totalen
   const alleGefilterdeSchutters: DoelSlot[] = []
   for (const d of doelen) {
@@ -113,15 +102,6 @@ export default function PrintDocument({
           </ul>
         </section>
       )}
-
-      {/* Footer: in print toont CSS deze via position: fixed onderaan elke pagina.
-          In de preview zit dezelfde footer onderaan het pagina-blok. Paginanummers
-          worden niet geprint omdat Chromium's "Microsoft Print to PDF" geen
-          @page counter(page) ondersteunt — datum + versie volstaan. */}
-      <footer className="print-footer">
-        <span>{vandaag}</span>
-        <span>{versieTxt}</span>
-      </footer>
     </>
   )
 }

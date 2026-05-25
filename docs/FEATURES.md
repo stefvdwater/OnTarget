@@ -71,11 +71,16 @@
 - De linker balk toont duidelijk hoeveel schutters nog niet zijn ingedeeld.
 - Conflicten blokkeren nooit de indeling — de organisatie beslist altijd zelf.
 
-## 4. Weergave & Export
+## 4. Weergave & Afdrukken
 
 - Overzichtelijke weergave van de doelindeling per doel (wie schiet op doel 1, 2, 3, ...).
-- Exporteren naar PDF voor afdrukken en ophangen.
-- Optioneel: exporteren naar Excel/CSV.
+- **Afdrukken**-tab per wedstrijd: live preview van een doelindelingslijst
+  (Excel-achtige tabel) met live-bijgewerkte opties voor oriëntatie,
+  groepering (per doel of per gilde), filters op doel-interval / gilde /
+  afstand, totalen en conflict-waarschuwingen. De native print-dialoog van
+  Windows opent met "Microsoft Print to PDF" als optie om een PDF op te
+  slaan. Zie [AFDRUKKEN.md](AFDRUKKEN.md) voor de volledige beschrijving.
+- Optioneel: exporteren naar Excel/CSV — nog niet geïmplementeerd.
 
 ## 5. Wedstrijdinstellingen
 

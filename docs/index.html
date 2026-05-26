@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OnTarget — komt binnenkort</title>
+    <meta
+      name="description"
+      content="OnTarget — automatische doel-indeling voor wedstrijden van Vlaamse schuttersgilden. Binnenkort beschikbaar."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <svg
+          class="brand-mark"
+          width="28"
+          height="28"
+          viewBox="0 0 32 32"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle cx="16" cy="16" r="15" fill="#1c1917" />
+          <circle cx="16" cy="16" r="11.5" fill="#1d70b8" />
+          <circle cx="16" cy="16" r="8" fill="#e63946" />
+          <circle cx="16" cy="16" r="4.5" fill="#f5c518" />
+          <circle cx="16" cy="16" r="1.2" fill="#fff" />
+        </svg>
+        <span>OnTarget</span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-right">stefvdwater.be</div>
+    </header>
+
+    <main class="content">
+      <section class="hero">
+        <svg
+          class="hero-mark"
+          width="120"
+          height="120"
+          viewBox="0 0 32 32"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle cx="16" cy="16" r="15" fill="#1c1917" />
+          <circle cx="16" cy="16" r="11.5" fill="#1d70b8" />
+          <circle cx="16" cy="16" r="8" fill="#e63946" />
+          <circle cx="16" cy="16" r="4.5" fill="#f5c518" />
+          <circle cx="16" cy="16" r="1.2" fill="#fff" />
+        </svg>
+        <h1>OnTarget</h1>
+        <p class="tagline">
+          Automatische doel-indeling voor wedstrijden van schuttersgilden.
+        </p>
+        <div class="chip">Komt binnenkort</div>
+        <p class="muted">
+          Deze pagina is een tijdelijke placeholder. De volledige site met
+          downloads en gebruiksinstructies volgt later.
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>© <span id="year"></span> Stef Van de Water</span>
+    </footer>
+
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear()
+    </script>
+  </body>
+</html>

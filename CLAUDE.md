@@ -29,13 +29,13 @@ Drie processen volgens het standaard electron-vite layout:
 
 ### Het indelingsalgoritme (`src/renderer/src/algoritme/`)
 
-Paren-gebaseerd algoritme met LPT bin-packing over twee sporen — zie [docs/ALGORITME_v2.0.md](docs/ALGORITME_v2.0.md). **Stabiel — alleen aanraken als nodig**, en eerst lezen:
+Paren-gebaseerd algoritme met LPT bin-packing over twee sporen — zie [internal-docs/ALGORITME_v2.0.md](internal-docs/ALGORITME_v2.0.md). **Stabiel — alleen aanraken als nodig**, en eerst lezen:
 
-1. [docs/ALGORITHM_SPEC.md](docs/ALGORITHM_SPEC.md) — gewenst gedrag, input/output, randgevallen.
-2. [docs/RULES_HIERARCHY.md](docs/RULES_HIERARCHY.md) — regels per prioriteit (harde → zachte).
-3. [docs/ALGORITME_v2.0.md](docs/ALGORITME_v2.0.md) — huidige implementatie.
+1. [internal-docs/ALGORITHM_SPEC.md](internal-docs/ALGORITHM_SPEC.md) — gewenst gedrag, input/output, randgevallen.
+2. [internal-docs/RULES_HIERARCHY.md](internal-docs/RULES_HIERARCHY.md) — regels per prioriteit (harde → zachte).
+3. [internal-docs/ALGORITME_v2.0.md](internal-docs/ALGORITME_v2.0.md) — huidige implementatie.
 
-[docs/RULES.md](docs/RULES.md) bevat alle regels in gewone taal; [docs/FEATURES.md](docs/FEATURES.md) is het functioneel overzicht.
+[internal-docs/RULES.md](internal-docs/RULES.md) bevat alle regels in gewone taal; [internal-docs/FEATURES.md](internal-docs/FEATURES.md) is het functioneel overzicht.
 
 ### Gedeelde logica — hergebruiken, niet dupliceren
 

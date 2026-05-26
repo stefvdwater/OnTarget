@@ -38,7 +38,7 @@ doelen en aanmeldvolgorde.
 - **Automatische doelindeling**: één-klik indeling die rekening houdt met
   alle regels (zone, gilde-diversiteit, dubbelschutters, registratievolgorde).
   Gebruikt het paren-gebaseerde algoritme met tweesporen-toewijzing —
-  zie [docs/ALGORITME_v2.0.md](docs/ALGORITME_v2.0.md).
+  zie [internal-docs/ALGORITME_v2.0.md](internal-docs/ALGORITME_v2.0.md).
 - **Handmatige aanpassing**: schutters slepen tussen doelen of terug naar
   de aanmeldlijst, doelen individueel of allemaal tegelijk vergrendelen,
   indeling leegmaken.
@@ -47,7 +47,7 @@ doelen en aanmeldvolgorde.
 - **Afdrukken**: per wedstrijd een live preview van de doelindelingslijst
   met filters (doel-interval, gilde, afstand), groepering per doel of per
   gilde, en native print-dialoog (incl. Microsoft Print to PDF) — zie
-  [docs/AFDRUKKEN.md](docs/AFDRUKKEN.md).
+  [internal-docs/AFDRUKKEN.md](internal-docs/AFDRUKKEN.md).
 - **Dark mode**: volgt systeemvoorkeur bij eerste start, met handmatige
   toggle (zon/maan-icoon rechts in de topbar) en localStorage-persistentie.
 
@@ -117,12 +117,12 @@ Alle inhoudelijke specificaties staan in [`docs/`](docs/):
 
 | Document | Inhoud |
 |---|---|
-| [FEATURES.md](docs/FEATURES.md) | Functioneel overzicht van het programma |
-| [RULES.md](docs/RULES.md) | Indelingsregels in gewone taal |
-| [RULES_HIERARCHY.md](docs/RULES_HIERARCHY.md) | Regels per prioriteitsniveau (R1–R18) |
-| [ALGORITHM_SPEC.md](docs/ALGORITHM_SPEC.md) | Gewenst gedrag van de indeling (input/output, randgevallen) |
-| [ALGORITME_v2.0.md](docs/ALGORITME_v2.0.md) | Werking van het huidige algoritme (paren + tweesporen-toewijzing) |
-| [AFDRUKKEN.md](docs/AFDRUKKEN.md) | Print-systeem: opties, document-structuur, `@media print`-architectuur |
+| [FEATURES.md](internal-docs/FEATURES.md) | Functioneel overzicht van het programma |
+| [RULES.md](internal-docs/RULES.md) | Indelingsregels in gewone taal |
+| [RULES_HIERARCHY.md](internal-docs/RULES_HIERARCHY.md) | Regels per prioriteitsniveau (R1–R18) |
+| [ALGORITHM_SPEC.md](internal-docs/ALGORITHM_SPEC.md) | Gewenst gedrag van de indeling (input/output, randgevallen) |
+| [ALGORITME_v2.0.md](internal-docs/ALGORITME_v2.0.md) | Werking van het huidige algoritme (paren + tweesporen-toewijzing) |
+| [AFDRUKKEN.md](internal-docs/AFDRUKKEN.md) | Print-systeem: opties, document-structuur, `@media print`-architectuur |
 
 ## Schutter-validatieregels
 
@@ -207,10 +207,10 @@ schutterkaart: blauw=Recurve, rood=Compound, geel=Barebow.
 ## Voor AI-agents
 
 Bij wijzigingen aan het **indelingsalgoritme**:
-1. Lees eerst [docs/ALGORITHM_SPEC.md](docs/ALGORITHM_SPEC.md) (gewenst gedrag)
-   en [docs/RULES_HIERARCHY.md](docs/RULES_HIERARCHY.md) (prioriteit).
+1. Lees eerst [internal-docs/ALGORITHM_SPEC.md](internal-docs/ALGORITHM_SPEC.md) (gewenst gedrag)
+   en [internal-docs/RULES_HIERARCHY.md](internal-docs/RULES_HIERARCHY.md) (prioriteit).
 2. Voor de huidige implementatie zie
-   [docs/ALGORITME_v2.0.md](docs/ALGORITME_v2.0.md) en
+   [internal-docs/ALGORITME_v2.0.md](internal-docs/ALGORITME_v2.0.md) en
    [`src/renderer/src/algoritme/indeling.ts`](src/renderer/src/algoritme/indeling.ts).
 
 Bij wijzigingen aan de **UI**:

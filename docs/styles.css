@@ -1,0 +1,168 @@
+/* OnTarget — landing placeholder
+   Light-mode warm-gray + archery target accents, gespiegeld op de app. */
+
+:root {
+  --bg: #f6f5f3;
+  --panel: #ffffff;
+  --panel-2: #faf9f7;
+  --border: #e6e3de;
+  --border-2: #d6d2cb;
+  --text: #1c1917;
+  --text-2: #44403c;
+  --muted: #87827a;
+  --muted-2: #a8a39a;
+
+  --yellow: #f5c518;
+  --yellow-soft: #fef4c8;
+  --yellow-soft-border: #ecdfa2;
+  --red: #e63946;
+  --blue: #1d70b8;
+
+  --radius: 8px;
+  --radius-sm: 5px;
+  --radius-lg: 12px;
+
+  --sans: 'IBM Plex Sans', system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--blue);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+/* ─── Topbar ─────────────────────────────────────────── */
+
+.topbar {
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+
+.brand-mark { display: block; }
+
+.topbar-spacer { flex: 1; }
+
+.topbar-right {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ─── Hero ───────────────────────────────────────────── */
+
+.content {
+  flex: 1;
+  padding: 64px 32px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero {
+  text-align: center;
+  padding: 48px 32px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+}
+
+.hero-mark {
+  margin-bottom: 24px;
+  filter: drop-shadow(0 2px 6px rgba(28, 25, 23, 0.08));
+}
+
+.hero h1 {
+  margin: 0 0 12px;
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  margin: 0 0 24px;
+  color: var(--text-2);
+  font-size: 16px;
+}
+
+.chip {
+  display: inline-block;
+  padding: 6px 14px;
+  background: var(--yellow-soft);
+  color: #735604;
+  border: 1px solid var(--yellow-soft-border);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+/* ─── Footer ─────────────────────────────────────────── */
+
+.footer {
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+  padding: 16px 32px;
+  color: var(--muted);
+  font-size: 13px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  align-items: center;
+}
+
+.footer .dot { color: var(--border-2); }
+
+/* ─── Mobile ─────────────────────────────────────────── */
+
+@media (max-width: 560px) {
+  .topbar { padding: 0 20px; height: 56px; }
+  .content { padding: 32px 16px; }
+  .hero { padding: 32px 20px; }
+  .hero h1 { font-size: 32px; }
+  .hero-mark { width: 88px; height: 88px; }
+  .topbar-right { display: none; }
+}

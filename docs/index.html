@@ -15,6 +15,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js" defer></script>
   </head>
   <body>
     <header class="topbar">
@@ -65,6 +66,46 @@
           downloads en gebruiksinstructies volgt later.
         </p>
       </section>
+
+      <aside
+        class="release-box"
+        id="release-box"
+        aria-live="polite"
+        aria-label="Laatste release"
+      >
+        <div class="release-skeleton" id="release-skeleton" aria-hidden="true">
+          <div class="skel skel-label"></div>
+          <div class="skel skel-title"></div>
+          <div class="skel skel-meta"></div>
+          <div class="skel-divider"></div>
+          <div class="skel skel-line"></div>
+          <div class="skel skel-line skel-line--short"></div>
+          <div class="skel skel-line"></div>
+          <div class="skel skel-line skel-line--mid"></div>
+          <div class="skel skel-line skel-line--short"></div>
+          <div class="skel-divider"></div>
+          <div class="skel skel-btn"></div>
+          <div class="skel skel-btn skel-btn--sm"></div>
+        </div>
+
+        <div class="release-content" id="release-content" hidden>
+          <p class="release-label">Laatste release</p>
+          <div class="release-header">
+            <span class="release-version-chip" id="release-tag"></span>
+            <span class="pre-release-badge" id="pre-release-badge" hidden>Pre-release</span>
+            <span class="release-date" id="release-date"></span>
+          </div>
+          <div class="release-notes prose" id="release-notes"></div>
+          <div class="release-downloads" id="release-downloads"></div>
+          <a
+            class="release-gh-link"
+            id="release-gh-link"
+            href="https://github.com/stefvdwater/OnTarget/releases"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Alle releases op GitHub →</a>
+        </div>
+      </aside>
     </main>
 
     <footer class="footer">
@@ -73,6 +114,67 @@
 
     <script>
       document.getElementById('year').textContent = new Date().getFullYear()
+
+      async function laadRelease() {
+        try {
+          const res = await fetch(
+            'https://api.github.com/repos/stefvdwater/OnTarget/releases?per_page=1',
+            { headers: { Accept: 'application/vnd.github+json' } }
+          )
+          if (!res.ok) { verbergReleaseBox(); return }
+          const lijst = await res.json()
+          if (!lijst.length) { verbergReleaseBox(); return }
+          const rel = lijst[0]
+
+          document.getElementById('release-tag').textContent = rel.tag_name
+
+          if (rel.prerelease) {
+            document.getElementById('pre-release-badge').hidden = false
+          }
+
+          const datum = new Date(rel.published_at)
+          document.getElementById('release-date').textContent =
+            datum.toLocaleDateString('nl-BE', {
+              day: 'numeric', month: 'long', year: 'numeric'
+            })
+
+          const notesEl = document.getElementById('release-notes')
+          if (rel.body && rel.body.trim()) {
+            notesEl.innerHTML = marked.parse(rel.body)
+          } else {
+            notesEl.hidden = true
+          }
+
+          const downloadsEl = document.getElementById('release-downloads')
+          const assets = rel.assets || []
+          const exe = assets.find(a => a.name.endsWith('.exe'))
+          const zip = assets.find(a => a.name.endsWith('.zip'))
+
+          if (exe) downloadsEl.appendChild(maakDownloadLink(exe.browser_download_url, 'Installer downloaden (.exe)', true))
+          if (zip) downloadsEl.appendChild(maakDownloadLink(zip.browser_download_url, 'Draagbare versie (.zip)', false))
+
+          document.getElementById('release-gh-link').href = rel.html_url
+
+          document.getElementById('release-skeleton').hidden = true
+          document.getElementById('release-content').hidden = false
+        } catch (e) {
+          verbergReleaseBox()
+        }
+      }
+
+      function maakDownloadLink(url, label, primary) {
+        const a = document.createElement('a')
+        a.href = url
+        a.className = 'download-btn' + (primary ? ' download-btn--primary' : ' download-btn--secondary')
+        a.textContent = label
+        return a
+      }
+
+      function verbergReleaseBox() {
+        document.getElementById('release-box').hidden = true
+      }
+
+      window.addEventListener('load', laadRelease)
     </script>
   </body>
 </html>

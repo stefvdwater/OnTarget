@@ -27,6 +27,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
   const [nietIngedeeld, setNietIngedeeld] = useState<DoelSlot[]>([])
   const [actiefSlot, setActiefSlot] = useState<DoelSlot | null>(null)
   const [bevestigAuto, setBevestigAuto] = useState(false)
+  const [bevestigLeegmaken, setBevestigLeegmaken] = useState(false)
   const [totaalInschrijvingen, setTotaalInschrijvingen] = useState(0)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
@@ -292,17 +293,24 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
     await window.api.indeling.toggleDoelVergrendeld(wedstrijd.id, doelNr, vergrendeld)
   }
 
-  function leegmaken(): void {
-    if (!confirm('Alle niet-vergrendelde doelen leegmaken?')) return
-    const teVerplaatsen: DoelSlot[] = []
-    const nieuweDoelen = doelen.map((d) => {
-      if (d.vergrendeld) return d
-      teVerplaatsen.push(...d.schutters)
-      return { ...d, schutters: [] }
-    })
-    setNietIngedeeld((prev) =>
-      [...prev, ...teVerplaatsen].sort((a, b) => a.schutter_id - b.schutter_id)
+  async function voerLeegmakenUit(): Promise<void> {
+    setBevestigLeegmaken(false)
+    const nieuweDoelen = doelen.map((d) => (d.vergrendeld ? d : { ...d, schutters: [] }))
+
+    // Schutters die op een vergrendeld doel staan moeten ingedeeld blijven.
+    const vergrendeldeSchutterIds = new Set(
+      nieuweDoelen.filter((d) => d.vergrendeld).flatMap((d) => d.schutters.map((s) => s.schutter_id))
     )
+
+    // Herstel oorspronkelijke aanmeldvolgorde door inschrijvingen opnieuw op te halen.
+    const inschrijvingen: Inschrijving[] = await window.api.inschrijvingen.getByWedstrijd(
+      wedstrijd.id
+    )
+    const nogIn = inschrijvingen
+      .filter((i) => !vergrendeldeSchutterIds.has(i.schutter_id))
+      .map((i, idx) => inschrijvingNaarSlot(i, idx))
+
+    setNietIngedeeld(nogIn)
     const metConflicten = voegConflictenToe(nieuweDoelen as Doel[])
     setDoelen(metConflicten)
     slaOp(metConflicten)
@@ -371,7 +379,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
           </span>
         )}
         <div style={{ flex: 1 }} />
-        <button className="btn btn-ghost btn-sm" onClick={leegmaken}>
+        <button className="btn btn-ghost btn-sm" onClick={() => setBevestigLeegmaken(true)}>
           <IconX /> Leegmaken
         </button>
         <button
@@ -463,6 +471,25 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
               </button>
               <button className="btn btn-accent-yellow" onClick={runAuto}>
                 <IconMagic /> Herbereken
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {bevestigLeegmaken && (
+        <div className="modal-backdrop" onClick={() => setBevestigLeegmaken(false)}>
+          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
+            <header className="modal-head">Indeling leegmaken?</header>
+            <div className="modal-text">
+              Alle niet-vergrendelde doelen worden leeggemaakt. Vergrendelde doelen blijven bewaard.
+            </div>
+            <div className="modal-actions">
+              <button className="btn" onClick={() => setBevestigLeegmaken(false)}>
+                Annuleer
+              </button>
+              <button className="btn" onClick={voerLeegmakenUit}>
+                <IconX /> Leegmaken
               </button>
             </div>
           </div>

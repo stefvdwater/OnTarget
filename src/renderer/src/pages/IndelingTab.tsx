@@ -382,11 +382,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
         <button className="btn btn-ghost btn-sm" onClick={() => setBevestigLeegmaken(true)}>
           <IconX /> Leegmaken
         </button>
-        <button
-          className="btn"
-          onClick={toggleAlleVergrendeld}
-          title={allesVergrendeld ? 'Alle doelen ontgrendelen' : 'Alle doelen vergrendelen'}
-        >
+        <button className="btn" onClick={toggleAlleVergrendeld}>
           {allesVergrendeld ? <IconUnlock /> : <IconLock />}
           {allesVergrendeld ? 'Doelen ontgrendelen' : 'Doelen vergrendelen'}
         </button>

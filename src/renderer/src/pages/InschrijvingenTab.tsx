@@ -159,7 +159,7 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
                   <td className="mono">{i.afstand}m</td>
                   <td>
                     <div className="dubbel-cell">
-                      <label className="dubbel-check" title="Dubbel in eerste helft">
+                      <label className="dubbel-check">
                         <input
                           type="checkbox"
                           checked={!!i.dubbel_eerste_helft}
@@ -167,7 +167,7 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
                         />
                         <span>1e</span>
                       </label>
-                      <label className="dubbel-check" title="Dubbel in tweede helft">
+                      <label className="dubbel-check">
                         <input
                           type="checkbox"
                           checked={!!i.dubbel_tweede_helft}
@@ -234,12 +234,7 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
                   {gildeKort(s.gilde_naam)} · {s.type_boog} · {s.afstand}m
                 </div>
               </div>
-              <button
-                className="add"
-                onClick={() => voegToe(s.id)}
-                title="Inschrijven"
-                type="button"
-              >
+              <button className="add" onClick={() => voegToe(s.id)} type="button">
                 <IconPlus />
               </button>
             </div>

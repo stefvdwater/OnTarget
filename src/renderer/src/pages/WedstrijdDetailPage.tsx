@@ -76,7 +76,7 @@ export default function WedstrijdDetailPage({
           <IconArrowLeft /> Wedstrijden
         </button>
         <span>/</span>
-        <button onClick={() => setTab('inschrijvingen')} title="Naar Inschrijvingen">
+        <button onClick={() => setTab('inschrijvingen')}>
           {huidig.naam}
         </button>
         <span>/</span>

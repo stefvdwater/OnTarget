@@ -216,9 +216,7 @@ function RowEditor({
   return (
     <div className={'import-review-row' + (ok ? ' ok' : ' fout')}>
       <div className="import-review-row-head">
-        <span className="status" title={ok ? 'Geldig' : 'Conflict'}>
-          {ok ? <IconCheck /> : <IconWarn />}
-        </span>
+        <span className="status">{ok ? <IconCheck /> : <IconWarn />}</span>
         <span className="regel mono">Rij {rij.regel}</span>
         <input
           className="input"

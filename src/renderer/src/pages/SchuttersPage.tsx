@@ -439,7 +439,6 @@ export default function SchuttersPage(): JSX.Element {
                       className="btn btn-ghost btn-sm"
                       style={{ color: 'var(--red)' }}
                       onClick={() => setVerwijderBevestig(s)}
-                      title="Schutter verwijderen"
                     >
                       Verwijder
                     </button>
@@ -484,11 +483,6 @@ export default function SchuttersPage(): JSX.Element {
             className="btn"
             onClick={() => setLegeGildenBevestig(true)}
             disabled={aantalLegeGilden === 0}
-            title={
-              aantalLegeGilden === 0
-                ? 'Geen lege gilden om op te ruimen'
-                : `${aantalLegeGilden} lege gilde${aantalLegeGilden !== 1 ? 'n' : ''} opruimen`
-            }
           >
             Lege gilden verwijderen
             {aantalLegeGilden > 0 && (

@@ -29,14 +29,6 @@ export default function SchutterKaart({
   const d1 = slot.dubbel_eerste_helft
   const d2 = slot.dubbel_tweede_helft
   const dubbelLabel = d1 && d2 ? 'Dubbel' : d1 ? 'Dubbel 1e' : d2 ? 'Dubbel 2e' : null
-  const dubbelTitle =
-    d1 && d2
-      ? 'Schiet dubbel: beide helften'
-      : d1
-        ? 'Schiet dubbel: eerste helft'
-        : d2
-          ? 'Schiet dubbel: tweede helft'
-          : ''
 
   const className =
     'schutter' +
@@ -52,19 +44,11 @@ export default function SchutterKaart({
       {...attributes}
       className={className}
       data-boog={slot.type_boog}
-      title={`${fullNaam} — ${slot.gilde_naam ?? '—'} — ${slot.type_boog} — ${catLabel} — ${slot.afstand}m${
-        dubbelTitle ? ' — ' + dubbelTitle : ''
-      }`}
     >
       <div className="naam-wrap">
         <span className="naam">{fullNaam}</span>
         {dubbelLabel && (
-          <span
-            className={'dubbel-badge' + (d1 && d2 ? ' full' : '')}
-            title={dubbelTitle}
-          >
-            {dubbelLabel}
-          </span>
+          <span className={'dubbel-badge' + (d1 && d2 ? ' full' : '')}>{dubbelLabel}</span>
         )}
       </div>
       <div className="leeftijd">{catLabel}</div>

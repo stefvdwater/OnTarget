@@ -14,7 +14,6 @@ export default function Header({ pagina, onSwitch, isDark, onToggleDark }: Props
         type="button"
         className="brand brand-button"
         onClick={() => onSwitch('wedstrijden')}
-        title="Naar wedstrijden"
       >
         <TargetMark className="brand-mark" />
         <span>OnTarget</span>
@@ -39,7 +38,6 @@ export default function Header({ pagina, onSwitch, isDark, onToggleDark }: Props
           className="theme-toggle"
           onClick={onToggleDark}
           aria-label="Donkere modus wisselen"
-          title={isDark ? 'Lichte modus' : 'Donkere modus'}
         >
           {isDark ? <IconZon /> : <IconMaan />}
         </button>

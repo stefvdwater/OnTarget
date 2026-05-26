@@ -291,13 +291,6 @@ export default function SchutterFormulier({
                   className={afstand === a ? 'on' : ''}
                   onClick={() => setAfstand(a)}
                   disabled={!toegestaan}
-                  title={
-                    toegestaan
-                      ? undefined
-                      : leeftijdscategorie === 'Jeugd'
-                        ? 'Jeugd-schutters schieten op 12m of 18m'
-                        : `${leeftijdscategorie}-schutters schieten op 25m`
-                  }
                   style={
                     toegestaan
                       ? undefined

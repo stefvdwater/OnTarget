@@ -1,5 +1,7 @@
 # OnTarget
 
+> **Disclaimer:** dit project is gebouwd met behulp van AI (Claude Code).
+
 Een Electron-desktopapp voor het **automatisch indelen van schutters over doelen**
 bij boogschietwedstrijden. Gemaakt voor de organisatie van wedstrijden waar
 schutters van verschillende gilden samen schieten op verschillende afstanden

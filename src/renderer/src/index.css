@@ -1664,6 +1664,10 @@ input:focus-visible,
   justify-content: center;
 }
 
+:root.dark .afdrukken-preview-pagina {
+  background: #14110f;
+}
+
 /* ─── Print document (preview + print) ───────────────── */
 
 .print-root {

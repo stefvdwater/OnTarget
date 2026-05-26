@@ -25,6 +25,9 @@ export default function App(): JSX.Element {
         {pagina === 'wedstrijden' && <WedstrijdenPage key={homeVersie} />}
         {pagina === 'schutters' && <SchuttersPage />}
       </div>
+      <div className="app-version" aria-hidden="true">
+        v{__APP_VERSION__}
+      </div>
     </div>
   )
 }

@@ -66,6 +66,8 @@ Regels zijn gegroepeerd per prioriteitsniveau. Hogere niveaus overrulen lagere n
 
 **R18.** De volgorde van schutters **binnen** een doel maakt niet uit, behalve waar expliciete volgordeRegels gelden (R4b, R5).
 
+**R19.** Het geconfigureerde **aantal compound-doelen** is een bovengrens. De compound-zone wordt eerst verwerkt; compound-doelen die geen schutters kregen en niet vergrendeld zijn, worden herbestemd tot 25m-doelen. Zij behouden hun doelnummer (fysieke positie) en doen mee in de 25m-indeling. Op een herbestemd doel geldt de compound-conflictwaarschuwing niet.
+
 ---
 
 ## Configureerbare parameters (per wedstrijd)

@@ -44,6 +44,7 @@ Het aantal doelen per afstand en het totaal aantal doelen zijn configureerbaar p
 - Uitzondering: bij **minder dan 3 compound schutters** worden zij bij andere schutters geplaatst.
   - In dat geval **moeten zij als eersten schieten** op dat doel.
 - Vanaf **3 compound schutters** krijgen zij altijd een eigen doel.
+- Het ingestelde **aantal compound-doelen** is een bovengrens. Het algoritme bepaalt op basis van het aantal compound-schutters hoeveel compound-doelen écht nodig zijn (streef 5 per doel, minimum 4). **Ongebruikte compound-doelen worden gebruikt als gewone 25m-doelen** voor de niet-compound schutters; ze behouden hun doelnummer en de waarschuwing "niet-compound op compound" geldt daar niet. Een vergrendeld compound-doel blijft compound, ook als het leeg is.
 
 ## Aanmeldvolgorde
 

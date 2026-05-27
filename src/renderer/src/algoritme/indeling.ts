@@ -573,10 +573,21 @@ export function berekenIndeling(
     compound25Def = []
   }
 
-  verwerkZone(normaal25Def, doelen.filter((d) => d.zone === '25m'), nietIngedeeld)
+  // Compound EERST verwerken (issue #9): zo zijn de niet-benodigde compound-doelen
+  // bekend voordat de 25m-zone wordt ingedeeld, en kunnen ze als 25m worden hergebruikt.
   if (compound25Def.length >= 3) {
     verwerkZone(compound25Def, doelen.filter((d) => d.zone === 'compound'), nietIngedeeld)
   }
+
+  // Ongebruikte compound-doelen worden herbestemd tot 25m-doelen (issue #9).
+  // Een vergrendeld compound-doel blijft compound, ook al is het leeg.
+  doelen.forEach((d) => {
+    if (d.zone === 'compound' && d.schutters.length === 0 && !d.vergrendeld) {
+      d.zone = '25m'
+    }
+  })
+
+  verwerkZone(normaal25Def, doelen.filter((d) => d.zone === '25m'), nietIngedeeld)
   verwerkZone(schutters18, doelen.filter((d) => d.zone === '18m'), nietIngedeeld)
   verwerkZone(schutters12, doelen.filter((d) => d.zone === '12m'), nietIngedeeld)
 

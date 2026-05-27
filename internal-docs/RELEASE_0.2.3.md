@@ -1,4 +1,6 @@
-# Release 0.2.3-alpha.1 (vs 0.2.3-alpha.0)
+# Release 0.2.3 (vs 0.2.3-alpha.0)
+
+> **Let op:** deze stabiele release is inhoudelijk identiek aan **`0.2.3-alpha.1`**. Geen verdere wijzigingen tussen de alpha en de promotie naar `0.2.3` — enkel de version-tag is opgeschoond.
 
 Doel van dit document: een agent die voor het eerst aan deze codebase werkt na deze release snel laten begrijpen wat er is gewijzigd en welk gedrag vanaf nu geldt.
 

@@ -277,6 +277,11 @@ a:hover { text-decoration: underline; }
   flex-direction: column;
   flex: 1;
   min-height: 0;
+}
+
+.release-notes {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border-2) transparent;
@@ -444,7 +449,12 @@ a:hover { text-decoration: underline; }
 /* ─── Mobile ─────────────────────────────────────────── */
 
 @media (max-width: 760px) {
+  body {
+    height: auto;
+    min-height: 100vh;
+  }
   .content {
+    flex: 0 0 auto;
     flex-direction: column;
     align-items: stretch;
     padding: 24px 16px;
@@ -456,7 +466,14 @@ a:hover { text-decoration: underline; }
   .release-box,
   .instructions-box {
     align-self: stretch;
-    max-height: 70vh;
+    flex: 0 0 auto;
+    max-height: none;
+    overflow: visible;
+  }
+  .release-content { min-height: 0; }
+  .release-notes {
+    max-height: none;
+    overflow: visible;
   }
 }
 

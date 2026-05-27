@@ -21,6 +21,7 @@ interface ImportResultaat {
 interface ImportSessie {
   rijen: ImportRij[]
   bekendeGilden: Gilde[]
+  bestaandeSchutters: Schutter[]
 }
 
 export default function SchuttersPage(): JSX.Element {
@@ -204,10 +205,17 @@ export default function SchuttersPage(): JSX.Element {
     // Voor autocomplete alleen gilden tonen die al schutters hebben — verlaten
     // gilden zijn ruis voor de gebruiker. Bij commit gebruiken we wél de
     // volledige lijst voor dedup (zie commitImportRijen).
-    const gildenSuggestie: Gilde[] = await window.api.gilden.getMetSchutters()
+    const [gildenSuggestie, alleSchutters] = await Promise.all([
+      window.api.gilden.getMetSchutters(),
+      window.api.schutters.getAll()
+    ])
     // Altijd review-modal tonen zodat de gebruiker zelfs zonder conflicten kan
     // controleren wat geïmporteerd wordt.
-    setImportSessie({ rijen: parseResult.rijen, bekendeGilden: gildenSuggestie })
+    setImportSessie({
+      rijen: parseResult.rijen,
+      bekendeGilden: gildenSuggestie,
+      bestaandeSchutters: alleSchutters
+    })
   }
 
   async function bevestigImportReview(gecorrigeerd: ImportRij[]): Promise<void> {
@@ -232,6 +240,10 @@ export default function SchuttersPage(): JSX.Element {
     const fouten: string[] = []
 
     for (const rij of rijen) {
+      // Uitgevinkte rijen importeren we niet (issue #5) en duplicaten met
+      // 'behoud'/'skip' (issue #4) hebben actief=false.
+      if (!rij.actief) continue
+
       const v = valideerImportRij(rij)
       if (!v.ok) {
         fouten.push(`Rij ${rij.regel}: ${v.redenen.join(' · ')}`)
@@ -252,16 +264,22 @@ export default function SchuttersPage(): JSX.Element {
         }
       }
 
+      const payload = {
+        voornaam: rij.voornaam.trim(),
+        naam: rij.naam.trim(),
+        gilde_id: gildeId,
+        type_boog: rij.type_boog,
+        leeftijdscategorie: rij.leeftijdscategorie,
+        geslacht: rij.geslacht,
+        afstand: rij.afstand
+      }
+
       try {
-        await window.api.schutters.create({
-          voornaam: rij.voornaam.trim(),
-          naam: rij.naam.trim(),
-          gilde_id: gildeId,
-          type_boog: rij.type_boog,
-          leeftijdscategorie: rij.leeftijdscategorie,
-          geslacht: rij.geslacht,
-          afstand: rij.afstand
-        })
+        if (rij.duplicaat?.bron === 'db' && rij.duplicaat.actie === 'vervang') {
+          await window.api.schutters.update({ id: rij.duplicaat.bestaande.id, ...payload })
+        } else {
+          await window.api.schutters.create(payload)
+        }
         toegevoegd++
       } catch (err) {
         fouten.push(`Rij ${rij.regel}: ${(err as Error).message}`)
@@ -512,6 +530,7 @@ export default function SchuttersPage(): JSX.Element {
         <ImportReviewModal
           rijen={importSessie.rijen}
           bekendeGilden={importSessie.bekendeGilden}
+          bestaandeSchutters={importSessie.bestaandeSchutters}
           bezig={importBezig}
           onAnnuleer={() => setImportSessie(null)}
           onBevestig={bevestigImportReview}
@@ -899,7 +918,9 @@ function parseImportTekst(tekst: string): ParseResultaat {
       type_boog: (rij[idx.boog]?.trim() ?? '') as ImportRij['type_boog'],
       leeftijdscategorie: (rij[idx.cat]?.trim() ?? '') as ImportRij['leeftijdscategorie'],
       geslacht: (rij[idx.geslacht]?.trim().toUpperCase() ?? '') as ImportRij['geslacht'],
-      afstand: Number(rij[idx.afstand]?.trim() ?? '0') as ImportRij['afstand']
+      afstand: Number(rij[idx.afstand]?.trim() ?? '0') as ImportRij['afstand'],
+      // Default aan; modal markeert duplicaten zelf en zet die uit.
+      actief: true
     })
   }
   return { ok: true, rijen: result }

@@ -1176,7 +1176,7 @@ input:focus-visible,
 }
 .import-review-row.fout {
   border-color: var(--yellow-deep);
-  background: linear-gradient(180deg, var(--yellow-soft) 0%, var(--panel) 28%);
+  background: var(--yellow-soft);
 }
 .import-review-row-head {
   display: flex;
@@ -1197,6 +1197,14 @@ input:focus-visible,
   color: #2e7d32;
 }
 .import-review-row.fout .status {
+  background: var(--yellow);
+  color: #2a200a;
+}
+.import-review-row.duplicaat .status {
+  background: var(--blue-soft-border);
+  color: var(--blue-deep);
+}
+.import-review-row.duplicaat.fout .status {
   background: var(--yellow);
   color: #2a200a;
 }
@@ -1233,10 +1241,8 @@ input:focus-visible,
 }
 .import-review-row-warn {
   margin-left: 30px;
-  padding: 6px 10px;
-  background: var(--yellow);
-  color: #2a200a;
-  border-radius: 4px;
+  padding: 2px 0;
+  color: var(--yellow-deep);
   font-size: 12px;
   display: flex;
   gap: 6px;
@@ -1245,6 +1251,107 @@ input:focus-visible,
 .import-review-row-warn svg {
   flex-shrink: 0;
   margin-top: 1px;
+}
+
+/* Toolbar boven de rijenlijst (bulk-toggle) */
+.import-review-toolbar {
+  padding: 4px 22px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+}
+.import-review-toolbar .bulk-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--text-2);
+}
+.import-review-row-head .row-toggle {
+  width: 16px;
+  height: 16px;
+  margin: 0 2px 0 0;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* Uitgevinkte rij: gedimd zodat het visueel duidelijk is */
+.import-review-row.inactief {
+  opacity: 0.55;
+}
+.import-review-row.inactief .import-review-row-head .input,
+.import-review-row.inactief .import-review-row-body .select,
+.import-review-row.inactief .import-review-row-body .segmented {
+  filter: grayscale(0.4);
+}
+
+/* Duplicaat-rij krijgt blauwe accent-rand */
+.import-review-row.duplicaat {
+  border-color: var(--blue-soft-border);
+  background: var(--blue-soft);
+}
+.import-review-row.duplicaat.fout {
+  /* Conflicten winnen visueel van duplicaat-styling */
+  border-color: var(--yellow-deep);
+  background: var(--yellow-soft);
+}
+
+/* Velden die afwijken van de bestaande DB-schutter */
+.import-review-row-head .input.afwijkend,
+.import-review-row-body .select.afwijkend,
+.import-review-row-body .segmented.afwijkend {
+  border-color: var(--blue-deep);
+  box-shadow: 0 0 0 1px var(--blue-deep) inset;
+}
+
+/* Duplicaat-actie-blok onderaan de rij */
+.import-review-row-dup {
+  margin-left: 30px;
+  padding: 8px 10px;
+  background: var(--blue-soft);
+  color: var(--blue-deep);
+  border-radius: 4px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.import-review-row-dup .dup-label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-weight: 500;
+}
+.import-review-row-dup .dup-keuze {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.import-review-row-dup .dup-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--blue-soft-border);
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  user-select: none;
+}
+.import-review-row-dup .dup-radio.on {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue-deep);
+}
+.import-review-row-dup .dup-radio input {
+  /* De radio zelf verbergen — het label is de knop */
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* ─── Filter dropdown ────────────────────────────────── */
@@ -1524,10 +1631,7 @@ input:focus-visible,
 
 .config-card.danger {
   border-color: var(--red-soft-border);
-  background: linear-gradient(180deg, #fef7f8 0%, var(--panel) 60%);
-}
-:root.dark .config-card.danger {
-  background: linear-gradient(180deg, #2a1014 0%, var(--panel) 60%);
+  background: var(--red-soft);
 }
 .config-actions {
   display: flex;

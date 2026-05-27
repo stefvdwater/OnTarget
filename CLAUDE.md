@@ -37,6 +37,10 @@ Paren-gebaseerd algoritme met LPT bin-packing over twee sporen — zie [internal
 
 [internal-docs/RULES.md](internal-docs/RULES.md) bevat alle regels in gewone taal; [internal-docs/FEATURES.md](internal-docs/FEATURES.md) is het functioneel overzicht.
 
+### Release-notities
+
+Per alpha/release-bump ligt er een changelog-bestand in `internal-docs/RELEASE_<versie>.md`. Lees de meest recente vóór je werk begint, vooral voor recent gewijzigde features en nieuwe conventies. Huidige: [internal-docs/RELEASE_0.2.3-alpha.0.md](internal-docs/RELEASE_0.2.3-alpha.0.md).
+
 ### Gedeelde logica — hergebruiken, niet dupliceren
 
 - **Schutter-validatie (categorie × boog × afstand)**: pure validator `valideerImportRij` in [`src/renderer/src/components/ImportReviewModal.tsx`](src/renderer/src/components/ImportReviewModal.tsx). De helpers `afstandToegestaan` / `categorieToegestaan` in [`src/renderer/src/components/SchutterFormulier.tsx`](src/renderer/src/components/SchutterFormulier.tsx) hergebruiken die voor form-disable/filter-logica.
@@ -50,7 +54,9 @@ Schema + migraties in [`src/main/database.ts`](src/main/database.ts). Voor bulk-
 ## UI-conventies
 
 - **Geen Tailwind utility classes toevoegen**, ook al staat Tailwind in `devDependencies`. Alle styling gaat via bestaande klassen (`.btn`, `.card`, `.chip`, `.schutter`, `.doel`, `.aanmeldlijst`, `.split-pane`, `.config-card`, …) en CSS-variables uit `:root` / `:root.dark` in [`src/renderer/src/index.css`](src/renderer/src/index.css).
-- **Dark mode** werkt automatisch via CSS-vars in `:root.dark` — zet variabelen, geen aparte selectors per component.
+- **Dark mode** werkt automatisch via CSS-vars in `:root.dark`: zet variabelen, geen aparte selectors per component.
+- **Geen gradient-fades** op achtergronden. Gebruik vlakke `var(--*-soft)` tints met een gekleurde border. Tokens hebben automatische dark-mode varianten.
+- **Geen em dashes** (—) of en dashes (–) in tekst, UI, comments, commits. Vlaams gebruikt ze niet. Vervang door hyphen, dubbele punt, komma, of herstructureer.
 - Boogtype is herkenbaar aan een 4-pixel gekleurde linkerstrip op de schutterkaart: blauw=Recurve, rood=Compound, geel=Barebow.
 - Doel-accenten: geel `#f5c518` (primair), rood `#e63946` (compound/gevaar), blauw `#1d70b8` (focus/links).
 

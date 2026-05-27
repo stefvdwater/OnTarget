@@ -5,6 +5,7 @@ import { initDatabase } from './database'
 import './ipc'
 import icon from '../../resources/icon.ico?asset'
 
+// Bouwt het hoofdvenster, koppelt het preload-script en laadt de renderer (dev-URL of gebouwde index.html).
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 1400,

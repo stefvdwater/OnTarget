@@ -39,7 +39,7 @@ Paren-gebaseerd algoritme met LPT bin-packing over twee sporen — zie [internal
 
 ### Release-notities
 
-Per alpha/release-bump ligt er een changelog-bestand in `internal-docs/RELEASE_<versie>.md`. Lees de meest recente vóór je werk begint, vooral voor recent gewijzigde features en nieuwe conventies. Huidige: [internal-docs/RELEASE_0.2.3-alpha.0.md](internal-docs/RELEASE_0.2.3-alpha.0.md).
+Per alpha/release-bump ligt er een changelog-bestand in `internal-docs/RELEASE_<versie>.md`. Lees de meest recente vóór je werk begint, vooral voor recent gewijzigde features en nieuwe conventies. Huidige: [internal-docs/RELEASE_0.2.3-alpha.1.md](internal-docs/RELEASE_0.2.3-alpha.1.md).
 
 ### Gedeelde logica — hergebruiken, niet dupliceren
 

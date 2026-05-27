@@ -65,6 +65,34 @@ afstand = 12                         → 12m-zone
 
 Als de compound-zone minder dan 3 schutters heeft, worden die schutters toegevoegd aan de 25m-zone en krijgen ze positie vóórin hun doel (visueel onderscheid zonder apart doel).
 
+### 4.2b Variabele compound-doelen (R17)
+
+`aantalCompoundDoelen` in de wedstrijdconfiguratie is een **bovengrens**, geen vast aantal.
+Het algoritme bepaalt zelf hoeveel compound-doelen écht nodig zijn op basis van de
+aanwezige compound-schutters en de gewone bezettingslogica (streef 5 per doel,
+R4-hard min 4). **Ongebruikte compound-doelen worden herbestemd tot 25m-doelen**
+en doen mee in de indeling van de 25m-zone.
+
+Praktisch:
+
+1. De compound-zone wordt **vóór** de 25m-zone verwerkt (afwijking op §4.3).
+2. Daarna worden alle compound-doelen die geen enkele schutter kregen én niet
+   vergrendeld zijn, omgezet naar `zone = '25m'`. Ze behouden hun doelnummer
+   (fysieke positie) en worden in de samengevoegde 25m-zone gesorteerd op nummer.
+3. De 25m-zone bestaat dan logisch uit `[oorspronkelijke 25m-doelnummers] ∪
+   [herbestemde compound-doelnummers]`. R8 (aanmeldvolgorde → doelnummer) en
+   R7 (dubbels op laatste actieve doelen) gelden over die samengevoegde zone.
+4. Een **vergrendeld** compound-doel blijft compound, ook als het leeg is — de
+   gebruiker heeft het bewust gereserveerd.
+5. Voor **conflictdetectie** (§9) geldt: een herbestemd doel telt voor alle
+   doeleinden als 25m-doel. De waarschuwing "niet-compound schutter op compound
+   doel" geldt dus niet op een herbestemd doel.
+
+Compound-overflow (méér compound-schutters dan de voorziene compound-doelen
+kunnen bevatten bij 6 beurten/doel) blijft hard: resterende compound-schutters
+worden `nietIngedeeld`. Compound-schutters lopen nooit over naar 25m (behalve
+via de bestaande R16-uitzondering bij <3 schutters).
+
 ### 4.3 Verwerkingsvolgorde per zone
 
 1. Sorteer alle schutters op `aanmeldvolgorde` (oplopend).
@@ -264,8 +292,8 @@ Toon een ⚠-waarschuwing op een doel bij:
 | Meer dan 6 beurten in een helft | — |
 | Meer dan 5 beurten (aanbeveling) | — |
 | Schutter op verkeerde afstand voor zone | — |
-| Compound-schutter op niet-compound doel | — |
-| Niet-compound schutter op compound doel | — |
+| Compound-schutter op niet-compound doel | Compound-schutter op 25m via R16-uitzondering (<3) |
+| Niet-compound schutter op compound doel | Doel was herbestemd tot 25m (§4.2b); telt dan als 25m-doel |
 | Dubbelschutter niet op eerste positie | — |
 
 ---

@@ -1627,6 +1627,9 @@ input:focus-visible,
   border: 1px solid var(--red-soft-border);
   border-radius: 6px;
   font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .config-card.danger {

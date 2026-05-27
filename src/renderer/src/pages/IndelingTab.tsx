@@ -17,6 +17,7 @@ import { voegConflictenToe } from '../algoritme/conflicten'
 import SchutterKaart from '../components/SchutterKaart'
 import DoelKolom from '../components/DoelKolom'
 import NietIngedeeldBalk from '../components/NietIngedeeldBalk'
+import { IconWarn } from '../components/icons/IconWarn'
 
 interface Props {
   wedstrijd: Wedstrijd
@@ -359,7 +360,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
         {totaalConflicten > 0 && (
           <span className="aandachtspunten-wrap" tabIndex={0}>
             <span className="chip chip-yellow" style={{ cursor: 'help' }}>
-              ⚠ {totaalConflicten} aandachtspunt{totaalConflicten > 1 ? 'en' : ''}
+              <IconWarn size={12} /> {totaalConflicten} aandachtspunt{totaalConflicten > 1 ? 'en' : ''}
             </span>
             <div className="aandachtspunten-popover" role="tooltip">
               <h4>Aandachtspunten per doel</h4>

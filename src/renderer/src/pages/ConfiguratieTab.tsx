@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Wedstrijd } from '../types'
+import { IconWarn } from '../components/icons/IconWarn'
 
 interface Props {
   wedstrijd: Wedstrijd
@@ -158,7 +159,7 @@ export default function ConfiguratieTab({ wedstrijd, onUpdate, onVerwijder }: Pr
         </div>
         {compoundBuitenZone && aantalCompound > 0 && (
           <div className="config-warn">
-            ⚠ Compound-doelen vallen buiten de 25m-zone (1 – {aantal25m}).
+            <IconWarn size={16} /> Compound-doelen vallen buiten de 25m-zone (1 – {aantal25m}).
           </div>
         )}
       </section>

@@ -21,7 +21,7 @@ export default function NietIngedeeldBalk({ slots, totaal }: Props): JSX.Element
       <div className="aanmeldlijst-body">
         {slots.length === 0 ? (
           <div className="aanmeldlijst-empty">
-            Iedereen ingedeeld 🎯
+            Iedereen ingedeeld
             <div style={{ marginTop: 8, fontSize: 11 }}>
               Sleep schutters terug om opnieuw in te delen.
             </div>

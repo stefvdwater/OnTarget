@@ -1,4 +1,4 @@
-# Release 0.2.4-alpha.5
+# Release 0.2.4-alpha.6
 
 Doel van dit document: een agent of mens die voor het eerst aan deze codebase werkt tijdens of na cyclus 0.2.4 snel laten begrijpen wat er is gewijzigd ten opzichte van 0.2.3.
 
@@ -89,3 +89,24 @@ De wedstrijden worden bij mount van de pagina meegeladen via `window.api.wedstri
 ### Helper-component `WedstrijdBackupBlok`
 
 Het backup-blok is een lokale component onderaan [`SchuttersPage.tsx`](../src/renderer/src/pages/SchuttersPage.tsx). Het houdt zijn eigen `bezig`- en `resultaat`-state, zodat de modal-mount automatisch een verse status geeft elke keer dat hij wordt geopend. Hergebruik buiten deze twee modals is mogelijk maar nog niet nodig; als het ergens anders relevant wordt, kan het naar `src/renderer/src/components/` verhuizen.
+
+### Conflict-waarschuwingen respecteren spec-uitzonderingen (PR-A uit openstaande werken)
+
+Twee onterechte aandachtspunten in de Indelingstab werkten gen [ALGORITHM_SPEC.md](ALGORITHM_SPEC.md) tegen:
+
+- **Mono-gilde-zone** (P5-1): de waarschuwing "Alle schutters op dit doel komen van hetzelfde gilde" werd ook getoond als de hele zone slechts 1 gilde bevat, terwijl §7.2 en §9 die uitzondering expliciet maken (er is dan geen werkbaar alternatief). [`voegConflictenToe`](../src/renderer/src/algoritme/conflicten.ts) telt nu per zone het aantal unieke gilden over alle bezette doelen en geeft dat als context mee aan `detecteerConflicten`; de waarschuwing wordt onderdrukt wanneer `zoneGildenCount === 1`.
+- **TH-only-dubbelaars** (P5-3): de waarschuwing "Een dubbelschutter staat niet op de eerste positie" werd ook gemeld voor doelen waar enkel tweede-helft-dubbels stonden, die volgens §8 net achteraan horen. Het filter is beperkt tot EH-dubbels en vol-dubbels (`dubbel_eerste_helft === true`); TH-only-dubbels triggeren niets meer.
+
+De publieke API van `voegConflictenToe(doelen)` blijft ongewijzigd; de zone-telling gebeurt intern. Geen wijziging in de daadwerkelijke indeling — enkel de melding-laag is consistent met de spec.
+
+### Variabele compound-zone behouden na tab-wissel
+
+`berekenIndeling` herbestemt sinds [#9](https://github.com/stefvdwater/ontarget/issues/9) ongebruikte compound-doelen tot `25m`-doelen, maar die runtime-rebrand werd niet gepersisteerd. Bij elke tab-wissel reconstrueerde [`IndelingTab.laadIndeling`](../src/renderer/src/pages/IndelingTab.tsx) de zones puur uit de wedstrijd-config, waardoor het doel terug compound werd en de 25m-schutters erop onterecht conflict-rood opleverden.
+
+De DRY-extractie [`pasRuntimeCompoundZoneToe`](../src/renderer/src/algoritme/zones.ts) past één regel toe: een compound-doel dat geen compound-schutter draagt en niet vergrendeld is wordt `25m`. Drie callers gebruiken de helper:
+
+- `berekenIndeling` (verving het inline-blok dat het oude gedrag implementeerde).
+- `IndelingTab.laadIndeling` na het verdelen van de schutters uit de database.
+- `AfdrukkenTab.laadIndeling` idem; deze handler leest nu ook `indeling.getVergrendeldeDoelen` op zodat lege vergrendelde compound-doelen consistent compound blijven, ook in de print-preview.
+
+Bewuste beperking: de helper wordt **niet** aangeroepen na een drag-and-drop. Een rebrand-doel (nu 25m) waar je daarna een compound-schutter naartoe sleept blijft 25m tot een nieuwe auto-indeling. Het algoritme is ontworpen als one-shot; tussenliggende handmatige verschuivingen veranderen de zone-typering niet. Bij twijfel: opnieuw "Automatisch indelen".

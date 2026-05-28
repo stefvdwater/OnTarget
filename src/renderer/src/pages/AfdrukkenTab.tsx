@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Wedstrijd } from '../types'
 import type { Doel, DoelMetConflicten } from '../algoritme/types'
 import { voegConflictenToe } from '../algoritme/conflicten'
+import { pasRuntimeCompoundZoneToe } from '../algoritme/zones'
 import PrintDocument from '../components/PrintDocument'
 import {
   parseDoelInterval,
@@ -50,6 +51,8 @@ export default function AfdrukkenTab({ wedstrijd }: Props): JSX.Element {
 
   async function laadIndeling(): Promise<void> {
     const rijen = await window.api.indeling.getByWedstrijd(wedstrijd.id)
+    const vergrendeldeDoelen = await window.api.indeling.getVergrendeldeDoelen(wedstrijd.id)
+    const vergrendeldeSet = new Set<number>(vergrendeldeDoelen)
     const lege = maakLegeDoelen(wedstrijd)
 
     rijen.forEach((r: any) => {
@@ -70,7 +73,11 @@ export default function AfdrukkenTab({ wedstrijd }: Props): JSX.Element {
         })
       }
     })
-    lege.forEach((d) => d.schutters.sort((a, b) => a.positie - b.positie))
+    lege.forEach((d) => {
+      d.schutters.sort((a, b) => a.positie - b.positie)
+      d.vergrendeld = vergrendeldeSet.has(d.nummer)
+    })
+    pasRuntimeCompoundZoneToe(lege as Doel[])
     setDoelen(voegConflictenToe(lege as Doel[]))
   }
 

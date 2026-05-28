@@ -1,6 +1,7 @@
 import type { Schutter, Doel, DoelSlot, Indelingsresultaat, WedstrijdConfig } from './types'
 import { configVanWedstrijd } from './types'
 import { voegConflictenToe } from './conflicten'
+import { pasRuntimeCompoundZoneToe } from './zones'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -579,13 +580,7 @@ export function berekenIndeling(
     verwerkZone(compound25Def, doelen.filter((d) => d.zone === 'compound'), nietIngedeeld)
   }
 
-  // Ongebruikte compound-doelen worden herbestemd tot 25m-doelen (issue #9).
-  // Een vergrendeld compound-doel blijft compound, ook al is het leeg.
-  doelen.forEach((d) => {
-    if (d.zone === 'compound' && d.schutters.length === 0 && !d.vergrendeld) {
-      d.zone = '25m'
-    }
-  })
+  pasRuntimeCompoundZoneToe(doelen)
 
   verwerkZone(normaal25Def, doelen.filter((d) => d.zone === '25m'), nietIngedeeld)
   verwerkZone(schutters18, doelen.filter((d) => d.zone === '18m'), nietIngedeeld)

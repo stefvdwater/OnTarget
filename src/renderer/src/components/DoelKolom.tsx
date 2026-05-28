@@ -2,6 +2,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { DoelMetConflicten } from '../algoritme/types'
 import SchutterKaart from './SchutterKaart'
+import { IconWarn } from './icons/IconWarn'
 
 interface Props {
   doel: DoelMetConflicten
@@ -81,7 +82,7 @@ export default function DoelKolom({ doel, onVergrendel }: Props): JSX.Element {
 
       {heeftConflicten && (
         <div className="doel-warn">
-          <IconWarn />
+          <IconWarn size={13} />
           <span>
             {doel.conflicten[0].bericht}
             {doel.conflicten.length > 1 ? ` (+${doel.conflicten.length - 1})` : ''}
@@ -140,21 +141,3 @@ function IconUnlock(): JSX.Element {
   )
 }
 
-function IconWarn(): JSX.Element {
-  return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={{ flexShrink: 0, marginTop: 1 }}
-    >
-      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
-      <path d="M12 9v4M12 17h.01" />
-    </svg>
-  )
-}

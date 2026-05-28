@@ -1,10 +1,10 @@
-# Release 0.2.4-alpha.3
+# Release 0.2.4-alpha.4
 
 Doel van dit document: een agent of mens die voor het eerst aan deze codebase werkt tijdens of na cyclus 0.2.4 snel laten begrijpen wat er is gewijzigd ten opzichte van 0.2.3.
 
 ## Overzicht
 
-Cyclus gestart vanaf [`0.2.3`](RELEASE_0.2.3.md). Drie kleine UI/structurele aanpassingen: een toelichtende code-comment ([#13](https://github.com/stefvdwater/ontarget/issues/13)), het vervangen van emoji's door inline-SVG iconen ([#12](https://github.com/stefvdwater/ontarget/issues/12)) en het rechttrekken van de verticale uitlijning van die iconen ([#16](https://github.com/stefvdwater/ontarget/issues/16)). Geen wijzigingen aan het indelingsalgoritme, de database of de IPC.
+Cyclus gestart vanaf [`0.2.3`](RELEASE_0.2.3.md). Vier kleine UI/structurele aanpassingen: een toelichtende code-comment ([#13](https://github.com/stefvdwater/ontarget/issues/13)), het vervangen van emoji's door inline-SVG iconen ([#12](https://github.com/stefvdwater/ontarget/issues/12)), het rechttrekken van de verticale uitlijning van die iconen ([#16](https://github.com/stefvdwater/ontarget/issues/16)) en het stabiliseren van de pagina-layout bij tab-wissel met consistente afgeronde scrollbars ([#11](https://github.com/stefvdwater/ontarget/issues/11)). Geen wijzigingen aan het indelingsalgoritme, de database of de IPC.
 
 ## Wijziging
 
@@ -38,3 +38,11 @@ Het uitroepteken is proportioneel meegeschoven (streep y=8-13, dot y=18) zodat d
 In [`DoelKolom.tsx`](../src/renderer/src/components/DoelKolom.tsx) leefde nog een lokale duplicate `IconWarn` (nalatenschap van #12); die is verwijderd en vervangen door een import van de gedeelde component met expliciete `size={13}` om de visuele grootte te behouden.
 
 Geen wijziging aan de container-CSS-klassen (`.config-warn`, `.chip`, `.doel-warn`, `.dup-label`, `.import-review-row-warn`, `.import-review-row-head .status`): die gebruikten al de juiste `flex` + `align-items`, het probleem zat in de svg zelf.
+
+### Stabiele pagina-layout bij tab-wissel en consistente scrollbars (issue #11)
+
+Bij het wisselen tussen Wedstrijden en Schutters verspringt de pagina-inhoud niet meer enkele pixels naar links wanneer de ene tab wel en de andere geen scrollbar nodig had. Ook de twee knoppen rechtsboven (dark mode + website) blijven nu op hun plek.
+
+De hoofdscroll van de app verhuist van `html`/`body` naar een nieuwe `.app-main` wrapper rond `.content` in [`App.tsx`](../src/renderer/src/App.tsx). Op die wrapper staat `overflow-y: auto` met `scrollbar-gutter: stable`, zodat de scrollbar-ruimte altijd gereserveerd is, ook als er niets te scrollen valt. De `.app` is nu vaste viewport-hoogte (`height: 100vh`) en de topbar is een gewone flex-child in plaats van `position: sticky`, waardoor de header tot aan de vensterrand loopt in plaats van te eindigen vóór de gutter-strook. Interne scroll-containers (`.aanmeldlijst-body`, `.beschikbaar-paneel-list`, `.modal-body`, `.import-review-list`, `.afdrukken-opties`, `.afdruk-gildelijst`) krijgen dezelfde `scrollbar-gutter: stable` behandeling.
+
+In dezelfde wijziging zijn de scrollbar-stijlen geüniformeerd: de bestaande `::-webkit-scrollbar`-regels voor Aanmeldingen en Beschikbare schutters zijn vervangen door één globale set in [`index.css`](../src/renderer/src/index.css) (10px breed, transparante track, afgeronde thumb met `border-radius: 5px`, hover-state via `var(--text-2)`). Alle scrollbars in de app (pagina, modals, paneel-lijsten, Afdrukken-opties) zien er nu hetzelfde uit, zowel in light- als dark-mode via de bestaande kleur-tokens.

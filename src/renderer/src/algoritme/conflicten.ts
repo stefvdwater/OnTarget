@@ -1,14 +1,20 @@
 import type { Conflict, Doel, DoelMetConflicten } from './types'
 
-export function detecteerConflicten(doel: Doel): Conflict[] {
+interface ConflictContext {
+  // Aantal unieke gilden over alle bezette doelen in dezelfde zone als dit doel.
+  // Bij 1 vervalt de "alle hetzelfde gilde"-waarschuwing: er is dan geen
+  // werkbaar alternatief binnen de zone (ALGORITHM_SPEC §7.2, §9).
+  zoneGildenCount: number
+}
+
+export function detecteerConflicten(doel: Doel, ctx: ConflictContext): Conflict[] {
   const conflicten: Conflict[] = []
   const s = doel.schutters
 
   if (s.length === 0) return []
 
-  // Aantal gilden
   const gilden = new Set(s.map((x) => x.gilde_naam ?? '__geen__'))
-  if (s.length > 1 && gilden.size < 2) {
+  if (s.length > 1 && gilden.size < 2 && ctx.zoneGildenCount > 1) {
     conflicten.push({
       bericht: 'Alle schutters op dit doel komen van hetzelfde gilde.'
     })
@@ -78,12 +84,13 @@ export function detecteerConflicten(doel: Doel): Conflict[] {
     })
   }
 
-  // Dubbelschutter niet vooraan
-  const dubbelaars = s.filter((x) => x.dubbel_eerste_helft || x.dubbel_tweede_helft)
-  if (dubbelaars.length > 0) {
+  // Dubbelschutter niet vooraan. Alleen EH-dubbels en vol-dubbels horen vooraan;
+  // TH-only-dubbels staan correct achteraan (ALGORITHM_SPEC §8).
+  const ehDubbelaars = s.filter((x) => x.dubbel_eerste_helft)
+  if (ehDubbelaars.length > 0) {
     const eerstePositie = Math.min(...s.map((x) => x.positie))
-    const eersteIsdubbel = s.find((x) => x.positie === eerstePositie)
-    if (eersteIsdubbel && !eersteIsdubbel.dubbel_eerste_helft && !eersteIsdubbel.dubbel_tweede_helft) {
+    const eersteSchutter = s.find((x) => x.positie === eerstePositie)
+    if (eersteSchutter && !eersteSchutter.dubbel_eerste_helft) {
       conflicten.push({
         bericht: 'Een dubbelschutter staat niet op de eerste positie.'
       })
@@ -107,5 +114,20 @@ function berekenBeurten(schutters: Doel['schutters'], helft: 'eerste' | 'tweede'
 }
 
 export function voegConflictenToe(doelen: Doel[]): DoelMetConflicten[] {
-  return doelen.map((d) => ({ ...d, conflicten: detecteerConflicten(d) }))
+  const gildenPerZone = new Map<string, Set<string>>()
+  for (const d of doelen) {
+    if (d.schutters.length === 0) continue
+    let set = gildenPerZone.get(d.zone)
+    if (!set) {
+      set = new Set<string>()
+      gildenPerZone.set(d.zone, set)
+    }
+    for (const s of d.schutters) set.add(s.gilde_naam ?? '__geen__')
+  }
+  return doelen.map((d) => ({
+    ...d,
+    conflicten: detecteerConflicten(d, {
+      zoneGildenCount: gildenPerZone.get(d.zone)?.size ?? 0
+    })
+  }))
 }

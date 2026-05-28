@@ -21,10 +21,12 @@ export default function App(): JSX.Element {
   return (
     <div className="app">
       <Header pagina={pagina} onSwitch={navigeer} isDark={isDark} onToggleDark={toggle} />
-      <div className="content">
-        {pagina === 'wedstrijden' && <WedstrijdenPage key={homeVersie} />}
-        {pagina === 'schutters' && <SchuttersPage />}
-      </div>
+      <main className="app-main">
+        <div className="content">
+          {pagina === 'wedstrijden' && <WedstrijdenPage key={homeVersie} />}
+          {pagina === 'schutters' && <SchuttersPage />}
+        </div>
+      </main>
       <div className="app-version" aria-hidden="true">
         v{__APP_VERSION__}
       </div>

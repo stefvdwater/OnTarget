@@ -76,6 +76,7 @@ body,
   height: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden;
 }
 
 body {
@@ -104,7 +105,7 @@ input:focus-visible,
 /* ─── App shell ──────────────────────────────────────── */
 
 .app {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -114,11 +115,10 @@ input:focus-visible,
   border-bottom: 1px solid var(--border);
   padding: 0 32px;
   height: 64px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 32px;
-  position: sticky;
-  top: 0;
   z-index: 10;
 }
 
@@ -200,8 +200,14 @@ input:focus-visible,
 }
 .theme-toggle:hover { background: var(--panel-2); color: var(--text); }
 
-.content {
+.app-main {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.content {
   padding: 28px 32px 56px;
   max-width: 1600px;
   width: 100%;
@@ -645,6 +651,7 @@ input:focus-visible,
 .aanmeldlijst-body {
   padding: 10px;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -856,6 +863,7 @@ input:focus-visible,
 .beschikbaar-paneel-list {
   flex: 1;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   padding: 8px;
   display: flex;
   flex-direction: column;
@@ -942,13 +950,16 @@ input:focus-visible,
   align-self: stretch;
 }
 
-.aanmeldlijst-body::-webkit-scrollbar,
-.beschikbaar-paneel-list::-webkit-scrollbar { width: 8px; }
-.aanmeldlijst-body::-webkit-scrollbar-thumb,
-.beschikbaar-paneel-list::-webkit-scrollbar-thumb {
+/* Globale afgeronde scrollbars (Chromium/Electron) zodat alle scroll-containers
+   in de app er consistent uitzien. */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
   background: var(--border-2);
-  border-radius: 4px;
+  border-radius: 5px;
 }
+::-webkit-scrollbar-thumb:hover { background: var(--text-2); }
+::-webkit-scrollbar-corner { background: transparent; }
 
 .kbd {
   font-family: var(--mono);
@@ -1107,6 +1118,7 @@ input:focus-visible,
   width: min(460px, calc(100vw - 32px));
   max-height: calc(100vh - 64px);
   overflow-y: auto;
+  scrollbar-gutter: stable;
   box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.35);
   animation: modal-pop 0.16s ease-out;
 }
@@ -1160,6 +1172,7 @@ input:focus-visible,
 .import-review-list {
   flex: 1;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   padding: 6px 22px;
   display: flex;
   flex-direction: column;
@@ -1659,6 +1672,7 @@ input:focus-visible,
   top: 80px;
   max-height: calc(100vh - 100px);
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .afdruk-h3 {
@@ -1719,6 +1733,7 @@ input:focus-visible,
   gap: 4px;
   max-height: 180px;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 8px 10px;

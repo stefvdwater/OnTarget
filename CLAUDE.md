@@ -8,6 +8,10 @@ OnTarget — een Electron + React + TypeScript desktopapp voor het automatisch i
 
 Project is **Nederlandstalig (Vlaams)** — code-commentaar, UI-teksten en variabelennamen volgen die conventie.
 
+## Openstaande werken
+
+Een gestructureerd overzicht van geïdentificeerde issues, design-afspraken en geplande PR's leeft in [.claude/openstaande-werken.md](.claude/openstaande-werken.md). Lees dat eerst voordat je een nieuwe taak in de app oppakt — vaak hangt het werk samen met een eerder afgesproken aanpak.
+
 ## Commands
 
 ```bash

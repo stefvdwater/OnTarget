@@ -51,6 +51,11 @@ Per alpha/release-bump ligt er een changelog-bestand in `internal-docs/RELEASE_<
 
 Schema + migraties in [`src/main/database.ts`](src/main/database.ts). Voor bulk-acties altijd `transaction(() => { … })` gebruiken (zie `schutters:deleteAll` en `demo:laad`). Aparte cleanup-IPC's voor afhankelijke tabellen (bv. `gilden:deleteLege`).
 
+### Bestandsformaten (stabiele contracten)
+
+- **Wedstrijd-backup JSON**: gespecificeerd in [internal-docs/BACKUP_FORMAT.md](internal-docs/BACKUP_FORMAT.md). Doorheen versies stabiel: de top-level discriminator (`"type": "ontarget-wedstrijd-backup"`) en `schemaVersie` blijven, en binnen één versie zijn alleen additieve wijzigingen toegelaten. Een breaking change vereist een `schemaVersie`-bump met behoud van de oude lezer. Update het document mee zodra je iets aan de export- of import-handler raakt — dat is verplicht, geen optie.
+- **Schutter-CSV**: zie de "CSV import/export"-sectie onderaan dit document.
+
 ## UI-conventies
 
 - **Geen Tailwind utility classes toevoegen**, ook al staat Tailwind in `devDependencies`. Alle styling gaat via bestaande klassen (`.btn`, `.card`, `.chip`, `.schutter`, `.doel`, `.aanmeldlijst`, `.split-pane`, `.config-card`, …) en CSS-variables uit `:root` / `:root.dark` in [`src/renderer/src/index.css`](src/renderer/src/index.css).

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { Gilde, Schutter, SchutterFormData } from '../types'
+import type { Gilde, Schutter, SchutterFormData, Wedstrijd } from '../types'
 import SchutterFormulier, {
   afstandToegestaan,
   categorieToegestaan
@@ -9,6 +9,7 @@ import ImportReviewModal, {
   valideerImportRij
 } from '../components/ImportReviewModal'
 import { categorieLabel } from '../lib/labels'
+import { exporteerWedstrijden } from '../lib/wedstrijdBackup'
 
 type Modal = { type: 'nieuw'; zoek: string } | { type: 'bewerk'; schutter: Schutter } | null
 
@@ -26,6 +27,7 @@ interface ImportSessie {
 
 export default function SchuttersPage(): JSX.Element {
   const [schutters, setSchutters] = useState<Schutter[]>([])
+  const [wedstrijden, setWedstrijden] = useState<Wedstrijd[]>([])
   const [zoek, setZoek] = useState('')
   const [filterBoog, setFilterBoog] = useState('alle')
   const [filterAfstand, setFilterAfstand] = useState('alle')
@@ -63,13 +65,15 @@ export default function SchuttersPage(): JSX.Element {
   }, [filterOpen, ioOpen])
 
   async function laadSchutters(): Promise<void> {
-    const [data, alleGilden, metSchutters] = await Promise.all([
+    const [data, alleGilden, metSchutters, alleWedstrijden] = await Promise.all([
       window.api.schutters.getAll(),
       window.api.gilden.getAll(),
-      window.api.gilden.getMetSchutters()
+      window.api.gilden.getMetSchutters(),
+      window.api.wedstrijden.getAll()
     ])
     setSchutters(data)
     setAantalLegeGilden(alleGilden.length - metSchutters.length)
+    setWedstrijden(alleWedstrijden)
   }
 
   const actieveFilters =
@@ -542,10 +546,13 @@ export default function SchuttersPage(): JSX.Element {
           <div className="modal-body" onClick={(e) => e.stopPropagation()}>
             <header className="modal-head">Alle schutters verwijderen?</header>
             <div className="modal-text">
-              <strong className="mono">{schutters.length}</strong> schutter
-              {schutters.length !== 1 ? 's' : ''} en al hun inschrijvingen +
-              doelindelingen worden permanent verwijderd. Gilden en wedstrijden zelf
-              blijven behouden. Deze actie kan niet ongedaan gemaakt worden.
+              <p>
+                <strong className="mono">{schutters.length}</strong> schutter
+                {schutters.length !== 1 ? 's' : ''} en al hun inschrijvingen +
+                doelindelingen worden permanent verwijderd. Gilden en wedstrijden zelf
+                blijven behouden. Deze actie kan niet ongedaan gemaakt worden.
+              </p>
+              <WedstrijdBackupBlok wedstrijden={wedstrijden} />
             </div>
             <div className="modal-actions">
               <button
@@ -683,8 +690,12 @@ export default function SchuttersPage(): JSX.Element {
           <div className="modal-body" onClick={(e) => e.stopPropagation()}>
             <header className="modal-head">Demo data laden?</header>
             <div className="modal-text">
-              Dit verwijdert <strong>alle bestaande schutters en gilden</strong> en laadt
-              demo-schutters. Wedstrijden en inschrijvingen worden ook gewist.
+              <p>
+                Dit verwijdert <strong>alle bestaande schutters en gilden</strong> en laadt
+                demo-schutters. Inschrijvingen en doelindelingen van bestaande wedstrijden
+                gaan verloren; de wedstrijden zelf blijven bestaan (maar zonder schutters).
+              </p>
+              <WedstrijdBackupBlok wedstrijden={wedstrijden} />
             </div>
             <div className="modal-actions">
               <button className="btn" onClick={() => setDemoBevestig(false)}>
@@ -698,6 +709,56 @@ export default function SchuttersPage(): JSX.Element {
         </div>
       )}
     </>
+  )
+}
+
+// Backup-blok dat in destructieve bevestigingsmodals wordt gestoken: nodigt de
+// gebruiker uit om eerst alle wedstrijden te exporteren. Toont enkel als er
+// wedstrijden zijn. Geeft een succes-status terug na de download, maar voert de
+// destructieve actie zelf niet uit; dat blijft een aparte expliciete klik.
+function WedstrijdBackupBlok({ wedstrijden }: { wedstrijden: Wedstrijd[] }): JSX.Element | null {
+  const [bezig, setBezig] = useState(false)
+  const [resultaat, setResultaat] = useState<{ opgeslagen: number; map: string } | null>(null)
+
+  if (wedstrijden.length === 0) return null
+
+  async function handleBackup(): Promise<void> {
+    setBezig(true)
+    try {
+      const res = await exporteerWedstrijden(wedstrijden)
+      if (!res.geannuleerd && res.map) {
+        setResultaat({ opgeslagen: res.opgeslagen, map: res.map })
+      }
+    } finally {
+      setBezig(false)
+    }
+  }
+
+  return (
+    <div className="backup-prompt">
+      <div className="backup-prompt-tekst">
+        <strong>Tip:</strong> je hebt {wedstrijden.length} wedstrijd
+        {wedstrijden.length !== 1 ? 'en' : ''}. Maak eerst een backup zodat je de
+        inschrijvingen en doelindeling later terug kan inlezen.
+      </div>
+      <button className="btn btn-sm" onClick={handleBackup} disabled={bezig}>
+        {bezig
+          ? 'Bezig met exporteren…'
+          : resultaat
+            ? 'Backup opnieuw maken'
+            : 'Backup wedstrijden'}
+      </button>
+      {resultaat && !bezig && (
+        <div className="backup-prompt-status">
+          ✓ <strong className="mono">{resultaat.opgeslagen}</strong> bestand
+          {resultaat.opgeslagen !== 1 ? 'en' : ''} opgeslagen in{' '}
+          <span className="mono" style={{ wordBreak: 'break-all' }}>
+            {resultaat.map}
+          </span>
+          .
+        </div>
+      )}
+    </div>
   )
 }
 

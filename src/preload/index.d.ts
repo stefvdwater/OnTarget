@@ -23,6 +23,24 @@ declare global {
         create: (wedstrijd: object) => Promise<any>
         update: (wedstrijd: object) => Promise<any>
         delete: (id: number) => Promise<any>
+        exportBackup: (id: number) => Promise<any>
+        exportBackupBulk: (ids: number[]) => Promise<{
+          geannuleerd: boolean
+          opgeslagen: number
+          map: string | null
+          fouten: string[]
+        }>
+        importCheck: (payload: object) => Promise<{ conflict: { id: number; naam: string; datum: string } | null }>
+        importApply: (
+          payload: object,
+          actie: 'vervang' | 'kopie' | 'geen'
+        ) => Promise<{
+          ok: boolean
+          wedstrijdId: number
+          naam: string
+          nieuweSchutters: number
+          nieuweGilden: number
+        }>
       }
       inschrijvingen: {
         getByWedstrijd: (wedstrijd_id: number) => Promise<any[]>

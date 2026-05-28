@@ -1,10 +1,10 @@
-# Release 0.2.4-alpha.4
+# Release 0.2.4-alpha.5
 
 Doel van dit document: een agent of mens die voor het eerst aan deze codebase werkt tijdens of na cyclus 0.2.4 snel laten begrijpen wat er is gewijzigd ten opzichte van 0.2.3.
 
 ## Overzicht
 
-Cyclus gestart vanaf [`0.2.3`](RELEASE_0.2.3.md). Vier kleine UI/structurele aanpassingen: een toelichtende code-comment ([#13](https://github.com/stefvdwater/ontarget/issues/13)), het vervangen van emoji's door inline-SVG iconen ([#12](https://github.com/stefvdwater/ontarget/issues/12)), het rechttrekken van de verticale uitlijning van die iconen ([#16](https://github.com/stefvdwater/ontarget/issues/16)) en het stabiliseren van de pagina-layout bij tab-wissel met consistente afgeronde scrollbars ([#11](https://github.com/stefvdwater/ontarget/issues/11)). Geen wijzigingen aan het indelingsalgoritme, de database of de IPC.
+Cyclus gestart vanaf [`0.2.3`](RELEASE_0.2.3.md). Vier kleine UI/structurele aanpassingen aan het begin: een toelichtende code-comment ([#13](https://github.com/stefvdwater/ontarget/issues/13)), het vervangen van emoji's door inline-SVG iconen ([#12](https://github.com/stefvdwater/ontarget/issues/12)), het rechttrekken van de verticale uitlijning van die iconen ([#16](https://github.com/stefvdwater/ontarget/issues/16)) en het stabiliseren van de pagina-layout bij tab-wissel met consistente afgeronde scrollbars ([#11](https://github.com/stefvdwater/ontarget/issues/11)). Daarna een grotere uitbreiding rond backups: per-wedstrijd export en import in een gespecificeerd JSON-formaat ([#3](https://github.com/stefvdwater/ontarget/issues/3)) en een backup-prompt in de destructieve modals op de schutterspagina ([#2](https://github.com/stefvdwater/ontarget/issues/2)). De backup-feature voegt nieuwe IPC-handlers toe in [`src/main/ipc.ts`](../src/main/ipc.ts) en een nieuwe gedeelde lib [`src/renderer/src/lib/wedstrijdBackup.ts`](../src/renderer/src/lib/wedstrijdBackup.ts); het indelingsalgoritme en het database-schema blijven onaangeroerd.
 
 ## Wijziging
 
@@ -46,3 +46,46 @@ Bij het wisselen tussen Wedstrijden en Schutters verspringt de pagina-inhoud nie
 De hoofdscroll van de app verhuist van `html`/`body` naar een nieuwe `.app-main` wrapper rond `.content` in [`App.tsx`](../src/renderer/src/App.tsx). Op die wrapper staat `overflow-y: auto` met `scrollbar-gutter: stable`, zodat de scrollbar-ruimte altijd gereserveerd is, ook als er niets te scrollen valt. De `.app` is nu vaste viewport-hoogte (`height: 100vh`) en de topbar is een gewone flex-child in plaats van `position: sticky`, waardoor de header tot aan de vensterrand loopt in plaats van te eindigen vóór de gutter-strook. Interne scroll-containers (`.aanmeldlijst-body`, `.beschikbaar-paneel-list`, `.modal-body`, `.import-review-list`, `.afdrukken-opties`, `.afdruk-gildelijst`) krijgen dezelfde `scrollbar-gutter: stable` behandeling.
 
 In dezelfde wijziging zijn de scrollbar-stijlen geüniformeerd: de bestaande `::-webkit-scrollbar`-regels voor Aanmeldingen en Beschikbare schutters zijn vervangen door één globale set in [`index.css`](../src/renderer/src/index.css) (10px breed, transparante track, afgeronde thumb met `border-radius: 5px`, hover-state via `var(--text-2)`). Alle scrollbars in de app (pagina, modals, paneel-lijsten, Afdrukken-opties) zien er nu hetzelfde uit, zowel in light- als dark-mode via de bestaande kleur-tokens.
+
+### Backup-export en -import van wedstrijden (issue #3)
+
+Een wedstrijd kan nu volledig geëxporteerd worden naar een JSON-bestand en later (op dezelfde of een andere installatie) terug ingelezen worden, met haar inschrijvingen, doelindeling en vergrendelde-doelen-status intact. Het volledige formaat is gespecificeerd in [`internal-docs/BACKUP_FORMAT.md`](BACKUP_FORMAT.md) — dat document is de bron van waarheid en bevat het stabiliteitscontract dat het formaat doorheen versies bruikbaar houdt (vaste top-level `type`-string, monotoon groeiende `schemaVersie`, oude bestanden blijven altijd leesbaar, binnen één versie enkel additieve wijzigingen). Wie de export- of import-handler aanraakt, moet ook dat document mee bijwerken; dat is een afspraak die in [`CLAUDE.md`](../CLAUDE.md) staat onder de nieuwe sectie "Bestandsformaten (stabiele contracten)".
+
+Backend in [`src/main/ipc.ts`](../src/main/ipc.ts):
+
+- `wedstrijden:exportBackup(id)` levert de volledige payload voor één wedstrijd als JSON-object. Bevat de wedstrijd-configuratie, alle inschrijvingen, de indeling, de vergrendelde doelen, en de schutters die in de inschrijvingen voorkomen mét hun gilde-naam (zodat het bestand zelfstandig importeerbaar is).
+- `wedstrijden:exportBackupBulk(ids)` opent éénmalig een `dialog.showOpenDialog` met `openDirectory + createDirectory` en schrijft per wedstrijd één JSON-bestand met `fs.writeFileSync` naar die map. Geen save-prompt per bestand. Returnt `{ geannuleerd, opgeslagen, map, fouten }`.
+- `wedstrijden:importCheck(payload)` rapporteert of er al een wedstrijd met dezelfde `naam` + `datum` bestaat, zonder iets te wijzigen.
+- `wedstrijden:importApply(payload, actie)` voert de import in één transactie uit. `actie` is `'vervang'`, `'kopie'`, of `'geen'`. Bij `'kopie'` krijgt de nieuwe wedstrijd de suffix `(kopie)`, `(kopie 2)`, ... tot een vrije naam. Schutters worden gematcht op `(LOWER(voornaam), LOWER(naam), LOWER(gilde_naam))`; geen match betekent nieuwe schutter (en eventueel nieuw gilde) aanmaken. Inschrijvingen en indeling-rijen krijgen de gemapte database-id's.
+
+Bestandsformaat-helper en exporter-helpers leven in [`src/renderer/src/lib/wedstrijdBackup.ts`](../src/renderer/src/lib/wedstrijdBackup.ts), zodat zowel [`WedstrijdenPage`](../src/renderer/src/pages/WedstrijdenPage.tsx) als [`SchuttersPage`](../src/renderer/src/pages/SchuttersPage.tsx) dezelfde logica gebruiken. De slugify-functie voor bestandsnamen is bewust gedupliceerd in [`src/main/ipc.ts`](../src/main/ipc.ts) omdat main- en renderer-bundles niet rechtstreeks code delen; beide implementaties moeten in sync blijven.
+
+UI in [`WedstrijdenPage.tsx`](../src/renderer/src/pages/WedstrijdenPage.tsx):
+
+- Per wedstrijdkaart een klein download-icoon rechtsboven (`.wedstrijd-card-export`), zichtbaar op hover/focus, dat één wedstrijd via `<a download>` exporteert. De kaart zelf is daarom geen `<button>` meer maar een `<div role="button" tabIndex={0}>` om geneste interactive elements te vermijden.
+- Dropdown "Importeren / Exporteren" bovenaan met twee echte knoppen: "Wedstrijden importeren" (file-input met `multiple`, accepteert `.json`) en "Alle exporteren" (sub-tekst toont het aantal). Submelding bij nul wedstrijden disablet de export-knop.
+- Multi-file import verwerkt bestanden sequentieel. Per bestand wordt eerst `importCheck` gedaan; bij conflict opent dezelfde modal met (bij batch ≥ 2) een sub-header `Bestand X van Y: <bestandsnaam>` en drie keuzes: **Vervangen / Als kopie importeren / Overslaan**. Buiten de modal klikken = overslaan. Sequentiële await werkt via een Promise-resolver-ref (`conflictResolverRef`) zodat de batch-loop blokkeert tot de gebruiker kiest.
+- Eén `BatchSamenvatting`-modal aan het einde toont per bestand de status (✓/–/✗), de uiteindelijke wedstrijdnaam (met hernoemd-notitie bij kopie), of de foutdetail. Totalen bovenaan: aantal geïmporteerd, overgeslagen, mislukt, en totale nieuwe schutters/gilden.
+- Na een succesvolle bulk-export verschijnt een `exportResultaat`-modal die de gekozen map toont met aantal opgeslagen bestanden.
+
+CSS in [`index.css`](../src/renderer/src/index.css): nieuwe stijlen `.wedstrijd-card-export` (subtiele icon-button met opacity-fade op hover), `.menu-item-info` (informatieve sub-tegel in een dropdown, niet-klikbaar). De wedstrijd-card kreeg `position: relative` voor de absolute positionering van de export-knop.
+
+Bewuste exclusies in dit issue:
+
+- Geen ZIP-bundel; één JSON per wedstrijd blijft de eenheid, ook bij bulk.
+- De single-export (per-kaart-knop) gebruikt nog steeds `<a download>` omdat één save-prompt geen overlast geeft. Alleen de bulk-export is via `showOpenDialog` voor de UX-reden uit issue #2's discussie.
+- Geen feature-flag of opt-out; het JSON-formaat is direct beschikbaar voor alle gebruikers vanaf deze versie.
+
+### Backup-prompt bij destructieve schutters-acties (issue #2)
+
+De bevestigingsmodals voor "Alle schutters verwijderen" en "Demo data laden" in [`SchuttersPage.tsx`](../src/renderer/src/pages/SchuttersPage.tsx) bevatten nu een gele tip-box (`.backup-prompt`) die de gebruiker uitnodigt om eerst alle wedstrijden te exporteren. De knop "Backup wedstrijden" hergebruikt `exporteerWedstrijden` uit de gedeelde lib en opent één map-keuze-dialoog. Na een succesvolle export wordt de knop "Backup opnieuw maken" en verschijnt eronder een status met aantal en gekozen map. Bij geen wedstrijden is het hele backup-blok afwezig.
+
+Backup en destructieve actie zijn twee bewuste stappen: het maken van een backup voert het verwijderen of demo-laden niet automatisch uit. De gebruiker klikt eerst op "Backup wedstrijden", controleert de status, en pas dan op de eigenlijke bevestigingsknop ("Definitief verwijderen" of "Demo data laden"). Annuleren van de map-keuze-dialoog laat de modal in zijn beginstand zonder valse succes-melding.
+
+De demo-modal tekst is bij deze gelegenheid gecorrigeerd: voorheen stond er misleidend "Wedstrijden en inschrijvingen worden ook gewist", terwijl `demo:laad` enkel inschrijvingen, indeling, vergrendelde doelen, schutters en gilden wist; de wedstrijden zelf blijven bestaan (zij het zonder schutters). De nieuwe tekst zegt dat expliciet.
+
+De wedstrijden worden bij mount van de pagina meegeladen via `window.api.wedstrijden.getAll()` (uitbreiding van `laadSchutters`) zodat de tip-box kan weten of hij relevant is.
+
+### Helper-component `WedstrijdBackupBlok`
+
+Het backup-blok is een lokale component onderaan [`SchuttersPage.tsx`](../src/renderer/src/pages/SchuttersPage.tsx). Het houdt zijn eigen `bezig`- en `resultaat`-state, zodat de modal-mount automatisch een verse status geeft elke keer dat hij wordt geopend. Hergebruik buiten deze twee modals is mogelijk maar nog niet nodig; als het ergens anders relevant wordt, kan het naar `src/renderer/src/components/` verhuizen.

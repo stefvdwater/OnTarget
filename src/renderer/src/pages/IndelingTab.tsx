@@ -14,6 +14,7 @@ import type { Doel, DoelMetConflicten, DoelSlot } from '../algoritme/types'
 import { berekenIndeling } from '../algoritme/indeling'
 import { configVanWedstrijd as cfgVanW } from '../algoritme/types'
 import { voegConflictenToe } from '../algoritme/conflicten'
+import { pasRuntimeCompoundZoneToe } from '../algoritme/zones'
 import SchutterKaart from '../components/SchutterKaart'
 import DoelKolom from '../components/DoelKolom'
 import NietIngedeeldBalk from '../components/NietIngedeeldBalk'
@@ -49,6 +50,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
       legeDoelen.forEach((d) => {
         d.vergrendeld = vergrendeldeSet.has(d.nummer)
       })
+      pasRuntimeCompoundZoneToe(legeDoelen as Doel[])
       setDoelen(legeDoelen)
       setNietIngedeeld(inschrijvingen.map((i, idx) => inschrijvingNaarSlot(i, idx)))
     } else {
@@ -77,6 +79,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
         d.schutters.sort((a, b) => a.positie - b.positie)
         d.vergrendeld = vergrendeldeSet.has(d.nummer)
       })
+      pasRuntimeCompoundZoneToe(alleDoelen as Doel[])
       setDoelen(voegConflictenToe(alleDoelen as Doel[]))
 
       const ingedeeldIds = new Set(rijen.map((r: any) => r.schutter_id))

@@ -950,13 +950,16 @@ input:focus-visible,
   align-self: stretch;
 }
 
-.aanmeldlijst-body::-webkit-scrollbar,
-.beschikbaar-paneel-list::-webkit-scrollbar { width: 8px; }
-.aanmeldlijst-body::-webkit-scrollbar-thumb,
-.beschikbaar-paneel-list::-webkit-scrollbar-thumb {
+/* Globale afgeronde scrollbars (Chromium/Electron) zodat alle scroll-containers
+   in de app er consistent uitzien. */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
   background: var(--border-2);
-  border-radius: 4px;
+  border-radius: 5px;
 }
+::-webkit-scrollbar-thumb:hover { background: var(--text-2); }
+::-webkit-scrollbar-corner { background: transparent; }
 
 .kbd {
   font-family: var(--mono);

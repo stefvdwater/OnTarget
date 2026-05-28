@@ -25,7 +25,12 @@ contextBridge.exposeInMainWorld('api', {
     getById: (id: number) => ipcRenderer.invoke('wedstrijden:getById', id),
     create: (wedstrijd: object) => ipcRenderer.invoke('wedstrijden:create', wedstrijd),
     update: (wedstrijd: object) => ipcRenderer.invoke('wedstrijden:update', wedstrijd),
-    delete: (id: number) => ipcRenderer.invoke('wedstrijden:delete', id)
+    delete: (id: number) => ipcRenderer.invoke('wedstrijden:delete', id),
+    exportBackup: (id: number) => ipcRenderer.invoke('wedstrijden:exportBackup', id),
+    exportBackupBulk: (ids: number[]) => ipcRenderer.invoke('wedstrijden:exportBackupBulk', ids),
+    importCheck: (payload: object) => ipcRenderer.invoke('wedstrijden:importCheck', payload),
+    importApply: (payload: object, actie: 'vervang' | 'kopie' | 'geen') =>
+      ipcRenderer.invoke('wedstrijden:importApply', payload, actie)
   },
 
   // Inschrijvingen

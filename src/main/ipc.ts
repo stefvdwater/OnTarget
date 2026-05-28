@@ -1,4 +1,6 @@
-import { ipcMain } from 'electron'
+import { ipcMain, dialog, BrowserWindow } from 'electron'
+import { writeFileSync } from 'fs'
+import { join } from 'path'
 import { queryAll, queryOne, run, transaction } from './database'
 
 // ── Demo data ─────────────────────────────────────────────
@@ -173,6 +175,279 @@ ipcMain.handle('wedstrijden:delete', (_, id: number) =>
     run('DELETE FROM wedstrijden WHERE id = ?', [id])
   })
 )
+
+// ── Wedstrijd backup (export/import) ──────────────────────
+// JSON-formaat per wedstrijd, met de schutters van haar inschrijvingen erbij
+// zodat het bestand zelfstandig importeerbaar is op een andere installatie.
+// Het volledige bestandsformaat is gespecificeerd in internal-docs/BACKUP_FORMAT.md.
+// Stabiel contract: top-level "type" en "schemaVersie" blijven, binnen één versie
+// enkel additieve wijzigingen. Breaking change = bump van schemaVersie + behoud
+// van de oude lezer. Update het document mee bij elke wijziging hier.
+
+function bouwBackupPayload(id: number): any {
+  const wedstrijd = queryOne('SELECT * FROM wedstrijden WHERE id = ?', [id])
+  if (!wedstrijd) throw new Error(`Wedstrijd ${id} bestaat niet`)
+
+  const inschrijvingen = queryAll(
+    `SELECT schutter_id, aanmeldvolgorde, dubbel_eerste_helft, dubbel_tweede_helft
+     FROM inschrijvingen WHERE wedstrijd_id = ? ORDER BY aanmeldvolgorde`,
+    [id]
+  )
+  const indeling = queryAll(
+    `SELECT doel_nummer, schutter_id, positie
+     FROM indeling WHERE wedstrijd_id = ? ORDER BY doel_nummer, positie`,
+    [id]
+  )
+  const vergrendeldeDoelen = queryAll(
+    'SELECT doel_nummer FROM vergrendelde_doelen WHERE wedstrijd_id = ?',
+    [id]
+  ).map((r: any) => r.doel_nummer)
+
+  const schutterIds = Array.from(new Set(inschrijvingen.map((i: any) => i.schutter_id)))
+  const schutters =
+    schutterIds.length === 0
+      ? []
+      : queryAll(
+          `SELECT s.id, s.voornaam, s.naam, s.type_boog, s.leeftijdscategorie,
+                  s.geslacht, s.afstand, g.naam AS gilde_naam
+           FROM schutters s
+           LEFT JOIN gilden g ON s.gilde_id = g.id
+           WHERE s.id IN (${schutterIds.map(() => '?').join(',')})`,
+          schutterIds
+        )
+
+  return {
+    type: 'ontarget-wedstrijd-backup',
+    schemaVersie: 1,
+    geexporteerdOp: new Date().toISOString(),
+    wedstrijd: {
+      naam: wedstrijd.naam,
+      datum: wedstrijd.datum,
+      locatie: wedstrijd.locatie,
+      aantal_doelen: wedstrijd.aantal_doelen,
+      aantal_doelen_18m: wedstrijd.aantal_doelen_18m,
+      aantal_doelen_12m: wedstrijd.aantal_doelen_12m,
+      compound_startdoel: wedstrijd.compound_startdoel,
+      aantal_compound_doelen: wedstrijd.aantal_compound_doelen
+    },
+    schutters,
+    inschrijvingen,
+    indeling,
+    vergrendeldeDoelen
+  }
+}
+
+// Slug-versie voor bestandsnamen. Gedupliceerd in renderer (lib/wedstrijdBackup.ts)
+// omdat main- en renderer-bundles niet rechtstreeks code delen. Houd beide
+// implementaties in sync.
+function slugifyVoorBestand(naam: string): string {
+  const basis = naam
+    .toLowerCase()
+    .normalize('NFD')
+    // eslint-disable-next-line no-misleading-character-class
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40)
+  return basis || 'wedstrijd'
+}
+
+ipcMain.handle('wedstrijden:exportBackup', (_, id: number) => bouwBackupPayload(id))
+
+// Bulk-export: opent één map-keuze-dialoog en schrijft één JSON per wedstrijd
+// rechtstreeks weg met fs.writeFileSync. Vermijdt dat de gebruiker per bestand
+// een opslag-dialoog moet bevestigen.
+ipcMain.handle('wedstrijden:exportBackupBulk', async (event, ids: number[]) => {
+  const win = BrowserWindow.fromWebContents(event.sender) ?? undefined
+  const result = await dialog.showOpenDialog(win!, {
+    title: 'Kies map voor backup-bestanden',
+    properties: ['openDirectory', 'createDirectory'],
+    buttonLabel: 'Opslaan in deze map'
+  })
+  if (result.canceled || result.filePaths.length === 0) {
+    return { geannuleerd: true, opgeslagen: 0, map: null as string | null, fouten: [] as string[] }
+  }
+  const map = result.filePaths[0]
+  let opgeslagen = 0
+  const fouten: string[] = []
+  for (const id of ids) {
+    try {
+      const payload = bouwBackupPayload(id)
+      const slug = slugifyVoorBestand(payload.wedstrijd.naam)
+      const bestandsnaam = `wedstrijd-${slug}-${payload.wedstrijd.datum}.json`
+      writeFileSync(join(map, bestandsnaam), JSON.stringify(payload, null, 2))
+      opgeslagen++
+    } catch (e) {
+      fouten.push(`Wedstrijd ${id}: ${(e as Error).message}`)
+    }
+  }
+  return { geannuleerd: false, opgeslagen, map, fouten }
+})
+
+// Checkt of er een naam+datum-conflict is. Doet zelf geen wijzigingen.
+ipcMain.handle('wedstrijden:importCheck', (_, payload: any) => {
+  const w = payload?.wedstrijd
+  if (!w?.naam || !w?.datum) return { conflict: null }
+  const bestaande = queryOne(
+    'SELECT id, naam, datum FROM wedstrijden WHERE naam = ? AND datum = ?',
+    [w.naam, w.datum]
+  )
+  return { conflict: bestaande ?? null }
+})
+
+// Importeert de backup-payload. actie bepaalt wat te doen bij naam+datum-conflict:
+//   'vervang' = bestaande wedstrijd verwijderen (met inschrijvingen + indeling) en nieuwe aanmaken
+//   'kopie'   = nieuwe wedstrijd aanmaken met '(kopie)'-suffix tot de naam vrij is
+//   'geen'    = veronderstelt dat er geen conflict is; faalt bij conflict
+ipcMain.handle('wedstrijden:importApply', (_, payload: any, actie: 'vervang' | 'kopie' | 'geen') => {
+  if (payload?.type !== 'ontarget-wedstrijd-backup') {
+    throw new Error('Onbekend bestandsformaat')
+  }
+  if (payload.schemaVersie !== 1) {
+    throw new Error(`Niet-ondersteunde schema-versie: ${payload.schemaVersie}`)
+  }
+  const w = payload.wedstrijd
+  if (!w?.naam || !w?.datum) throw new Error('Wedstrijd-gegevens ontbreken in bestand')
+
+  let aantalNieuweSchutters = 0
+  let aantalNieuweGilden = 0
+  let nieuweWedstrijdId = 0
+  let nieuweNaam = String(w.naam)
+
+  transaction(() => {
+    // 1) Conflict afhandelen
+    const conflict = queryOne(
+      'SELECT id FROM wedstrijden WHERE naam = ? AND datum = ?',
+      [w.naam, w.datum]
+    )
+    if (conflict) {
+      if (actie === 'vervang') {
+        run('DELETE FROM vergrendelde_doelen WHERE wedstrijd_id = ?', [conflict.id])
+        run('DELETE FROM indeling WHERE wedstrijd_id = ?', [conflict.id])
+        run('DELETE FROM inschrijvingen WHERE wedstrijd_id = ?', [conflict.id])
+        run('DELETE FROM wedstrijden WHERE id = ?', [conflict.id])
+      } else if (actie === 'kopie') {
+        let n = 1
+        let kandidaat = `${w.naam} (kopie)`
+        while (queryOne('SELECT id FROM wedstrijden WHERE naam = ? AND datum = ?', [kandidaat, w.datum])) {
+          n++
+          kandidaat = `${w.naam} (kopie ${n})`
+        }
+        nieuweNaam = kandidaat
+      } else {
+        throw new Error('Wedstrijd met dezelfde naam en datum bestaat al')
+      }
+    }
+
+    // 2) Schutters mappen: per backup-id -> id in deze DB
+    //    Match op (voornaam, naam, gilde_naam) lowercase. Geen match = nieuw aanmaken.
+    const schutterIdMap = new Map<number, number>()
+    const gildeCache = new Map<string, number>()
+
+    for (const s of payload.schutters ?? []) {
+      // Probeer bestaande schutter te vinden — match op (voornaam, naam, gilde) lowercase
+      const bestaande = queryOne(
+        `SELECT s.id FROM schutters s
+         LEFT JOIN gilden g ON s.gilde_id = g.id
+         WHERE LOWER(s.voornaam) = LOWER(?)
+           AND LOWER(s.naam) = LOWER(?)
+           AND LOWER(COALESCE(g.naam, '')) = LOWER(COALESCE(?, ''))`,
+        [s.voornaam.trim(), s.naam.trim(), (s.gilde_naam ?? '').trim()]
+      )
+
+      if (bestaande) {
+        schutterIdMap.set(s.id, bestaande.id)
+        continue
+      }
+
+      // Gilde opzoeken of aanmaken
+      let gildeId: number | null = null
+      const gildeNaam = (s.gilde_naam ?? '').trim()
+      if (gildeNaam) {
+        const cacheKey = gildeNaam.toLowerCase()
+        if (gildeCache.has(cacheKey)) {
+          gildeId = gildeCache.get(cacheKey)!
+        } else {
+          const bestaandGilde = queryOne(
+            'SELECT id FROM gilden WHERE LOWER(naam) = LOWER(?)',
+            [gildeNaam]
+          )
+          if (bestaandGilde) {
+            gildeId = bestaandGilde.id
+          } else {
+            const gres = run('INSERT INTO gilden (naam) VALUES (?)', [gildeNaam])
+            gildeId = gres.lastInsertRowid
+            aantalNieuweGilden++
+          }
+          gildeCache.set(cacheKey, gildeId!)
+        }
+      }
+
+      const sres = run(
+        `INSERT INTO schutters (voornaam, naam, gilde_id, type_boog, leeftijdscategorie, geslacht, afstand)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [s.voornaam.trim(), s.naam.trim(), gildeId, s.type_boog, s.leeftijdscategorie, s.geslacht, s.afstand]
+      )
+      schutterIdMap.set(s.id, sres.lastInsertRowid)
+      aantalNieuweSchutters++
+    }
+
+    // 3) Wedstrijd aanmaken
+    const wres = run(
+      `INSERT INTO wedstrijden (naam, datum, locatie, aantal_doelen, aantal_doelen_18m, aantal_doelen_12m, compound_startdoel, aantal_compound_doelen)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        nieuweNaam,
+        w.datum,
+        w.locatie ?? null,
+        w.aantal_doelen,
+        w.aantal_doelen_18m,
+        w.aantal_doelen_12m,
+        w.compound_startdoel,
+        w.aantal_compound_doelen ?? 1
+      ]
+    )
+    nieuweWedstrijdId = wres.lastInsertRowid
+
+    // 4) Inschrijvingen
+    for (const i of payload.inschrijvingen ?? []) {
+      const nieuweSchutterId = schutterIdMap.get(i.schutter_id)
+      if (!nieuweSchutterId) continue // schutter zat niet in payload.schutters — skip
+      run(
+        `INSERT INTO inschrijvingen (wedstrijd_id, schutter_id, aanmeldvolgorde, dubbel_eerste_helft, dubbel_tweede_helft)
+         VALUES (?, ?, ?, ?, ?)`,
+        [nieuweWedstrijdId, nieuweSchutterId, i.aanmeldvolgorde, i.dubbel_eerste_helft, i.dubbel_tweede_helft]
+      )
+    }
+
+    // 5) Indeling
+    for (const r of payload.indeling ?? []) {
+      const nieuweSchutterId = schutterIdMap.get(r.schutter_id)
+      if (!nieuweSchutterId) continue
+      run(
+        `INSERT INTO indeling (wedstrijd_id, doel_nummer, schutter_id, positie, vergrendeld)
+         VALUES (?, ?, ?, ?, 0)`,
+        [nieuweWedstrijdId, r.doel_nummer, nieuweSchutterId, r.positie]
+      )
+    }
+
+    // 6) Vergrendelde doelen
+    for (const doelNr of payload.vergrendeldeDoelen ?? []) {
+      run(
+        'INSERT OR IGNORE INTO vergrendelde_doelen (wedstrijd_id, doel_nummer) VALUES (?, ?)',
+        [nieuweWedstrijdId, doelNr]
+      )
+    }
+  })
+
+  return {
+    ok: true,
+    wedstrijdId: nieuweWedstrijdId,
+    naam: nieuweNaam,
+    nieuweSchutters: aantalNieuweSchutters,
+    nieuweGilden: aantalNieuweGilden
+  }
+})
 
 // ── Inschrijvingen ────────────────────────────────────────
 ipcMain.handle('inschrijvingen:getByWedstrijd', (_, wedstrijd_id: number) =>

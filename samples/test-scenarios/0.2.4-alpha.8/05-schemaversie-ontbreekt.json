@@ -1,0 +1,18 @@
+{
+  "type": "ontarget-wedstrijd-backup",
+  "geexporteerdOp": "2026-05-29T12:00:00.000Z",
+  "wedstrijd": {
+    "naam": "Versietest schemaVersie ontbreekt",
+    "datum": "2026-06-01",
+    "locatie": "Testlokaal",
+    "aantal_doelen": 5,
+    "aantal_doelen_18m": 0,
+    "aantal_doelen_12m": 0,
+    "compound_startdoel": 5,
+    "aantal_compound_doelen": 1
+  },
+  "schutters": [],
+  "inschrijvingen": [],
+  "indeling": [],
+  "vergrendeldeDoelen": []
+}

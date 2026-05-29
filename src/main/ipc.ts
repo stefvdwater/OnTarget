@@ -2,6 +2,7 @@ import { ipcMain, dialog, BrowserWindow } from 'electron'
 import { writeFileSync } from 'fs'
 import { join } from 'path'
 import { queryAll, queryOne, run, transaction } from './database'
+import { valideerEnNormaliseer, type BackupPayloadV1 } from '@shared/backupTypes'
 
 // ── Demo data ─────────────────────────────────────────────
 ipcMain.handle('demo:laad', () => {
@@ -194,7 +195,7 @@ ipcMain.handle('wedstrijden:delete', (_, id: number) =>
 // enkel additieve wijzigingen. Breaking change = bump van schemaVersie + behoud
 // van de oude lezer. Update het document mee bij elke wijziging hier.
 
-function bouwBackupPayload(id: number): any {
+function bouwBackupPayload(id: number): BackupPayloadV1 {
   const wedstrijd = queryOne('SELECT * FROM wedstrijden WHERE id = ?', [id])
   if (!wedstrijd) throw new Error(`Wedstrijd ${id} bestaat niet`)
 
@@ -295,12 +296,15 @@ ipcMain.handle('wedstrijden:exportBackupBulk', async (event, ids: number[]) => {
 })
 
 // Checkt of er een naam+datum-conflict is. Doet zelf geen wijzigingen.
-ipcMain.handle('wedstrijden:importCheck', (_, payload: any) => {
-  const w = payload?.wedstrijd
-  if (!w?.naam || !w?.datum) return { conflict: null }
+// Valideert eerst type + schemaVersie zodat ongeldige bestanden hier al stuk
+// gaan en niet pas in importApply (de UI's batch-catch toont de fout dan
+// netjes per bestand). Zie internal-docs/BACKUP_FORMAT.md "Hoe lezers moeten
+// omgaan met versie-mismatch".
+ipcMain.handle('wedstrijden:importCheck', (_, payload: unknown) => {
+  const p = valideerEnNormaliseer(payload)
   const bestaande = queryOne(
     'SELECT id, naam, datum FROM wedstrijden WHERE naam = ? AND datum = ?',
-    [w.naam, w.datum]
+    [p.wedstrijd.naam, p.wedstrijd.datum]
   )
   return { conflict: bestaande ?? null }
 })
@@ -309,15 +313,9 @@ ipcMain.handle('wedstrijden:importCheck', (_, payload: any) => {
 //   'vervang' = bestaande wedstrijd verwijderen (met inschrijvingen + indeling) en nieuwe aanmaken
 //   'kopie'   = nieuwe wedstrijd aanmaken met '(kopie)'-suffix tot de naam vrij is
 //   'geen'    = veronderstelt dat er geen conflict is; faalt bij conflict
-ipcMain.handle('wedstrijden:importApply', (_, payload: any, actie: 'vervang' | 'kopie' | 'geen') => {
-  if (payload?.type !== 'ontarget-wedstrijd-backup') {
-    throw new Error('Onbekend bestandsformaat')
-  }
-  if (payload.schemaVersie !== 1) {
-    throw new Error(`Niet-ondersteunde schema-versie: ${payload.schemaVersie}`)
-  }
-  const w = payload.wedstrijd
-  if (!w?.naam || !w?.datum) throw new Error('Wedstrijd-gegevens ontbreken in bestand')
+ipcMain.handle('wedstrijden:importApply', (_, payload: unknown, actie: 'vervang' | 'kopie' | 'geen') => {
+  const p = valideerEnNormaliseer(payload)
+  const w = p.wedstrijd
 
   let aantalNieuweSchutters = 0
   let aantalNieuweGilden = 0
@@ -354,7 +352,7 @@ ipcMain.handle('wedstrijden:importApply', (_, payload: any, actie: 'vervang' | '
     const schutterIdMap = new Map<number, number>()
     const gildeCache = new Map<string, number>()
 
-    for (const s of payload.schutters ?? []) {
+    for (const s of p.schutters ?? []) {
       // Probeer bestaande schutter te vinden — match op (voornaam, naam, gilde) lowercase
       const bestaande = queryOne(
         `SELECT s.id FROM schutters s
@@ -420,9 +418,9 @@ ipcMain.handle('wedstrijden:importApply', (_, payload: any, actie: 'vervang' | '
     nieuweWedstrijdId = wres.lastInsertRowid
 
     // 4) Inschrijvingen
-    for (const i of payload.inschrijvingen ?? []) {
+    for (const i of p.inschrijvingen ?? []) {
       const nieuweSchutterId = schutterIdMap.get(i.schutter_id)
-      if (!nieuweSchutterId) continue // schutter zat niet in payload.schutters — skip
+      if (!nieuweSchutterId) continue // schutter zat niet in payload.schutters, sla over
       run(
         `INSERT INTO inschrijvingen (wedstrijd_id, schutter_id, aanmeldvolgorde, dubbel_eerste_helft, dubbel_tweede_helft)
          VALUES (?, ?, ?, ?, ?)`,
@@ -431,7 +429,7 @@ ipcMain.handle('wedstrijden:importApply', (_, payload: any, actie: 'vervang' | '
     }
 
     // 5) Indeling
-    for (const r of payload.indeling ?? []) {
+    for (const r of p.indeling ?? []) {
       const nieuweSchutterId = schutterIdMap.get(r.schutter_id)
       if (!nieuweSchutterId) continue
       run(
@@ -442,7 +440,7 @@ ipcMain.handle('wedstrijden:importApply', (_, payload: any, actie: 'vervang' | '
     }
 
     // 6) Vergrendelde doelen
-    for (const doelNr of payload.vergrendeldeDoelen ?? []) {
+    for (const doelNr of p.vergrendeldeDoelen ?? []) {
       run(
         'INSERT OR IGNORE INTO vergrendelde_doelen (wedstrijd_id, doel_nummer) VALUES (?, ?)',
         [nieuweWedstrijdId, doelNr]

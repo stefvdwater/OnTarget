@@ -1,7 +1,7 @@
 import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { initDatabase } from './database'
+import { initDatabase, flushDatabaseSync } from './database'
 import './ipc'
 import icon from '../../resources/icon.ico?asset'
 
@@ -55,5 +55,16 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
+  }
+})
+
+// Synchroon de pending DB-save flushen voor het proces eindigt. Zonder dit
+// kan een schrijfactie verloren gaan als de gebruiker binnen 500ms (debounce
+// in scheduleSave) na een wijziging afsluit.
+app.on('before-quit', () => {
+  try {
+    flushDatabaseSync()
+  } catch (err) {
+    console.error('Flush bij quit faalde:', err)
   }
 })

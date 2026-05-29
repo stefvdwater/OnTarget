@@ -69,9 +69,9 @@ De configuratie van de wedstrijd. De sleutels komen rechtstreeks van de `wedstri
 | `aantal_doelen_18m` | integer | ja | Aantal doelen op 18m |
 | `aantal_doelen_12m` | integer | ja | Aantal doelen op 12m |
 | `compound_startdoel` | integer | ja | Eerste doel waarop compound-schutters mogen staan |
-| `aantal_compound_doelen` | integer | ja | Aantal opeenvolgende doelen vanaf `compound_startdoel` voor compound |
+| `aantal_compound_doelen` | integer | ja (schrijver) / nee (lezer) | Aantal opeenvolgende doelen vanaf `compound_startdoel` voor compound. Schrijvers van schemaVersie 1 moeten dit veld altijd meegeven. Lezers tolereren ontbreken en vallen terug op `1`, omdat backups uit pre-0.2.4-versies dit veld nog niet hadden. Dit volgt §"Compatibiliteitsregels in detail" punt 4 over default-en van ontbrekende velden. |
 
-De id van de wedstrijd wordt **bewust niet** opgenomen — bij import wordt een nieuwe id toegekend in de doel-database.
+De id van de wedstrijd wordt **bewust niet** opgenomen, bij import wordt een nieuwe id toegekend in de doel-database.
 
 ### `schutters` (array, verplicht)
 

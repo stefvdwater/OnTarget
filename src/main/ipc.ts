@@ -125,9 +125,19 @@ ipcMain.handle('schutters:update', (_, s) =>
   )
 )
 
-ipcMain.handle('schutters:delete', (_, id: number) =>
-  run('DELETE FROM schutters WHERE id = ?', [id])
-)
+ipcMain.handle('schutters:delete', (_, id: number) => {
+  // Met PRAGMA foreign_keys = ON faalt een directe DELETE zodra de schutter
+  // ingeschreven of ingedeeld is. Eerst de afhankelijke rijen opruimen, alles
+  // atomair in één transactie. vergrendelde_doelen heeft geen schutter_id en
+  // blijft ongemoeid: vergrendeling is een configuratie-keuze, niet afgeleid
+  // van bezetting.
+  transaction(() => {
+    run('DELETE FROM indeling WHERE schutter_id = ?', [id])
+    run('DELETE FROM inschrijvingen WHERE schutter_id = ?', [id])
+    run('DELETE FROM schutters WHERE id = ?', [id])
+  })
+  return { ok: true }
+})
 
 ipcMain.handle('schutters:deleteAll', () => {
   // Wipe alle schutters én afhankelijke records (inschrijvingen, indeling,

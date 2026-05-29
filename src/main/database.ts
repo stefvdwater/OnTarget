@@ -1,4 +1,4 @@
-import { app } from 'electron'
+import { app, dialog } from 'electron'
 import { join } from 'path'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import initSqlJs, { Database } from 'sql.js'
@@ -6,6 +6,7 @@ import initSqlJs, { Database } from 'sql.js'
 let db: Database
 let dbPath: string
 let saveTimeout: NodeJS.Timeout | null = null
+let inTransaction = false
 
 // Converteert sql.js resultaten naar een array van objecten
 export function queryAll(sql: string, params: any[] = []): any[] {
@@ -29,12 +30,17 @@ export function queryOne(sql: string, params: any[] = []): any | null {
 export function run(sql: string, params: any[] = []): { lastInsertRowid: number; changes: number } {
   db.run(sql, params)
   const info = queryOne('SELECT last_insert_rowid() as id, changes() as changes')
-  scheduleSave()
+  // Binnen een transactie plant transaction() zelf één save na de commit.
+  if (!inTransaction) scheduleSave()
   return { lastInsertRowid: info?.id ?? 0, changes: info?.changes ?? 0 }
 }
 
-// Voert meerdere statements uit in een transactie
+// Voert meerdere statements uit in een transactie.
+// sql.js ondersteunt geen geneste transacties: een tweede BEGIN faalt stil.
+// Daarom expliciet weigeren in plaats van een silent SQL-fout.
 export function transaction(fn: () => void): void {
+  if (inTransaction) throw new Error('Nested transaction not supported')
+  inTransaction = true
   db.run('BEGIN')
   try {
     fn()
@@ -42,6 +48,8 @@ export function transaction(fn: () => void): void {
   } catch (e) {
     db.run('ROLLBACK')
     throw e
+  } finally {
+    inTransaction = false
   }
   scheduleSave()
 }
@@ -52,9 +60,31 @@ function scheduleSave(): void {
   saveTimeout = setTimeout(() => saveToDisk(), 500)
 }
 
+// Synchroon flushen van wachtende save. Aanroepen vanuit before-quit
+// zodat data niet verloren gaat als de app binnen 500ms na een schrijfactie sluit.
+export function flushDatabaseSync(): void {
+  if (saveTimeout) {
+    clearTimeout(saveTimeout)
+    saveTimeout = null
+  }
+  saveToDisk()
+}
+
 function saveToDisk(): void {
-  const data = db.export()
-  writeFileSync(dbPath, Buffer.from(data))
+  try {
+    const data = db.export()
+    writeFileSync(dbPath, Buffer.from(data))
+  } catch (err) {
+    const boodschap = err instanceof Error ? err.message : String(err)
+    console.error('Kon database niet opslaan:', err)
+    // showErrorBox is synchroon en werkt ook tijdens before-quit.
+    dialog.showErrorBox(
+      'Opslagfout',
+      `Kon de database niet opslaan: ${boodschap}\n\n` +
+        'Recente wijzigingen kunnen verloren gaan bij het sluiten van de app. ' +
+        'Controleer schijfruimte en bestandsrechten, en probeer de app opnieuw te starten.'
+    )
+  }
 }
 
 export async function initDatabase(): Promise<void> {

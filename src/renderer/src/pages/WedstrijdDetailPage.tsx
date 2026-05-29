@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Wedstrijd } from '../types'
 import InschrijvingenTab from './InschrijvingenTab'
 import IndelingTab from './IndelingTab'
 import ConfiguratieTab from './ConfiguratieTab'
 import AfdrukkenTab from './AfdrukkenTab'
+
+// Debounce voor configuratie-wijzigingen: één DB-write per CONFIG_SAVE_DEBOUNCE_MS
+// na de laatste toetsaanslag, in plaats van per karakter.
+const CONFIG_SAVE_DEBOUNCE_MS = 300
 
 interface Props {
   wedstrijd: Wedstrijd
@@ -22,6 +26,21 @@ export default function WedstrijdDetailPage({
   const [huidig, setHuidig] = useState<Wedstrijd>(wedstrijd)
   const [aantalInschrijvingen, setAantalInschrijvingen] = useState(0)
 
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pendingSaveRef = useRef<Wedstrijd | null>(null)
+
+  function flushConfigSave(): void {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = null
+    }
+    const toSave = pendingSaveRef.current
+    if (toSave) {
+      pendingSaveRef.current = null
+      void window.api.wedstrijden.update(toSave)
+    }
+  }
+
   useEffect(() => {
     setHuidig(wedstrijd)
   }, [wedstrijd.id])
@@ -31,6 +50,28 @@ export default function WedstrijdDetailPage({
       .getByWedstrijd(huidig.id)
       .then((rs) => setAantalInschrijvingen(rs.length))
   }, [huidig.id, tab])
+
+  // Flush bij wedstrijd-wissel: cleanup loopt voor de nieuwe wedstrijd geladen is.
+  useEffect(() => {
+    return () => flushConfigSave()
+  }, [huidig.id])
+
+  // Flush bij tab-wissel weg van Configuratie zodat een laatste edit niet blijft hangen.
+  useEffect(() => {
+    if (tab !== 'configuratie') flushConfigSave()
+  }, [tab])
+
+  // Flush bij unmount, window blur en sluiten.
+  useEffect(() => {
+    const onBlurOrUnload = (): void => flushConfigSave()
+    window.addEventListener('blur', onBlurOrUnload)
+    window.addEventListener('beforeunload', onBlurOrUnload)
+    return () => {
+      window.removeEventListener('blur', onBlurOrUnload)
+      window.removeEventListener('beforeunload', onBlurOrUnload)
+      flushConfigSave()
+    }
+  }, [])
 
   function formatDatum(datum: string): string {
     const [y, m, d] = datum.split('-')
@@ -51,10 +92,19 @@ export default function WedstrijdDetailPage({
     return `${parseInt(d, 10)} ${maanden[parseInt(m, 10) - 1]} ${y}`
   }
 
-  async function handleConfigUpdate(patch: Partial<Wedstrijd>): Promise<void> {
+  function handleConfigUpdate(patch: Partial<Wedstrijd>): void {
     const nieuw: Wedstrijd = { ...huidig, ...patch }
     setHuidig(nieuw)
-    await window.api.wedstrijden.update(nieuw)
+    pendingSaveRef.current = nieuw
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => {
+      saveTimerRef.current = null
+      const toSave = pendingSaveRef.current
+      if (toSave) {
+        pendingSaveRef.current = null
+        void window.api.wedstrijden.update(toSave)
+      }
+    }, CONFIG_SAVE_DEBOUNCE_MS)
   }
 
   async function handleVerwijder(): Promise<void> {

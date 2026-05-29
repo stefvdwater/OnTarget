@@ -49,13 +49,10 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
   )
 
   async function voegToe(schutterId: number): Promise<void> {
-    const volgorde = inschrijvingen.length
-      ? Math.max(...inschrijvingen.map((i) => i.aanmeldvolgorde)) + 1
-      : 1
+    // aanmeldvolgorde wordt in het main-process bepaald binnen een transactie.
     await window.api.inschrijvingen.create({
       wedstrijd_id: wedstrijd.id,
       schutter_id: schutterId,
-      aanmeldvolgorde: volgorde,
       dubbel_eerste_helft: 0,
       dubbel_tweede_helft: 0
     })
@@ -86,13 +83,9 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
     }
     const r = await window.api.schutters.create({ ...data, gilde_id })
     const nieuwId = r.lastInsertRowid
-    const volgorde = inschrijvingen.length
-      ? Math.max(...inschrijvingen.map((i) => i.aanmeldvolgorde)) + 1
-      : 1
     await window.api.inschrijvingen.create({
       wedstrijd_id: wedstrijd.id,
       schutter_id: nieuwId,
-      aanmeldvolgorde: volgorde,
       dubbel_eerste_helft: 0,
       dubbel_tweede_helft: 0
     })
@@ -265,7 +258,7 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
       </aside>
 
       {nieuwOpen && (
-        <Modal onClose={() => setNieuwOpen(false)}>
+        <Modal>
           <SchutterFormulier
             initieelZoek={zoek}
             titel="Nieuwe schutter"
@@ -279,22 +272,12 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
   )
 }
 
-function Modal({
-  onClose,
-  children
-}: {
-  onClose: () => void
-  children: React.ReactNode
-}): JSX.Element {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+function Modal({ children }: { children: React.ReactNode }): JSX.Element {
+  // Een schutter-formulier sluit enkel via Annuleren of Opslaan in de inhoud zelf.
+  // Geen backdrop-dismiss en geen Escape: anders raakt ingevuld typewerk verloren
+  // bij een misklik of toetsenbord-misslag.
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
       <div className="modal-body" onClick={(e) => e.stopPropagation()}>
         {children}
       </div>

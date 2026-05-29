@@ -459,7 +459,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
       </DragOverlay>
 
       {bevestigAuto && (
-        <div className="modal-backdrop" onClick={() => setBevestigAuto(false)}>
+        <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
           <div className="modal-body" onClick={(e) => e.stopPropagation()}>
             <header className="modal-head">Indeling herberekenen?</header>
             <div className="modal-text">
@@ -478,7 +478,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
       )}
 
       {bevestigLeegmaken && (
-        <div className="modal-backdrop" onClick={() => setBevestigLeegmaken(false)}>
+        <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
           <div className="modal-body" onClick={(e) => e.stopPropagation()}>
             <header className="modal-head">Indeling leegmaken?</header>
             <div className="modal-text">

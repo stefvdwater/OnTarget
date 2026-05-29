@@ -1,0 +1,22 @@
+{
+  "type": "ontarget-wedstrijd-backup",
+  "schemaVersie": 1,
+  "geexporteerdOp": "2026-05-29T12:00:00.000Z",
+  "wedstrijd": {
+    "naam": "Versietest pre-0.2.4 zonder aantal_compound_doelen",
+    "datum": "2026-06-01",
+    "locatie": "Testlokaal",
+    "aantal_doelen": 5,
+    "aantal_doelen_18m": 0,
+    "aantal_doelen_12m": 0,
+    "compound_startdoel": 5
+  },
+  "schutters": [
+    { "id": 1, "voornaam": "Legacy", "naam": "Een", "gilde_naam": "Versietest Gilde", "type_boog": "Recurve", "leeftijdscategorie": "Senior", "geslacht": "M", "afstand": 25 }
+  ],
+  "inschrijvingen": [
+    { "schutter_id": 1, "aanmeldvolgorde": 1, "dubbel_eerste_helft": 0, "dubbel_tweede_helft": 0 }
+  ],
+  "indeling": [],
+  "vergrendeldeDoelen": []
+}

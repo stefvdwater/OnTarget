@@ -470,13 +470,29 @@ ipcMain.handle('inschrijvingen:getByWedstrijd', (_, wedstrijd_id: number) =>
   `, [wedstrijd_id])
 )
 
-ipcMain.handle('inschrijvingen:create', (_, i) =>
-  run(
-    `INSERT INTO inschrijvingen (wedstrijd_id, schutter_id, aanmeldvolgorde, dubbel_eerste_helft, dubbel_tweede_helft)
-     VALUES (?, ?, ?, ?, ?)`,
-    [i.wedstrijd_id, i.schutter_id, i.aanmeldvolgorde, i.dubbel_eerste_helft, i.dubbel_tweede_helft]
-  )
-)
+ipcMain.handle('inschrijvingen:create', (_, i) => {
+  // Aanmeldvolgorde wordt hier in de transactie bepaald (niet door de renderer)
+  // zodat twee snelle clicks geen identieke volgorde meer kunnen claimen.
+  let result: { lastInsertRowid: number; changes: number; aanmeldvolgorde: number } = {
+    lastInsertRowid: 0,
+    changes: 0,
+    aanmeldvolgorde: 0
+  }
+  transaction(() => {
+    const row = queryOne(
+      'SELECT COALESCE(MAX(aanmeldvolgorde), 0) + 1 AS volgende FROM inschrijvingen WHERE wedstrijd_id = ?',
+      [i.wedstrijd_id]
+    )
+    const aanmeldvolgorde: number = row?.volgende ?? 1
+    const r = run(
+      `INSERT INTO inschrijvingen (wedstrijd_id, schutter_id, aanmeldvolgorde, dubbel_eerste_helft, dubbel_tweede_helft)
+       VALUES (?, ?, ?, ?, ?)`,
+      [i.wedstrijd_id, i.schutter_id, aanmeldvolgorde, i.dubbel_eerste_helft, i.dubbel_tweede_helft]
+    )
+    result = { lastInsertRowid: r.lastInsertRowid, changes: r.changes, aanmeldvolgorde }
+  })
+  return result
+})
 
 ipcMain.handle('inschrijvingen:update', (_, i) =>
   run(

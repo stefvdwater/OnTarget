@@ -178,7 +178,7 @@ export default function ConfiguratieTab({ wedstrijd, onUpdate, onVerwijder }: Pr
       </section>
 
       {verwijderBevestig && (
-        <div className="modal-backdrop" onClick={() => setVerwijderBevestig(false)}>
+        <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
           <div className="modal-body" onClick={(e) => e.stopPropagation()}>
             <header className="modal-head">Wedstrijd verwijderen?</header>
             <div className="modal-text">

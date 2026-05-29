@@ -306,7 +306,7 @@ export default function WedstrijdenPage(): JSX.Element {
       )}
 
       {conflict && (
-        <div className="modal-backdrop" onClick={() => bevestigConflict('overslaan')}>
+        <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
           <div className="modal-body" onClick={(e) => e.stopPropagation()}>
             <header className="modal-head">Wedstrijd bestaat al</header>
             <div className="modal-text">

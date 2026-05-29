@@ -517,7 +517,7 @@ export default function SchuttersPage(): JSX.Element {
       </section>
 
       {modal && (
-        <Modal onClose={() => setModal(null)}>
+        <Modal>
           <SchutterFormulier
             bestaand={modal.type === 'bewerk' ? modal.schutter : null}
             initieelZoek={modal.type === 'nieuw' ? modal.zoek : ''}
@@ -542,7 +542,7 @@ export default function SchuttersPage(): JSX.Element {
       )}
 
       {verwijderAllesBevestig && (
-        <div className="modal-backdrop" onClick={() => setVerwijderAllesBevestig(false)}>
+        <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
           <div className="modal-body" onClick={(e) => e.stopPropagation()}>
             <header className="modal-head">Alle schutters verwijderen?</header>
             <div className="modal-text">
@@ -575,7 +575,7 @@ export default function SchuttersPage(): JSX.Element {
       )}
 
       {legeGildenBevestig && (
-        <div className="modal-backdrop" onClick={() => setLegeGildenBevestig(false)}>
+        <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
           <div className="modal-body" onClick={(e) => e.stopPropagation()}>
             <header className="modal-head">Lege gilden verwijderen?</header>
             <div className="modal-text">
@@ -604,7 +604,7 @@ export default function SchuttersPage(): JSX.Element {
       )}
 
       {verwijderBevestig && (
-        <div className="modal-backdrop" onClick={() => setVerwijderBevestig(null)}>
+        <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
           <div className="modal-body" onClick={(e) => e.stopPropagation()}>
             <header className="modal-head">Schutter verwijderen?</header>
             <div className="modal-text">
@@ -686,7 +686,7 @@ export default function SchuttersPage(): JSX.Element {
       )}
 
       {demoBevestig && (
-        <div className="modal-backdrop" onClick={() => setDemoBevestig(false)}>
+        <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
           <div className="modal-body" onClick={(e) => e.stopPropagation()}>
             <header className="modal-head">Demo data laden?</header>
             <div className="modal-text">
@@ -762,22 +762,12 @@ function WedstrijdBackupBlok({ wedstrijden }: { wedstrijden: Wedstrijd[] }): JSX
   )
 }
 
-function Modal({
-  onClose,
-  children
-}: {
-  onClose: () => void
-  children: React.ReactNode
-}): JSX.Element {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+function Modal({ children }: { children: React.ReactNode }): JSX.Element {
+  // Een schutter-formulier sluit enkel via Annuleren of Opslaan in de inhoud zelf.
+  // Geen backdrop-dismiss en geen Escape: anders raakt ingevuld typewerk verloren
+  // bij een misklik of toetsenbord-misslag.
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
       <div className="modal-body" onClick={(e) => e.stopPropagation()}>
         {children}
       </div>

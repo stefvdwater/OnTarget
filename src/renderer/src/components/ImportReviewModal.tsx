@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { Gilde, Schutter } from '../types'
 import { afstandToegestaan, categorieToegestaan } from './SchutterFormulier'
 import { geslachtLabel } from '../lib/labels'
@@ -172,13 +172,9 @@ export default function ImportReviewModal({
     return [...conflict, ...dup, ...ok]
   })
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onAnnuleer()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onAnnuleer])
+  // Geen Escape-handler: een import-review modal mag enkel via expliciete knop
+  // (Bevestig of Annuleren) afgesloten worden. Anders kan een toetsenbord-misklik
+  // het hele review-werk wegvegen.
 
   function patch(idx: number, p: Partial<ImportRij>): void {
     setBewerkt((prev) => {
@@ -256,7 +252,7 @@ export default function ImportReviewModal({
   }
 
   return (
-    <div className="modal-backdrop" onClick={onAnnuleer}>
+    <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
       <div className="modal-body import-review" onClick={(e) => e.stopPropagation()}>
         <header className="modal-head">
           Import controleren

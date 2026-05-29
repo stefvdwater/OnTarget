@@ -1,4 +1,4 @@
-# Release 0.2.4-alpha.6
+# Release 0.2.4-alpha.7
 
 Doel van dit document: een agent of mens die voor het eerst aan deze codebase werkt tijdens of na cyclus 0.2.4 snel laten begrijpen wat er is gewijzigd ten opzichte van 0.2.3.
 

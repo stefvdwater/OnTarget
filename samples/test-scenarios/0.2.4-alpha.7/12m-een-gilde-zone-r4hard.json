@@ -1,0 +1,37 @@
+{
+  "type": "ontarget-wedstrijd-backup",
+  "schemaVersie": 1,
+  "geexporteerdOp": "2026-05-29T12:00:00.000Z",
+  "wedstrijd": {
+    "naam": "Test 12m één gilde R4-hard",
+    "datum": "2026-06-01",
+    "locatie": "Testlokaal",
+    "aantal_doelen": 10,
+    "aantal_doelen_18m": 0,
+    "aantal_doelen_12m": 2,
+    "compound_startdoel": 11,
+    "aantal_compound_doelen": 1
+  },
+  "schutters": [
+    { "id": 1, "voornaam": "Noor",   "naam": "Janssens",  "gilde_naam": "Sint-Sebastiaan Testgilde", "type_boog": "Recurve", "leeftijdscategorie": "Jeugd", "geslacht": "V", "afstand": 12 },
+    { "id": 2, "voornaam": "Milan",  "naam": "Peeters",   "gilde_naam": "Sint-Sebastiaan Testgilde", "type_boog": "Recurve", "leeftijdscategorie": "Jeugd", "geslacht": "M", "afstand": 12 },
+    { "id": 3, "voornaam": "Lotte",  "naam": "Maes",      "gilde_naam": "Sint-Sebastiaan Testgilde", "type_boog": "Recurve", "leeftijdscategorie": "Jeugd", "geslacht": "V", "afstand": 12 },
+    { "id": 4, "voornaam": "Sam",    "naam": "Willems",   "gilde_naam": "Sint-Sebastiaan Testgilde", "type_boog": "Recurve", "leeftijdscategorie": "Jeugd", "geslacht": "M", "afstand": 12 },
+    { "id": 5, "voornaam": "Femke",  "naam": "De Smet",   "gilde_naam": "Sint-Sebastiaan Testgilde", "type_boog": "Recurve", "leeftijdscategorie": "Jeugd", "geslacht": "V", "afstand": 12 },
+    { "id": 6, "voornaam": "Wout",   "naam": "Claes",     "gilde_naam": "Sint-Sebastiaan Testgilde", "type_boog": "Recurve", "leeftijdscategorie": "Jeugd", "geslacht": "M", "afstand": 12 },
+    { "id": 7, "voornaam": "Lukas",  "naam": "Vermeulen", "gilde_naam": "Sint-Sebastiaan Testgilde", "type_boog": "Recurve", "leeftijdscategorie": "Jeugd", "geslacht": "M", "afstand": 12 },
+    { "id": 8, "voornaam": "Elise",  "naam": "Wouters",   "gilde_naam": "Sint-Sebastiaan Testgilde", "type_boog": "Recurve", "leeftijdscategorie": "Jeugd", "geslacht": "V", "afstand": 12 }
+  ],
+  "inschrijvingen": [
+    { "schutter_id": 1, "aanmeldvolgorde": 1, "dubbel_eerste_helft": 0, "dubbel_tweede_helft": 0 },
+    { "schutter_id": 2, "aanmeldvolgorde": 2, "dubbel_eerste_helft": 0, "dubbel_tweede_helft": 0 },
+    { "schutter_id": 3, "aanmeldvolgorde": 3, "dubbel_eerste_helft": 0, "dubbel_tweede_helft": 0 },
+    { "schutter_id": 4, "aanmeldvolgorde": 4, "dubbel_eerste_helft": 0, "dubbel_tweede_helft": 0 },
+    { "schutter_id": 5, "aanmeldvolgorde": 5, "dubbel_eerste_helft": 0, "dubbel_tweede_helft": 0 },
+    { "schutter_id": 6, "aanmeldvolgorde": 6, "dubbel_eerste_helft": 0, "dubbel_tweede_helft": 0 },
+    { "schutter_id": 7, "aanmeldvolgorde": 7, "dubbel_eerste_helft": 0, "dubbel_tweede_helft": 0 },
+    { "schutter_id": 8, "aanmeldvolgorde": 8, "dubbel_eerste_helft": 0, "dubbel_tweede_helft": 0 }
+  ],
+  "indeling": [],
+  "vergrendeldeDoelen": []
+}

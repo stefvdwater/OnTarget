@@ -342,8 +342,15 @@ function plaatsLones(lones: Schutter[], actieveDoelen: Doel[], nietIngedeeld: Sc
 }
 
 // Fase 5: R4-hard handhaving — verschuif schutters tot elk doel ≥ 4 beurten
-function handhaafMin4Beurten(actieveDoelen: Doel[], totaleBeurten: number): void {
+function handhaafMin4Beurten(
+  actieveDoelen: Doel[],
+  totaleBeurten: number,
+  zoneGildenCount: number
+): void {
   if (totaleBeurten < 4) return // zone-totaal < 4 → uitzondering
+
+  // §7.2: in een zone met slechts 1 gilde vervalt de 2-gilden-eis
+  const eenGildeZone = zoneGildenCount <= 1
 
   for (const d of actieveDoelen) {
     let benodigd = 4 - maxBeurten(d.schutters)
@@ -358,7 +365,7 @@ function handhaafMin4Beurten(actieveDoelen: Doel[], totaleBeurten: number): void
           const restGilden = new Set(
             bron.schutters.filter((x) => x.schutter_id !== slot.schutter_id).map(gildeKey)
           )
-          if (bron.schutters.length - 1 >= 2 && restGilden.size < 2) return false
+          if (!eenGildeZone && bron.schutters.length - 1 >= 2 && restGilden.size < 2) return false
           return passtSlotOpDoel(d, slot)
         })
         if (!verplaatsbaar) break
@@ -375,7 +382,8 @@ function handhaafMin4Beurten(actieveDoelen: Doel[], totaleBeurten: number): void
 function verdeelNormalen(
   schutters: Schutter[],
   actieveDoelen: Doel[],
-  nietIngedeeld: Schutter[]
+  nietIngedeeld: Schutter[],
+  zoneGildenCount: number
 ): void {
   if (schutters.length === 0) return
 
@@ -412,7 +420,7 @@ function verdeelNormalen(
   plaatsLones([...lones, ...extraLones], actieveDoelen, nietIngedeeld)
 
   // Fase 5: R4-hard handhaving
-  handhaafMin4Beurten(actieveDoelen, totaleBeurten)
+  handhaafMin4Beurten(actieveDoelen, totaleBeurten, zoneGildenCount)
 }
 
 // ─── Zone verwerking ──────────────────────────────────────────────────────────
@@ -432,6 +440,9 @@ function verwerkZone(
   const normalen = schutters.filter((s) => !isDubbel(s))
   const dubbelGroepen = groepeerdeDubbelaars(dubbelaars)
   const M = dubbelGroepen.length
+
+  // §7.2: aantal unieke gilden in de zone (incl. dubbelaars en normalen)
+  const zoneGildenCount = new Set(schutters.map(gildeKey)).size
 
   const beschikbareDoelen = zoneDoelen.filter((d) => !d.vergrendeld)
 
@@ -512,7 +523,7 @@ function verwerkZone(
   if (normaalDoelen.length === 0) {
     restNormalen.forEach((s) => nietIngedeeld.push(s))
   } else {
-    verdeelNormalen(restNormalen, normaalDoelen, nietIngedeeld)
+    verdeelNormalen(restNormalen, normaalDoelen, nietIngedeeld, zoneGildenCount)
   }
 }
 

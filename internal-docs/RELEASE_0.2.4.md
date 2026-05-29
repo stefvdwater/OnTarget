@@ -1,4 +1,4 @@
-# Release 0.2.4-alpha.7
+# Release 0.2.4-alpha.8
 
 Doel van dit document: een agent of mens die voor het eerst aan deze codebase werkt tijdens of na cyclus 0.2.4 snel laten begrijpen wat er is gewijzigd ten opzichte van 0.2.3.
 
@@ -120,3 +120,12 @@ Bewuste beperking: de helper wordt **niet** aangeroepen na een drag-and-drop. Ee
 Concreet test-scenario in [`samples/test-scenarios/0.2.4-alpha.7/12m-een-gilde-zone-r4hard.json`](../samples/test-scenarios/0.2.4-alpha.7/12m-een-gilde-zone-r4hard.json): 12m-zone met twee doelen, acht jeugdschutters van hetzelfde gilde, geen dubbelaars. Importeren en "Bereken indeling" levert nu een 4-4-verdeling i.p.v. 5-3.
 
 Bewuste scope-beperking: de fix raakt enkel Fase 5 binnen `verdeelNormalen`, dus de bron- en doel-doelen zijn allebei normaal-doelen. Dubbeldoelen worden in Fase A al volledig opgevuld en niet als bron meegegeven aan Fase 5. Zones met twee of meer gilden blijven het bestaande gedrag aanhouden — de 2-gilden-voorkeur per doel wordt daar nog steeds bewaakt door dezelfde filter.
+
+### Duurzaamheid van de data layer (PR-C uit openstaande werken)
+
+Vier samenhangende correcties in [`src/main/database.ts`](../src/main/database.ts), [`src/main/index.ts`](../src/main/index.ts) en [`src/main/ipc.ts`](../src/main/ipc.ts) maken de sql.js-laag robuuster tegen crashes, snelle quits en geneste schrijfacties. Geen schemawijziging; bestaande databases blijven leesbaar.
+
+- **Flush bij afsluiten** (P1-1): `scheduleSave()` debounct 500ms. Wie de app sloot binnen die marge na een schrijfactie verloor die laatste wijziging. Een nieuwe export `flushDatabaseSync()` in `database.ts` annuleert de wachtende timeout en schrijft synchroon naar disk. `index.ts` koppelt die aan `app.on('before-quit', ...)` zodat de save altijd wordt afgerond voor het proces eindigt.
+- **Geen scheduleSave mid-transactie + nested-tx guard** (P1-2): elke `run()` plande voorheen een save, ook tijdens een open transactie. Bij een transactie met N statements werden N+1 saves gepland (door debounce meestal samengevoegd, maar het was lekkend gedrag). Een module-niveau `inTransaction`-vlag onderdrukt nu `scheduleSave()` tijdens een transactie; `transaction()` zelf plant één save na een succesvolle commit. Tegelijk weigert `transaction()` geneste aanroepen expliciet (`throw new Error('Nested transaction not supported')`) omdat sql.js geen geneste `BEGIN` ondersteunt en de vorige stille SQL-fout moeilijk te diagnosticeren was. Geen huidige callsite is genest; de guard is dus een veiligheidsnet voor toekomstige wijzigingen.
+- **Cascade-cleanup in `schutters:delete`** (P1-3): met `PRAGMA foreign_keys = ON` faalde een directe `DELETE FROM schutters` zodra de schutter ingeschreven of ingedeeld was; de UI kreeg een onleesbare SQLite-foutmelding. De handler ruimt nu eerst rijen uit `indeling` en `inschrijvingen` (gefilterd op `schutter_id`) op binnen één transactie, en verwijdert pas dan de schutter zelf. `vergrendelde_doelen` blijft ongemoeid: vergrendeling is een configuratie-keuze, niet afgeleid uit bezetting. Een doel dat door deze delete leeg achterblijft, blijft dus vergrendeld (consistent met "leeg gereserveerd doel").
+- **Foutafhandeling in `saveToDisk`** (P1-4): `writeFileSync` kon eerder het main-proces laten crashen bij volle disk, read-only filesystem of antivirus-interventie. De functie zit nu in een `try/catch`: bij een fout wordt gelogd én een `dialog.showErrorBox('Opslagfout', ...)` getoond met een Nederlandstalige uitleg. Geen automatische retry, om retry-loops te voorkomen; de gebruiker krijgt de melding zichtbaar en kan zelf actie ondernemen (schijfruimte, rechten, herstart).

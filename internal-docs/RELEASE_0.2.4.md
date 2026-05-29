@@ -110,3 +110,13 @@ De DRY-extractie [`pasRuntimeCompoundZoneToe`](../src/renderer/src/algoritme/zon
 - `AfdrukkenTab.laadIndeling` idem; deze handler leest nu ook `indeling.getVergrendeldeDoelen` op zodat lege vergrendelde compound-doelen consistent compound blijven, ook in de print-preview.
 
 Bewuste beperking: de helper wordt **niet** aangeroepen na een drag-and-drop. Een rebrand-doel (nu 25m) waar je daarna een compound-schutter naartoe sleept blijft 25m tot een nieuwe auto-indeling. Het algoritme is ontworpen als one-shot; tussenliggende handmatige verschuivingen veranderen de zone-typering niet. Bij twijfel: opnieuw "Automatisch indelen".
+
+### R4-hard verschuiving in zones met één gilde (PR-B uit openstaande werken)
+
+`handhaafMin4Beurten` (Fase 5 van de normaal-verdeling in [`indeling.ts`](../src/renderer/src/algoritme/indeling.ts)) blokkeerde elke verschuiving tussen normaaldoelen in een zone die maar één gilde telt: de filter "bron moet na verwijdering nog ≥ 2 gilden bevatten" werd toegepast op alle bron-doelen, en die voorwaarde is onhaalbaar als er sowieso maar één gilde is. Bij ongelijke lone-verdeling kon een normaaldoel zo onder de harde minimum van vier beurten blijven hangen (R4-hard), terwijl [ALGORITHM_SPEC §7.2](ALGORITHM_SPEC.md) die 2-gilden-eis voor mono-gilde-zones net expliciet opheft.
+
+`verwerkZone` telt nu eenmalig het aantal unieke gilden over de hele zone met `gildeKey` (waarbij schutters zonder gilde één virtueel `__geen__`-gilde delen, consistent met de rest van het algoritme) en geeft de telling door aan `verdeelNormalen` → `handhaafMin4Beurten`. Daar wordt de 2-gilden-blokkade enkel nog toegepast wanneer `zoneGildenCount > 1`; bij precies één gilde is de filter overgeslagen en kunnen schutters van overvolle bron-doelen alsnog verplaatst worden tot elk normaaldoel ≥ 4 beurten haalt.
+
+Concreet test-scenario in [`samples/test-scenarios/0.2.4-alpha.7/12m-een-gilde-zone-r4hard.json`](../samples/test-scenarios/0.2.4-alpha.7/12m-een-gilde-zone-r4hard.json): 12m-zone met twee doelen, acht jeugdschutters van hetzelfde gilde, geen dubbelaars. Importeren en "Bereken indeling" levert nu een 4-4-verdeling i.p.v. 5-3.
+
+Bewuste scope-beperking: de fix raakt enkel Fase 5 binnen `verdeelNormalen`, dus de bron- en doel-doelen zijn allebei normaal-doelen. Dubbeldoelen worden in Fase A al volledig opgevuld en niet als bron meegegeven aan Fase 5. Zones met twee of meer gilden blijven het bestaande gedrag aanhouden — de 2-gilden-voorkeur per doel wordt daar nog steeds bewaakt door dezelfde filter.

@@ -168,7 +168,7 @@ export default function ConfiguratieTab({ wedstrijd, onUpdate, onVerwijder }: Pr
       <section className="config-card danger">
         <header>
           <h2>Gevarenzone</h2>
-          <p>Onomkeerbare acties — alle inschrijvingen en indelingen verdwijnen.</p>
+          <p>Onomkeerbare acties: alle inschrijvingen en indelingen verdwijnen.</p>
         </header>
         <div className="config-actions">
           <button className="btn danger" onClick={() => setVerwijderBevestig(true)}>

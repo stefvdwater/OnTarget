@@ -489,7 +489,7 @@ export default function SchuttersPage(): JSX.Element {
         <header>
           <h2>Gevarenzone</h2>
           <p>
-            Onomkeerbare acties — gebruik alleen wanneer je echt opnieuw wilt beginnen.
+            Onomkeerbare acties: gebruik alleen wanneer je echt opnieuw wilt beginnen.
             Wedstrijden zelf blijven steeds behouden.
           </p>
         </header>

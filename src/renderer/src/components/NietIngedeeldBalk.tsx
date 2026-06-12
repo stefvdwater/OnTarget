@@ -5,13 +5,23 @@ import SchutterKaart from './SchutterKaart'
 interface Props {
   slots: DoelSlot[]
   totaal: number
+  toonOverlay?: boolean
 }
 
-export default function NietIngedeeldBalk({ slots, totaal }: Props): JSX.Element {
+export default function NietIngedeeldBalk({
+  slots,
+  totaal,
+  toonOverlay = false
+}: Props): JSX.Element {
   const { setNodeRef, isOver } = useDroppable({ id: 'niet-ingedeeld' })
 
   return (
     <aside ref={setNodeRef} className={'aanmeldlijst' + (isOver ? ' drag-over' : '')}>
+      {toonOverlay && (
+        <div className="uit-indeling-overlay" aria-hidden="true">
+          Uit indeling halen
+        </div>
+      )}
       <div className="aanmeldlijst-head">
         <h3>Aanmeldvolgorde</h3>
         <span className="count">

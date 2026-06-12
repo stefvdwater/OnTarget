@@ -25,8 +25,10 @@ export interface PrintOpties {
 /**
  * Parseert een interval-uitdrukking zoals "1-10, 15, 18-20" naar een
  * gesorteerde lijst unieke doelnummers. Whitespace wordt genegeerd. Lege
- * input → null. Bij syntaxfouten (niet-numeriek, omgekeerd interval,
- * negatieve waarden) → { fout: string }.
+ * input → lege lijst. Open intervallen toegestaan: "2-" = 2 tot en met
+ * laatste doel; "-3" = vanaf doel 1 tot en met 3; "-" = alle doelen. Bij
+ * syntaxfouten (niet-numeriek, omgekeerd interval, buiten bereik) →
+ * { fout: string }.
  */
 export function parseDoelInterval(
   input: string,
@@ -40,8 +42,10 @@ export function parseDoelInterval(
     if (stuk.includes('-')) {
       const [aRaw, bRaw, ...rest] = stuk.split('-')
       if (rest.length > 0) return { fout: `Ongeldig interval: "${stuk}"` }
-      const a = parseInt(aRaw, 10)
-      const b = parseInt(bRaw, 10)
+      const aTrim = aRaw.trim()
+      const bTrim = bRaw.trim()
+      const a = aTrim === '' ? 1 : parseInt(aTrim, 10)
+      const b = bTrim === '' ? maxDoel : parseInt(bTrim, 10)
       if (!Number.isFinite(a) || !Number.isFinite(b)) {
         return { fout: `Ongeldig interval: "${stuk}"` }
       }

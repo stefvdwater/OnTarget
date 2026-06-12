@@ -116,6 +116,9 @@ function DoelTabel({
   opties: PrintOpties
 }): JSX.Element {
   const sortering = opties.sortering as SorteringDoel
+  // Alleen bij gilde-filter compact tonen. Doel- en afstand-filter behouden
+  // de 6 vaste rijen (gaten blijven leeg zodat het overzicht herkenbaar blijft).
+  const compactModus = opties.filters.gildes !== 'alle'
   const zichtbaar = doelen
     .filter((d) => doelPasseertFilter(d.nummer, opties.filters))
     .sort((a, b) => a.nummer - b.nummer)
@@ -133,32 +136,45 @@ function DoelTabel({
           <th style={{ width: '10%' }}>Dubbel</th>
         </tr>
       </thead>
-      <tbody>
-        {zichtbaar.map((doel) => {
-          const schutters = doel.schutters
-            .filter((s) => passeertFilters(s, doel.nummer, opties.filters))
-            .slice()
-            .sort((a, b) => vergelijkSchutters(a, b, sortering))
+      {zichtbaar.map((doel) => {
+        const passerende = doel.schutters
+          .filter((s) => passeertFilters(s, doel.nummer, opties.filters))
+          .slice()
+          .sort((a, b) => vergelijkSchutters(a, b, sortering))
 
-          // Bouw 6 rijen: A..F. Vul met werkelijke schutters in volgorde (sortering).
-          // Posities A..F zijn afdruk-posities, niet noodzakelijk de slot.positie.
-          const rijen: (DoelSlot | null)[] = []
-          for (let i = 0; i < 6; i++) {
-            rijen.push(schutters[i] ?? null)
+        // Compact bij gilde-filter (alleen passerende rijen, met werkelijke
+        // positie als label). Anders: 6 vaste rijen, schutter op de rij van
+        // zijn werkelijke slot.positie; gaten blijven leeg.
+        const rijen: { label: string; slot: DoelSlot | null }[] = []
+        if (compactModus) {
+          for (const s of passerende) {
+            rijen.push({ label: doelLabel(doel.nummer, s.positie), slot: s })
           }
-          return rijen.map((s, idx) => (
-            <tr key={`${doel.nummer}-${idx}`}>
-              <td className="print-cel-doel">{doelLabel(doel.nummer, idx + 1)}</td>
-              <td>{s ? `${s.voornaam} ${s.naam}` : ''}</td>
-              <td>{s?.gilde_naam ?? ''}</td>
-              <td>{s?.type_boog ?? ''}</td>
-              <td>{s ? categorieAfkorting(categorieLabel(s)) : ''}</td>
-              <td>{s ? `${s.afstand}m` : ''}</td>
-              <td>{s ? dubbelLabel(s) : ''}</td>
-            </tr>
-          ))
-        })}
-      </tbody>
+        } else {
+          for (let p = 1; p <= 6; p++) {
+            const slot = passerende.find((s) => s.positie === p) ?? null
+            rijen.push({ label: doelLabel(doel.nummer, p), slot })
+          }
+        }
+
+        if (rijen.length === 0) return null
+
+        return (
+          <tbody key={doel.nummer} className="print-doel-groep">
+            {rijen.map((r, idx) => (
+              <tr key={`${doel.nummer}-${idx}`}>
+                <td className="print-cel-doel">{r.label}</td>
+                <td>{r.slot ? `${r.slot.voornaam} ${r.slot.naam}` : ''}</td>
+                <td>{r.slot?.gilde_naam ?? ''}</td>
+                <td>{r.slot?.type_boog ?? ''}</td>
+                <td>{r.slot ? categorieAfkorting(categorieLabel(r.slot)) : ''}</td>
+                <td>{r.slot ? `${r.slot.afstand}m` : ''}</td>
+                <td>{r.slot ? dubbelLabel(r.slot) : ''}</td>
+              </tr>
+            ))}
+          </tbody>
+        )
+      })}
     </table>
   )
 }
@@ -182,11 +198,11 @@ function GildeTabel({
   for (const d of doelen) {
     if (!doelPasseertFilter(d.nummer, opties.filters)) continue
     const gesorteerd = d.schutters.slice().sort((a, b) => a.positie - b.positie)
-    gesorteerd.forEach((s, idx) => {
+    gesorteerd.forEach((s) => {
       if (!passeertFilters(s, d.nummer, opties.filters)) return
       const key = s.gilde_naam ?? '(Geen gilde)'
       if (!allesPerGilde.has(key)) allesPerGilde.set(key, [])
-      allesPerGilde.get(key)!.push({ doelNummer: d.nummer, positie1: idx + 1, slot: s })
+      allesPerGilde.get(key)!.push({ doelNummer: d.nummer, positie1: s.positie, slot: s })
     })
   }
 

@@ -1998,6 +1998,9 @@ input:focus-visible,
   .print-tabel tr {
     page-break-inside: avoid;
   }
+  .print-doel-groep {
+    page-break-inside: avoid;
+  }
   .print-tabel,
   .print-totalen,
   .print-waarschuwingen {

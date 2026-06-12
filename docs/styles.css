@@ -40,7 +40,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 a {
@@ -56,6 +56,7 @@ a:hover { text-decoration: underline; }
   border-bottom: 1px solid var(--border);
   padding: 0 32px;
   height: 64px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 32px;
@@ -91,8 +92,7 @@ a:hover { text-decoration: underline; }
 /* ─── Content layout ─────────────────────────────────── */
 
 .content {
-  flex: 1;
-  min-height: 0;
+  flex: 1 0 auto;
   padding: 48px 32px;
   max-width: 1480px;
   width: 100%;
@@ -105,6 +105,13 @@ a:hover { text-decoration: underline; }
 
 .content--single {
   max-width: 720px;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.content--single .hero {
+  flex: 0 0 auto;
 }
 
 /* ─── Hero ───────────────────────────────────────────── */
@@ -113,7 +120,7 @@ a:hover { text-decoration: underline; }
   flex: 1;
   min-width: 0;
   text-align: center;
-  padding: 48px 32px;
+  padding: 48px 32px 28px;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -167,10 +174,6 @@ a:hover { text-decoration: underline; }
   padding: 28px;
   display: flex;
   flex-direction: column;
-  max-height: 100%;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-2) transparent;
 }
 
 .instructions-title {
@@ -221,6 +224,104 @@ a:hover { text-decoration: underline; }
   font-size: 13px;
 }
 
+/* ─── Docs collapsible sections ──────────────────────── */
+
+.docs-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.docs-section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.docs-section > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  user-select: none;
+}
+
+.docs-section > summary::-webkit-details-marker { display: none; }
+
+.docs-section > summary::after {
+  content: '';
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.docs-section[open] > summary::after {
+  transform: rotate(-135deg);
+}
+
+.docs-section-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  background: var(--yellow-soft);
+  color: #735604;
+  border: 1px solid var(--yellow-soft-border);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.docs-section-title {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.docs-section-body {
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+
+.docs-section-body .muted {
+  margin: 0;
+  max-width: none;
+  text-align: left;
+}
+
+.docs-callout {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: color-mix(in srgb, #f5c518 10%, var(--panel));
+  border: 1px solid color-mix(in srgb, #f5c518 40%, var(--border));
+  border-left: 4px solid #f5c518;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-top: 16px;
+  font-size: 0.9rem;
+}
+
+.docs-callout-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #b8860b;
+}
+
+.docs-callout p {
+  margin: 0;
+  color: var(--text);
+}
+
 /* ─── Release box ────────────────────────────────────── */
 
 .release-box {
@@ -232,7 +333,6 @@ a:hover { text-decoration: underline; }
   padding: 28px;
   display: flex;
   flex-direction: column;
-  max-height: 100%;
   overflow: hidden;
 }
 
@@ -282,6 +382,7 @@ a:hover { text-decoration: underline; }
 .release-notes {
   flex: 1 1 auto;
   min-height: 0;
+  max-height: 240px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border-2) transparent;
@@ -438,6 +539,7 @@ a:hover { text-decoration: underline; }
   padding: 16px 32px;
   color: var(--muted);
   font-size: 13px;
+  flex-shrink: 0;
   display: flex;
   justify-content: center;
   gap: 10px;
@@ -448,11 +550,7 @@ a:hover { text-decoration: underline; }
 
 /* ─── Mobile ─────────────────────────────────────────── */
 
-@media (max-width: 760px) {
-  body {
-    height: auto;
-    min-height: 100vh;
-  }
+@media (max-width: 1024px) {
   .content {
     flex: 0 0 auto;
     flex-direction: column;

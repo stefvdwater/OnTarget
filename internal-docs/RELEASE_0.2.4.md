@@ -1,4 +1,4 @@
-# Release 0.2.4-alpha.11
+# Release 0.2.4-alpha.12
 
 Doel van dit document: een agent of mens die voor het eerst aan deze codebase werkt tijdens of na cyclus 0.2.4 snel laten begrijpen wat er is gewijzigd ten opzichte van 0.2.3.
 
@@ -164,3 +164,11 @@ Drie samenhangende correcties aan de Afdrukken-tab en het print-document, zonder
 Bewuste scope-beperking: P6-3 (hint bij lege interval-input) is niet apart toegevoegd. De bestaande placeholder `bv. 1-10, 15` dekt die rol al af; een extra hint daaronder zou de informatie dupliceren. De open-interval-uitbreiding hierboven is uit dezelfde discussie ontstaan en vervangt het oorspronkelijke hint-idee als nuttiger verbetering.
 
 PR: [#27](https://github.com/stefvdwater/OnTarget/pull/27).
+
+### Hele aanmeldlijst-zone droppable bij terugslepen schutters (issue #22)
+
+Schutters uit een doel terug naar de aanmeldlijst slepen vroeg voorheen pixel-precieze aim: een drop bovenop een bestaande schutterkaart in de aanmeldlijst viel door alle takken in [`onDragEnd`](../src/renderer/src/pages/IndelingTab.tsx) heen (omdat `useSortable` van [`SchutterKaart`](../src/renderer/src/components/SchutterKaart.tsx) die kaart óók een drop-target maakt, en `over.id` dan `niet-{schutter_id}` is in plaats van `niet-ingedeeld`). De extra tak `overId.startsWith('niet-')` routeert die drop nu naar `verplaatsNaarNietIngedeeld`, die de teruggehaalde schutter onderaan de aanmeldlijst plakt. Het algoritme leidt nog steeds op de DB-aanmeldvolgorde, dus een volgende "Automatisch indelen" gebruikt opnieuw de oorspronkelijke volgorde — de visuele append is enkel een tussenstand tussen drag-and-drop-acties door.
+
+Bij drag vanaf een doel-kaart krijgt de aanmeldlijst nu ook een semi-transparente overlay met de tekst "Uit indeling halen" (gestreepte gele rand, `color-mix` voor de tint), analoog aan browser file-drop-feedback. De overlay wordt aangestuurd door een nieuwe `dragVanDoel`-state in [`IndelingTab`](../src/renderer/src/pages/IndelingTab.tsx) (geset in `onDragStart` op basis van het id-prefix) en doorgegeven als `toonOverlay`-prop aan [`NietIngedeeldBalk`](../src/renderer/src/components/NietIngedeeldBalk.tsx). Bij drag vanaf de aanmeldlijst zelf verschijnt de overlay niet — dropzone-feedback voor "terug-naar-jezelf" zou alleen verwarren. De overlay heeft `pointer-events: none` zodat dnd-kit's collision-detectie niet wordt verstoord.
+
+PR: [#28](https://github.com/stefvdwater/OnTarget/pull/28).

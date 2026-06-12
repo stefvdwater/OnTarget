@@ -28,6 +28,7 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
   const [doelen, setDoelen] = useState<DoelMetConflicten[]>([])
   const [nietIngedeeld, setNietIngedeeld] = useState<DoelSlot[]>([])
   const [actiefSlot, setActiefSlot] = useState<DoelSlot | null>(null)
+  const [dragVanDoel, setDragVanDoel] = useState(false)
   const [bevestigAuto, setBevestigAuto] = useState(false)
   const [bevestigLeegmaken, setBevestigLeegmaken] = useState(false)
   const [totaalInschrijvingen, setTotaalInschrijvingen] = useState(0)
@@ -166,11 +167,14 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
   }
 
   function onDragStart(event: DragStartEvent): void {
-    setActiefSlot(vindSlot(event.active.id as string))
+    const id = event.active.id as string
+    setActiefSlot(vindSlot(id))
+    setDragVanDoel(!id.startsWith('niet-'))
   }
 
   function onDragEnd(event: DragEndEvent): void {
     setActiefSlot(null)
+    setDragVanDoel(false)
     const { active, over } = event
     if (!over) return
 
@@ -183,7 +187,8 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
       : parseInt(activeId.split('-')[1])
     const bronDoelNr = vanNietIngedeeld ? null : parseInt(activeId.split('-')[0])
 
-    if (overId === 'niet-ingedeeld') {
+    // Drop op aanmeldlijst-zone of op een van de niet-kaarten erin: terug naar niet-ingedeeld.
+    if (overId === 'niet-ingedeeld' || overId.startsWith('niet-')) {
       verplaatsNaarNietIngedeeld(bronSchutterId, bronDoelNr)
       return
     }
@@ -397,7 +402,11 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
 
       {/* Indeling layout */}
       <div className="indeling-layout">
-        <NietIngedeeldBalk slots={nietIngedeeld} totaal={totaalInschrijvingen || totaal} />
+        <NietIngedeeldBalk
+          slots={nietIngedeeld}
+          totaal={totaalInschrijvingen || totaal}
+          toonOverlay={dragVanDoel}
+        />
 
         <main>
           {doelen25mEnCompound.length > 0 && (

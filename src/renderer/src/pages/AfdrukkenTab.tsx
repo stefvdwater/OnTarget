@@ -5,6 +5,7 @@ import { voegConflictenToe } from '../algoritme/conflicten'
 import { pasRuntimeCompoundZoneToe } from '../algoritme/zones'
 import PrintDocument from '../components/PrintDocument'
 import {
+  bouwExcelModel,
   parseDoelInterval,
   type Groepering,
   type Orientatie,
@@ -43,6 +44,9 @@ export default function AfdrukkenTab({ wedstrijd }: Props): JSX.Element {
 
   const [totalenTonen, setTotalenTonen] = useState(true)
   const [waarschuwingenTonen, setWaarschuwingenTonen] = useState(false)
+
+  const [excelBezig, setExcelBezig] = useState(false)
+  const [excelFout, setExcelFout] = useState<string | null>(null)
 
   // ── Laad data ──────────────────────────────────────────
   useEffect(() => {
@@ -193,6 +197,22 @@ export default function AfdrukkenTab({ wedstrijd }: Props): JSX.Element {
     window.print()
   }
 
+  async function openenInExcel(): Promise<void> {
+    setExcelBezig(true)
+    setExcelFout(null)
+    try {
+      const model = bouwExcelModel(wedstrijd, doelen, opties)
+      const res = await window.api.indeling.openInExcel(model)
+      if (!res.ok) {
+        setExcelFout(res.fout ?? 'Kon het Excel-bestand niet openen.')
+      }
+    } catch (e) {
+      setExcelFout((e as Error).message)
+    } finally {
+      setExcelBezig(false)
+    }
+  }
+
   return (
     <div className="afdrukken-layout">
       {/* Linker paneel: opties */}
@@ -323,6 +343,15 @@ export default function AfdrukkenTab({ wedstrijd }: Props): JSX.Element {
         <button className="btn btn-accent-yellow afdruk-knop" onClick={afdrukken}>
           <IconPrinter /> Afdrukken
         </button>
+
+        <button
+          className="btn afdruk-knop afdruk-knop-excel"
+          onClick={openenInExcel}
+          disabled={excelBezig}
+        >
+          <IconExcel /> {excelBezig ? 'Bezig met openen…' : 'Openen in MS Excel'}
+        </button>
+        {excelFout && <div className="afdruk-fout">{excelFout}</div>}
       </aside>
 
       {/* Rechter paneel: preview */}
@@ -427,6 +456,27 @@ function IconPrinter(): JSX.Element {
       <polyline points="6 9 6 2 18 2 18 9" />
       <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
       <rect x="6" y="14" width="12" height="8" />
+    </svg>
+  )
+}
+
+function IconExcel(): JSX.Element {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <line x1="3" y1="9" x2="21" y2="9" />
+      <line x1="3" y1="15" x2="21" y2="15" />
+      <line x1="9" y1="3" x2="9" y2="21" />
+      <line x1="15" y1="3" x2="15" y2="21" />
     </svg>
   )
 }

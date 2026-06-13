@@ -1,6 +1,6 @@
 {
   "name": "target-assignment",
-  "version": "0.2.4",
+  "version": "0.2.5-alpha.1",
   "description": "Boogschieten doelindeling applicatie",
   "main": "./out/main/index.js",
   "scripts": {
@@ -15,12 +15,13 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
+    "exceljs": "^4.4.0",
     "sql.js": "^1.12.0"
   },
   "devDependencies": {
-    "@types/sql.js": "^1.4.9",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
+    "@types/sql.js": "^1.4.9",
     "@vitejs/plugin-react": "^4.4.1",
     "autoprefixer": "^10.4.21",
     "electron": "^33.2.0",

@@ -1,8 +1,10 @@
-import { ipcMain, dialog, BrowserWindow } from 'electron'
-import { writeFileSync } from 'fs'
+import { ipcMain, dialog, BrowserWindow, shell, app } from 'electron'
+import { writeFileSync, chmodSync, mkdirSync, readdirSync, unlinkSync } from 'fs'
 import { join } from 'path'
+import ExcelJS from 'exceljs'
 import { queryAll, queryOne, run, transaction } from './database'
 import { valideerEnNormaliseer, type BackupPayloadV1 } from '@shared/backupTypes'
+import type { ExcelModel } from '@shared/afdrukTypes'
 
 // ── Demo data ─────────────────────────────────────────────
 ipcMain.handle('demo:laad', () => {
@@ -555,3 +557,108 @@ ipcMain.handle('indeling:getVergrendeldeDoelen', (_, wedstrijd_id: number) =>
   queryAll('SELECT doel_nummer FROM vergrendelde_doelen WHERE wedstrijd_id=?', [wedstrijd_id])
     .map((r) => r.doel_nummer)
 )
+
+// Aparte submap in de OS-temp voor de tijdelijke Excel-exports. Zo kunnen we ze
+// bij het opstarten veilig opruimen zonder andere temp-bestanden te raken.
+function excelTempMap(): string {
+  return join(app.getPath('temp'), 'ontarget-excel')
+}
+
+// Ruimt achtergebleven Excel-export-bestanden van vorige sessies op. De
+// bestanden zijn read-only (zie indeling:openInExcel), dus eerst het schrijfbit
+// terugzetten voor de delete. Een bestand dat nog open is (bv. in Excel) kan op
+// Windows niet verwijderd worden: dat slaan we stil over. Wordt bij het
+// opstarten aangeroepen vanuit index.ts.
+export function ruimExcelTempBestandenOp(): void {
+  let namen: string[]
+  try {
+    namen = readdirSync(excelTempMap())
+  } catch {
+    return // map bestaat (nog) niet
+  }
+  const map = excelTempMap()
+  for (const naam of namen) {
+    const pad = join(map, naam)
+    try {
+      chmodSync(pad, 0o666)
+      unlinkSync(pad)
+    } catch {
+      // nog open of niet te verwijderen: overslaan
+    }
+  }
+}
+
+// Bouwt een opgemaakt .xlsx-werkboek uit het meegestuurde Excel-model en opent
+// het in de standaard-app voor .xlsx (doorgaans MS Excel). Het model is in de
+// renderer opgebouwd uit exact dezelfde rijen/kolommen als de afdruk-preview
+// (zie afdruk-helpers.ts → bouwExcelModel). Schrijft naar een tijdelijk bestand
+// zodat de gebruiker van daaruit in Excel kan afdrukken of "Opslaan als".
+ipcMain.handle('indeling:openInExcel', async (_, model: ExcelModel) => {
+  try {
+    const wb = new ExcelJS.Workbook()
+    const ws = wb.addWorksheet('Indeling')
+    const aantalKolommen = model.kolommen.length
+    ws.columns = model.kolommen.map((k) => ({ width: k.breedte }))
+
+    // Titel + subtitel over de volledige breedte.
+    const titelRij = ws.addRow([model.titel])
+    ws.mergeCells(titelRij.number, 1, titelRij.number, aantalKolommen)
+    titelRij.getCell(1).font = { bold: true, size: 14 }
+
+    const subRij = ws.addRow([model.subtitel])
+    ws.mergeCells(subRij.number, 1, subRij.number, aantalKolommen)
+    subRij.getCell(1).font = { color: { argb: 'FF555555' } }
+
+    ws.addRow([])
+
+    // Kolomkoppen: vet, lichte vulling, dunne onderrand.
+    const kopRij = ws.addRow(model.kolommen.map((k) => k.kop))
+    kopRij.eachCell((cel) => {
+      cel.font = { bold: true }
+      cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } }
+      cel.border = { bottom: { style: 'thin', color: { argb: 'FFBFBFBF' } } }
+    })
+    // Koprij bevriezen zodat hij bij scrollen zichtbaar blijft.
+    ws.views = [{ state: 'frozen', ySplit: kopRij.number }]
+
+    for (const rij of model.rijen) {
+      if (rij.soort === 'groepkop') {
+        const r = ws.addRow([rij.tekst])
+        ws.mergeCells(r.number, 1, r.number, aantalKolommen)
+        r.getCell(1).font = { bold: true }
+        r.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF7F7F7' } }
+      } else {
+        ws.addRow(rij.cellen)
+      }
+    }
+
+    if (model.totalen.length > 0) {
+      ws.addRow([])
+      ws.addRow(['Totalen']).getCell(1).font = { bold: true }
+      for (const regel of model.totalen) ws.addRow([regel])
+    }
+
+    if (model.waarschuwingen.length > 0) {
+      ws.addRow([])
+      ws.addRow(['Aandachtspunten']).getCell(1).font = { bold: true }
+      for (const regel of model.waarschuwingen) ws.addRow([regel])
+    }
+
+    const map = excelTempMap()
+    mkdirSync(map, { recursive: true })
+    const slug = slugifyVoorBestand(model.titel)
+    const bestand = join(map, `indeling-${slug}-${model.datum}-${Date.now()}.xlsx`)
+    await wb.xlsx.writeFile(bestand)
+
+    // Alleen-lezen maken: Excel opent het bestand als "Alleen-lezen", zodat de
+    // gebruiker eerst "Opslaan als" moet doen om in een eigen kopie te werken.
+    // Op Windows zet een chmod zonder schrijfbit het read-only-attribuut.
+    chmodSync(bestand, 0o444)
+
+    const fout = await shell.openPath(bestand)
+    if (fout) return { ok: false, fout }
+    return { ok: true, bestand }
+  } catch (e) {
+    return { ok: false, fout: (e as Error).message }
+  }
+})

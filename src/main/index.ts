@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { initDatabase, flushDatabaseSync } from './database'
-import './ipc'
+import { ruimExcelTempBestandenOp } from './ipc'
 import icon from '../../resources/icon.ico?asset'
 
 // Bouwt het hoofdvenster, koppelt het preload-script en laadt de renderer (dev-URL of gebouwde index.html).
@@ -45,6 +45,8 @@ app.whenReady().then(async () => {
   })
 
   await initDatabase()
+  // Tijdelijke Excel-exports van vorige sessies opruimen.
+  ruimExcelTempBestandenOp()
   createWindow()
 
   app.on('activate', function () {

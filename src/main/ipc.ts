@@ -1,5 +1,5 @@
 import { ipcMain, dialog, BrowserWindow, shell, app } from 'electron'
-import { writeFileSync, chmodSync } from 'fs'
+import { writeFileSync, chmodSync, mkdirSync, readdirSync, unlinkSync } from 'fs'
 import { join } from 'path'
 import ExcelJS from 'exceljs'
 import { queryAll, queryOne, run, transaction } from './database'
@@ -558,6 +558,36 @@ ipcMain.handle('indeling:getVergrendeldeDoelen', (_, wedstrijd_id: number) =>
     .map((r) => r.doel_nummer)
 )
 
+// Aparte submap in de OS-temp voor de tijdelijke Excel-exports. Zo kunnen we ze
+// bij het opstarten veilig opruimen zonder andere temp-bestanden te raken.
+function excelTempMap(): string {
+  return join(app.getPath('temp'), 'ontarget-excel')
+}
+
+// Ruimt achtergebleven Excel-export-bestanden van vorige sessies op. De
+// bestanden zijn read-only (zie indeling:openInExcel), dus eerst het schrijfbit
+// terugzetten voor de delete. Een bestand dat nog open is (bv. in Excel) kan op
+// Windows niet verwijderd worden: dat slaan we stil over. Wordt bij het
+// opstarten aangeroepen vanuit index.ts.
+export function ruimExcelTempBestandenOp(): void {
+  let namen: string[]
+  try {
+    namen = readdirSync(excelTempMap())
+  } catch {
+    return // map bestaat (nog) niet
+  }
+  const map = excelTempMap()
+  for (const naam of namen) {
+    const pad = join(map, naam)
+    try {
+      chmodSync(pad, 0o666)
+      unlinkSync(pad)
+    } catch {
+      // nog open of niet te verwijderen: overslaan
+    }
+  }
+}
+
 // Bouwt een opgemaakt .xlsx-werkboek uit het meegestuurde Excel-model en opent
 // het in de standaard-app voor .xlsx (doorgaans MS Excel). Het model is in de
 // renderer opgebouwd uit exact dezelfde rijen/kolommen als de afdruk-preview
@@ -614,8 +644,10 @@ ipcMain.handle('indeling:openInExcel', async (_, model: ExcelModel) => {
       for (const regel of model.waarschuwingen) ws.addRow([regel])
     }
 
+    const map = excelTempMap()
+    mkdirSync(map, { recursive: true })
     const slug = slugifyVoorBestand(model.titel)
-    const bestand = join(app.getPath('temp'), `indeling-${slug}-${model.datum}-${Date.now()}.xlsx`)
+    const bestand = join(map, `indeling-${slug}-${model.datum}-${Date.now()}.xlsx`)
     await wb.xlsx.writeFile(bestand)
 
     // Alleen-lezen maken: Excel opent het bestand als "Alleen-lezen", zodat de

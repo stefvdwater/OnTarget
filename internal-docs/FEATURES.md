@@ -81,7 +81,8 @@
   afstand, totalen en conflict-waarschuwingen. De native print-dialoog van
   Windows opent met "Microsoft Print to PDF" als optie om een PDF op te
   slaan. Zie [AFDRUKKEN.md](AFDRUKKEN.md) voor de volledige beschrijving.
-- De indeling wordt geëxporteerd via print-to-PDF: de native Windows print-dialoog met "Microsoft Print to PDF" slaat het Afdrukken-overzicht op als PDF. Een rechtstreekse CSV- of Excel-export van de indeling bestaat (nog) niet en blijft een optionele toekomstige uitbreiding.
+- **Openen in MS Excel**: een knop op de Afdrukken-tab genereert een opgemaakt .xlsx-werkboek met exact dezelfde rijen, kolommen, groepering en filters als de preview, en opent dat in de standaard-app voor .xlsx (doorgaans MS Excel). Het bestand opent **alleen-lezen**: om wijzigingen te bewaren gebruikt de organisatie "Opslaan als" en werkt ze verder in die kopie. Afdrukken vanuit Excel kan rechtstreeks. Het werkboek heeft vette kolomkoppen, een titelrij met wedstrijd en datum, gilde-groepkoppen (bij groepering per gilde) en optioneel de totalen en aandachtspunten.
+- Daarnaast kan het overzicht als PDF bewaard worden via print-to-PDF: de native Windows print-dialoog met "Microsoft Print to PDF". Een rechtstreekse CSV-export van de indeling bestaat nog niet en blijft een optionele toekomstige uitbreiding.
 
 ## 5. Wedstrijdinstellingen
 

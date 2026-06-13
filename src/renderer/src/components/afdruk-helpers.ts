@@ -69,16 +69,20 @@ export function parseDoelInterval(
   return { nummers: Array.from(nummers).sort((x, y) => x - y) }
 }
 
-/** Positie 1 → "A", 2 → "B", … 6 → "F" (1-indexed). */
-export function positieLetter(positieOfIndex: number): string {
-  // positieOfIndex is verwacht 1-based — geef letter A..F (clampen op Z voor veiligheid)
-  const idx = Math.max(1, positieOfIndex) - 1
+/**
+ * Positie 0 → "A", 1 → "B", … 5 → "F" (0-indexed, zoals slot.positie).
+ * Het algoritme kent posities toe als array-index (0-based), dus deze helper
+ * verwacht dezelfde 0-based waarde.
+ */
+export function positieLetter(positie0based: number): string {
+  // 0-based positie → letter A..F (clampen op Z voor veiligheid)
+  const idx = Math.max(0, positie0based)
   return String.fromCharCode(65 + Math.min(idx, 25))
 }
 
-/** "1A", "12F" enz. */
-export function doelLabel(doelNummer: number, positie1based: number): string {
-  return `${doelNummer}${positieLetter(positie1based)}`
+/** "1A", "12F" enz. positie is 0-based (zoals slot.positie). */
+export function doelLabel(doelNummer: number, positie0based: number): string {
+  return `${doelNummer}${positieLetter(positie0based)}`
 }
 
 export interface PrintRij {
@@ -226,7 +230,8 @@ export function bouwDoelGroepen(
         rijen.push({ label: doelLabel(doel.nummer, s.positie), slot: s })
       }
     } else {
-      for (let p = 1; p <= 6; p++) {
+      // 6 vaste rijen; slot.positie is 0-based (0..5), gaten blijven leeg.
+      for (let p = 0; p < 6; p++) {
         const slot = passerende.find((s) => s.positie === p) ?? null
         rijen.push({ label: doelLabel(doel.nummer, p), slot })
       }

@@ -8,9 +8,9 @@ OnTarget — een Electron + React + TypeScript desktopapp voor het automatisch i
 
 Project is **Nederlandstalig (Vlaams)** — code-commentaar, UI-teksten en variabelennamen volgen die conventie.
 
-## Openstaande werken
+## Openstaande werken en context
 
-Een gestructureerd overzicht van geïdentificeerde issues, design-afspraken en geplande PR's leeft in [.claude/openstaande-werken.md](.claude/openstaande-werken.md). Lees dat eerst voordat je een nieuwe taak in de app oppakt — vaak hangt het werk samen met een eerder afgesproken aanpak.
+De changelogs in `internal-docs/RELEASE_*.md` zijn de bron van waarheid voor recent werk, design-afspraken en de aanpak achter eerdere PR's. Lees de meest recente vóór je een nieuwe taak oppakt: vaak hangt het werk samen met een eerder afgesproken aanpak. Zie de sectie "Release-notities" hieronder voor de huidige versie.
 
 ## Commands
 
@@ -43,7 +43,7 @@ Paren-gebaseerd algoritme met LPT bin-packing over twee sporen — zie [internal
 
 ### Release-notities
 
-Per alpha/release-bump ligt er een changelog-bestand in `internal-docs/RELEASE_<versie>.md`. Lees de meest recente vóór je werk begint, vooral voor recent gewijzigde features en nieuwe conventies. Huidige: [internal-docs/RELEASE_0.2.3.md](internal-docs/RELEASE_0.2.3.md).
+Per alpha/release-bump ligt er een changelog-bestand in `internal-docs/RELEASE_<versie>.md`. Lees de meest recente vóór je werk begint, vooral voor recent gewijzigde features en nieuwe conventies. Huidige: [internal-docs/RELEASE_0.2.4.md](internal-docs/RELEASE_0.2.4.md).
 
 ### Gedeelde logica — hergebruiken, niet dupliceren
 

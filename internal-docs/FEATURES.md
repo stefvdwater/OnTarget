@@ -13,6 +13,7 @@
     [label-conventie](../README.md#label-conventie-weergave))
   - Afstand: 12m, 18m, 25m
 - Schutters doorzoeken en filteren.
+- Import en export van het schuttersbestand als CSV (UTF-8 met BOM, direct herimporteerbaar). Onbekende gilden worden bij import automatisch aangemaakt. Zie de CSV-sectie in [CLAUDE.md](../CLAUDE.md).
 
 ## 2. Wedstrijdinschrijving
 
@@ -80,7 +81,7 @@
   afstand, totalen en conflict-waarschuwingen. De native print-dialoog van
   Windows opent met "Microsoft Print to PDF" als optie om een PDF op te
   slaan. Zie [AFDRUKKEN.md](AFDRUKKEN.md) voor de volledige beschrijving.
-- Optioneel: exporteren naar Excel/CSV — nog niet geïmplementeerd.
+- De indeling wordt geëxporteerd via print-to-PDF: de native Windows print-dialoog met "Microsoft Print to PDF" slaat het Afdrukken-overzicht op als PDF. Een rechtstreekse CSV- of Excel-export van de indeling bestaat (nog) niet en blijft een optionele toekomstige uitbreiding.
 
 ## 5. Wedstrijdinstellingen
 
@@ -98,6 +99,7 @@ De app berekent automatisch hoeveel doelen per zone beschikbaar zijn op basis va
 - Overzicht van alle wedstrijden (verleden en toekomst).
 - Wedstrijdgegevens opslaan (datum, locatie, naam).
 - Inschrijvingslijst per wedstrijd raadpleegbaar.
+- Backup per wedstrijd: een wedstrijd volledig exporteren naar een JSON-bestand (met inschrijvingen, doelindeling en vergrendelde doelen) en later, op dezelfde of een andere installatie, terug importeren. Ook bulk-export van alle wedstrijden naar een map. Bij import met een naam- en datum-conflict kan de gebruiker kiezen tussen vervangen, als kopie importeren of overslaan. Het bestandsformaat staat in [BACKUP_FORMAT.md](BACKUP_FORMAT.md).
 
 ## 7. Toekomstige functies
 

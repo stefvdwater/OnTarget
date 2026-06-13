@@ -58,6 +58,7 @@ contextBridge.exposeInMainWorld('api', {
     toggleDoelVergrendeld: (wedstrijd_id: number, doel_nummer: number, vergrendeld: boolean) =>
       ipcRenderer.invoke('indeling:toggleDoelVergrendeld', wedstrijd_id, doel_nummer, vergrendeld),
     getVergrendeldeDoelen: (wedstrijd_id: number) =>
-      ipcRenderer.invoke('indeling:getVergrendeldeDoelen', wedstrijd_id)
+      ipcRenderer.invoke('indeling:getVergrendeldeDoelen', wedstrijd_id),
+    openInExcel: (model: object) => ipcRenderer.invoke('indeling:openInExcel', model)
   }
 })

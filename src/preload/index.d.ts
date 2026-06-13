@@ -57,6 +57,7 @@ declare global {
         save: (wedstrijd_id: number, indeling: object[]) => Promise<void>
         toggleDoelVergrendeld: (wedstrijd_id: number, doel_nummer: number, vergrendeld: boolean) => Promise<void>
         getVergrendeldeDoelen: (wedstrijd_id: number) => Promise<number[]>
+        openInExcel: (model: object) => Promise<{ ok: boolean; bestand?: string; fout?: string }>
       }
     }
   }

@@ -28,6 +28,8 @@
   --blue: #1d70b8;
   --blue-soft: #dceaf6;
   --blue-deep: #134269;
+  --green: #217346;
+  --green-deep: #16542f;
 
   /* Borders gemeenschappelijk gebruikt in accent-soft chips/cells */
   --yellow-soft-border: #ecdfa2;
@@ -1849,6 +1851,13 @@ input:focus-visible,
   width: 100%;
   justify-content: center;
 }
+
+.afdruk-knop-excel {
+  background: var(--green);
+  color: white;
+  border-color: var(--green-deep);
+}
+.afdruk-knop-excel:hover:not(:disabled) { background: #2a8c56; }
 
 /* ─── Print-preview wrap ─────────────────────────────── */
 

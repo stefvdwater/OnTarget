@@ -19,9 +19,10 @@ npm install
 npm run dev          # electron-vite dev met hot reload
 npm run build        # productie-build (out/)
 npm run build:win    # Windows installer (.exe) via electron-builder
+npm test             # algoritme-tests (Node test-runner, geen extra dependency)
 ```
 
-Er is **geen test- of lint-script** geconfigureerd. TypeScript-typecheck loopt via `electron-vite build`.
+Er is **geen lint-script** geconfigureerd. TypeScript-typecheck loopt via `electron-vite build`. Voor het indelingsalgoritme is er wel een test-harnas: `npm test` draait de scenario- en fuzz-tests in [`test/`](test/) (zie [internal-docs/ALGORITHM_DEFENSE.md](internal-docs/ALGORITHM_DEFENSE.md)).
 
 ## Architectuur
 
@@ -37,7 +38,8 @@ Paren-gebaseerd algoritme met LPT bin-packing over twee sporen — zie [internal
 
 1. [internal-docs/ALGORITHM_SPEC.md](internal-docs/ALGORITHM_SPEC.md) — gewenst gedrag, input/output, randgevallen.
 2. [internal-docs/RULES_HIERARCHY.md](internal-docs/RULES_HIERARCHY.md) — regels per prioriteit (harde → zachte).
-3. [internal-docs/ALGORITME_v2.0.md](internal-docs/ALGORITME_v2.0.md) — huidige implementatie.
+3. [internal-docs/ALGORITME_v2.0.md](internal-docs/ALGORITME_v2.0.md) - huidige implementatie (incl. fase 7, de lexicografische verfijning).
+4. [internal-docs/ALGORITHM_DEFENSE.md](internal-docs/ALGORITHM_DEFENSE.md) - de doelfunctie, waarom de verfijning beter is, en openstaande regelnotities.
 
 [internal-docs/RULES.md](internal-docs/RULES.md) bevat alle regels in gewone taal; [internal-docs/FEATURES.md](internal-docs/FEATURES.md) is het functioneel overzicht.
 

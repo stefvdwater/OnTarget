@@ -9,8 +9,10 @@ Cyclus gestart vanaf [`0.2.4`](RELEASE_0.2.4.md) met de version-bump naar `0.2.5
 1. Waarheids-correcties in [`CLAUDE.md`](../CLAUDE.md) en [`FEATURES.md`](FEATURES.md): dode verwijzingen en achterhaalde beweringen rechtgetrokken.
 2. Een nieuwe knop **"Openen in MS Excel"** op de Afdrukken-tab die de indeling als opgemaakt, alleen-lezen `.xlsx`-werkboek exporteert via [`exceljs`](https://github.com/exceljs/exceljs) en opent in Excel. De rij-opbouw wordt gedeeld met de print-preview zodat beide nooit uit elkaar lopen.
 3. Een herstelde off-by-one in de positie-nummering waardoor de eerste schutter van elk doel wegviel in de preview, de print en de Excel-export.
+4. (Later in de cyclus) Een gerichte fix in het indelingsalgoritme zodat ook de laatst ingedeelde gilde op aaneengesloten doelen blijft staan i.p.v. verspreid te raken.
+5. (Later in de cyclus) Een **lexicografische verfijningsstap (fase 7)** boven op de greedy-constructie die mono-gilde-staarten opruimt, plus een **test-harnas** (`npm test`) dat "beter" meetbaar maakt en regressies vangt.
 
-Het indelingsalgoritme en het database-schema blijven onaangeroerd.
+Het database-schema blijft onaangeroerd. De twee-sporen-kern bleef ongewijzigd; fase 7 herverdeelt enkel binnen de reeds gekozen actieve doelen en kan de indeling per constructie nooit verslechteren.
 
 ## Wijziging
 
@@ -48,3 +50,37 @@ Fix in [`afdruk-helpers.ts`](../src/renderer/src/components/afdruk-helpers.ts): 
 Het was een bestaande bug in de print: de oude `PrintDocument` had dezelfde `p=1..6`-lus. De DRY-extractie hierboven nam hem mee naar de Excel-export, waarna hij in alle drie de outputs tegelijk is opgelost.
 
 Bewuste scope-beperking: de fix raakt enkel de label- en rij-opbouw van het afdruk-overzicht. De Indeling-tab (drag-and-drop) toonde de schutters al correct, want die rendert op array-volgorde en niet op `positie === p`.
+
+### Gilde-restplaatsing: laatste gilde op aaneengesloten doelen
+
+**Probleem (gerapporteerd vanuit de wedstrijd Vosselaar).** De laatst ingeschreven gilde werd over de hele zaal verspreid terwijl de andere gilden mooi samen stonden. Voorbeeld: Herselt (3 schutters op 25m) belandde op doel 1, 6 en 11. Oorzaak in [`indeling.ts`](../src/renderer/src/algoritme/indeling.ts):
+
+- De twee-sporen-toewijzing plaatst maar ~2 paren (4 schutters) per doel; in dichte zones zijn er meer paren dan voorste doelen (`Tnorm`). De staart-paren raakten de overflow-tak en werden **ontkoppeld tot losse schutters**. Omdat elk spoor op aanmeldvolgorde is gesorteerd, is de laatst aangemelde gilde structureel het overflow-slachtoffer.
+- De oude `plaatsLones` plaatste elke restschutter daarna **onafhankelijk** in het leegste doel, zonder de eigen restleden van een gilde bij elkaar te houden. Gevolg: de late gilde waaierde uit.
+
+**Fix (gericht, twee-sporen-kern ongemoeid).** `plaatsLones` is vervangen door een gilde-blok-bewuste `plaatsLeftovers`. Alle leftovers (losse schutters + ontkoppelde overflow-paren) worden per gilde gegroepeerd en als blok op aaneengesloten doelen geplaatst, in volgorde van vroegste aanmeldvolgorde (zo krijgen late gilden vanzelf de achterste vrije doelen). Een blok groeit vanaf zijn anker (waar het gilde al staat) of een seed naar directe buren. Om een blok samen te houden mag een doel naar **6 beurten** (R10 weegt bij restplaatsing zwaarder dan het streefgetal 5; de harde grens van 6 blijft). Zie [ALGORITME_v2.0.md §7](ALGORITME_v2.0.md) en de bijgewerkte prioriteitsnoot in [ALGORITHM_SPEC.md §11](ALGORITHM_SPEC.md) / [RULES_HIERARCHY.md R11b](RULES_HIERARCHY.md).
+
+**Geverifieerd** op de Vosselaar-backup: Herselt-25m staat nu op doel 6, 7, 9 (aaneengesloten in de 25m-rij; doel 8 is het compound-doel ertussen), elk ander gilde blijft per zone aaneengesloten, geen doel boven 6 beurten en niets oningedeeld.
+
+Bewuste scope-beperking: `verdeelGildenOverSporen`, `plakSpoor`, de zone-/dubbelaar-logica en `handhaafMin4Beurten` blijven ongewijzigd.
+
+### Lexicografische verfijning (fase 7) + test-harnas
+
+**Probleem.** De auto-indeling is fundamenteel een **constrained optimization**-probleem, geen sorteerprobleem. De greedy-constructie (paren + tweesporen) lost het meeste goed op, maar bij scheve gildegroottes stapelt ze het surplus van een gilde op het laatste actieve doel: een **mono-gilde-staart**. Het canonieke voorbeeld [ALGORITHM_SPEC §7.4](ALGORITHM_SPEC.md) (A×10, B×2, 2 doelen) gaf `A:4 B:2 | A:6` terwijl `A:5 B:1 | A:5 B:1` voorgeschreven is. De v2.0-implementatie deed dit bewust fout (zie de oude §11-tabel).
+
+**Aanpak (construct + improve).** De greedy-constructie blijft de startoplossing (stabiel, uitlegbaar). Een nieuwe **fase 7** ([`indeling.ts`](../src/renderer/src/algoritme/indeling.ts)) doet daarna een begrensde, deterministische **lokale zoektocht**: per zone wordt een schutter VERPLAATST of worden twee schutters GERUILD, en een zet wordt enkel aanvaard als ze een **expliciete lexicografische doelfunctie** (`scoreToestand`) strikt verbetert. De termvolgorde codeert de prioriteitshierarchie (harde grenzen → bezetting → diversiteit → aanmeldvolgorde → compactheid). Dubbeldoelen (R7/R8) en compound-op-25m (R4b/R16) blijven onaangeroerd; geen enkele zet kan een harde grens schenden (die staan bovenaan de vector).
+
+**Waarom dit aantoonbaar beter is.** Omdat enkel strikt verbeterende zetten worden aanvaard, is de uitkomst **nooit slechter** dan de constructie alleen, en op de probleemgevallen **strikt beter**. Concreet wordt §7.4 nu exact `A:5 B:1 | A:5 B:1`, en verdwijnen de mono-staarten in A×7/B×6/C×4 en in "dominant gilde + singletons". Reeds-goede indelingen (§7.1, §7.2) blijven onveranderd. Volledige redenering: [ALGORITHM_DEFENSE.md](ALGORITHM_DEFENSE.md).
+
+**Test-harnas (nieuw, `npm test`).** Er was geen test-script. Toegevoegd in [`test/`](../test/), draaiend op Node's eigen test-runner via een kleine resolver-hook ([`scripts/ts-resolver.mjs`](../scripts/ts-resolver.mjs)) - **geen extra npm-dependency**. Het bevat de §7-scenario's met geasserteerde uitkomsten, het strikte-verbeterings-bewijs, en een fuzz die over **400 willekeurige scenario's** aantoont dat de verfijning de score nooit verslechtert, de harde constraints altijd respecteert en niemand van plaats laat verdwijnen. De doelfunctie staat onafhankelijk geimplementeerd in het harnas (`scoreVector`) als rechter. Tijdens de ontwikkeling ving het harnas een echte bug (contiguiteit gemeten zonder dubbeldoelen in de rang-as).
+
+**Twee verfijningen na test op echte data (wedstrijd Vosselaar, 80 schutters):**
+
+1. **Aanmeldvolgorde op gilde-niveau.** R8/R9 betekent: een gilde dat vroeger aanmeldt staat op de voorste doelen (de volgorde binnen een gilde doet er niet toe). De volgorde-term meet dat op gilde-niveau (gemiddelde aanmeld vs gemiddelde doel-positie). Bovendien worden de achterste **dubbeldoelen** nu met de **laatst** aangemelde normalen gevuld (`normalenAchteraan`), zodat een vroeg aangemelde gilde niet als dubbelvuller naar achteren gezogen wordt.
+2. **Niet uitsmeren om tot 5 te vullen.** De bezetting is gesplitst: ">5 vermijden / gelijk verdelen" blijft hoog, maar "een doel naar 5 i.p.v. 4 brengen" (`onderstreef`) staat helemaal onderaan, en "een gilde niet uitsmeren" (`uitgesmeerd`) staat boven "3-stapel vermijden" (`stapeling`). Zo blijft een gilde compact (bv. 5 leden op 3 aaneengesloten doelen) i.p.v. dun over veel doelen verspreid.
+
+Beide gestaafd met regressietests in [`test/optimaliteit.test.ts`](../test/optimaliteit.test.ts) ("Vosselaar-regressies").
+
+**Docs in lockstep:** [ALGORITME_v2.0.md §9b/§10/§11](ALGORITME_v2.0.md), [ALGORITHM_SPEC.md §11](ALGORITHM_SPEC.md) (nota over de R6-positie), [RULES_HIERARCHY.md](RULES_HIERARCHY.md) en de nieuwe [ALGORITHM_DEFENSE.md](ALGORITHM_DEFENSE.md).
+
+Bewuste scope-beperking: fase 7 zoekt een lokaal (niet gegarandeerd globaal) optimum, opent geen nieuwe doelen en raakt dubbeldoelen niet. De twee-sporen-constructie en alle eerdere fasen blijven ongewijzigd; fase 7 is uitschakelbaar via `berekenIndeling(..., { lokaleZoektocht: false })`.

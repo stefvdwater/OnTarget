@@ -126,7 +126,85 @@
             <span class="docs-section-title">Wedstrijden</span>
           </summary>
           <div class="docs-section-body">
-            <p class="muted">Inhoud volgt.</p>
+            <p>
+              Het scherm <strong>Wedstrijden</strong> is het startoverzicht van
+              de toepassing. Alle geplande wedstrijden staan er als kaarten, met
+              bovenaan het totale aantal. Vanaf hier maak je een nieuwe wedstrijd
+              aan, open je een bestaande, of beheer je back-ups. Het indelen zelf
+              gebeurt in de wedstrijd, niet op dit overzicht.
+            </p>
+
+            <h3>Een wedstrijd aanmaken of openen</h3>
+            <p>
+              Met de knop <strong>Nieuwe wedstrijd</strong> maak je een wedstrijd
+              aan met standaardinstellingen; die opent meteen op het tabblad
+              Configuratie, waar je de gegevens aanpast. Klik op een kaart om een
+              bestaande wedstrijd te openen. Zolang er nog geen wedstrijden zijn,
+              toont het scherm een lege weergave met een aanzet om er een aan te
+              maken.
+            </p>
+
+            <h3>Wat een kaart toont</h3>
+            <p>
+              Elke kaart vermeldt de naam van de wedstrijd, de datum en, indien
+              ingevuld, de locatie. Onderaan staan twee tellers: het aantal doelen
+              en het aantal ingeschreven schutters.
+            </p>
+
+            <h3>Een wedstrijd verwijderen</h3>
+            <p>
+              Met het prullenbak-icoon op een kaart verwijder je een wedstrijd. Er
+              volgt eerst een bevestiging, want alle inschrijvingen en de
+              doelindeling van die wedstrijd worden permanent verwijderd. Deze
+              actie kan niet ongedaan gemaakt worden.
+            </p>
+
+            <h3>Back-ups: importeren en exporteren</h3>
+            <p>
+              Een wedstrijd kan als back-upbestand (<code>.json</code>) bewaard en
+              later weer ingelezen worden, bijvoorbeeld om ze naar een andere
+              computer over te brengen. Zo'n bestand bevat de wedstrijd in haar
+              geheel: de configuratie, alle inschrijvingen, de doelindeling en de
+              schutters (met hun gilde) die erbij horen. De schutters worden dus
+              mee geëxporteerd en geïmporteerd, zodat je ze op de andere
+              installatie niet opnieuw hoeft in te voeren. Het beheer verloopt via
+              de knop <strong>Importeren / Exporteren</strong> en het
+              download-icoon op elke kaart.
+            </p>
+            <ul>
+              <li>
+                <strong>Eén wedstrijd exporteren:</strong> het download-icoon op de
+                kaart bewaart die ene wedstrijd als back-upbestand.
+              </li>
+              <li>
+                <strong>Alle exporteren:</strong> bewaart elke wedstrijd in een
+                apart bestand. Na afloop toont het programma in welke map de
+                bestanden staan.
+              </li>
+              <li>
+                <strong>Importeren:</strong> kies een of meerdere
+                back-upbestanden. Bestaat er al een wedstrijd met dezelfde naam en
+                datum, dan vraagt het programma wat er moet gebeuren: de bestaande
+                <strong>vervangen</strong>, <strong>als kopie importeren</strong>
+                (de bestaande blijft behouden), of het bestand
+                <strong>overslaan</strong>.
+              </li>
+            </ul>
+            <p>
+              Bij het importeren worden de schutters uit het bestand gekoppeld aan
+              de schutters die al op deze installatie bestaan, op basis van naam en
+              gilde. Bestaat een schutter of gilde nog niet, dan wordt die
+              automatisch aangemaakt. Na afloop verschijnt een overzicht van wat
+              ingelezen, overgeslagen of mislukt is, samen met het aantal schutters
+              en gildes dat daarbij nieuw is aangemaakt.
+            </p>
+            <p>
+              Het bestandsformaat is opgebouwd om te blijven werken doorheen
+              updates: een back-up uit een oudere versie van OnTarget kan altijd in
+              een nieuwere versie ingelezen worden. Omgekeerd kan een bestand dat
+              met een nieuwere versie gemaakt is niet in een oudere versie geopend
+              worden; werk in dat geval de toepassing eerst bij.
+            </p>
           </div>
         </details>
         <details class="docs-section">

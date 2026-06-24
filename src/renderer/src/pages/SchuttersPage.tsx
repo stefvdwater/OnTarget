@@ -10,6 +10,8 @@ import ImportReviewModal, {
 } from '../components/ImportReviewModal'
 import { categorieLabel } from '../lib/labels'
 import { exporteerWedstrijden } from '../lib/wedstrijdBackup'
+import { IconPencil } from '../components/icons/IconPencil'
+import { IconTrash } from '../components/icons/IconTrash'
 
 type Modal = { type: 'nieuw'; zoek: string } | { type: 'bewerk'; schutter: Schutter } | null
 
@@ -432,7 +434,7 @@ export default function SchuttersPage(): JSX.Element {
               <th>Boogtype</th>
               <th>Categorie</th>
               <th>Afstand</th>
-              <th style={{ width: 150 }}></th>
+              <th style={{ width: 80 }}></th>
             </tr>
           </thead>
           <tbody>
@@ -450,19 +452,22 @@ export default function SchuttersPage(): JSX.Element {
                 <td>{categorieLabel(s)}</td>
                 <td className="mono">{s.afstand}m</td>
                 <td>
-                  <div style={{ display: 'flex', gap: 4 }}>
+                  <div className="rij-acties">
                     <button
-                      className="btn btn-ghost btn-sm"
+                      className="icon-knop"
+                      title="Schutter bewerken"
+                      aria-label="Schutter bewerken"
                       onClick={() => setModal({ type: 'bewerk', schutter: s })}
                     >
-                      Bewerken
+                      <IconPencil />
                     </button>
                     <button
-                      className="btn btn-ghost btn-sm"
-                      style={{ color: 'var(--red)' }}
+                      className="icon-knop danger"
+                      title="Schutter verwijderen"
+                      aria-label="Schutter verwijderen"
                       onClick={() => setVerwijderBevestig(s)}
                     >
-                      Verwijder
+                      <IconTrash />
                     </button>
                   </div>
                 </td>
@@ -523,9 +528,6 @@ export default function SchuttersPage(): JSX.Element {
             initieelZoek={modal.type === 'nieuw' ? modal.zoek : ''}
             onAnnuleer={() => setModal(null)}
             onBevestig={handleBevestig}
-            onVerwijder={
-              modal.type === 'bewerk' ? () => handleVerwijder(modal.schutter.id) : undefined
-            }
           />
         </Modal>
       )}

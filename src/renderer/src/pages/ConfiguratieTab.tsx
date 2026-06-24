@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Wedstrijd } from '../types'
 import { IconWarn } from '../components/icons/IconWarn'
+import WedstrijdVerwijderModal from '../components/WedstrijdVerwijderModal'
 
 interface Props {
   wedstrijd: Wedstrijd
@@ -178,23 +179,11 @@ export default function ConfiguratieTab({ wedstrijd, onUpdate, onVerwijder }: Pr
       </section>
 
       {verwijderBevestig && (
-        <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
-          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
-            <header className="modal-head">Wedstrijd verwijderen?</header>
-            <div className="modal-text">
-              Alle inschrijvingen en de doelindeling van &quot;{w.naam}&quot; worden permanent
-              verwijderd. Deze actie kan niet ongedaan gemaakt worden.
-            </div>
-            <div className="modal-actions">
-              <button className="btn" onClick={() => setVerwijderBevestig(false)}>
-                Annuleer
-              </button>
-              <button className="btn danger" onClick={onVerwijder}>
-                Definitief verwijderen
-              </button>
-            </div>
-          </div>
-        </div>
+        <WedstrijdVerwijderModal
+          wedstrijd={w}
+          onAnnuleer={() => setVerwijderBevestig(false)}
+          onBevestig={onVerwijder}
+        />
       )}
     </div>
   )

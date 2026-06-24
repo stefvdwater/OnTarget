@@ -11,8 +11,6 @@ interface Props {
   bevestigLabel?: string
   onAnnuleer: () => void
   onBevestig: (data: SchutterFormData) => void
-  /** Optioneel: toon Verwijderen-knop bij bewerken. */
-  onVerwijder?: () => void
 }
 
 const CATEGORIEËN: SchutterFormData['leeftijdscategorie'][] = [
@@ -55,8 +53,7 @@ export default function SchutterFormulier({
   titel,
   bevestigLabel,
   onAnnuleer,
-  onBevestig,
-  onVerwijder
+  onBevestig
 }: Props): JSX.Element {
   const parts = initieelZoek.trim().split(/\s+/)
 
@@ -65,16 +62,20 @@ export default function SchutterFormulier({
   const [gildeId, setGildeId] = useState<number | null>(bestaand?.gilde_id ?? null)
   const [nieuwGildeNaam, setNieuwGildeNaam] = useState('')
   const [nieuwGildeOpen, setNieuwGildeOpen] = useState(false)
-  const [typeBoog, setTypeBoog] = useState<SchutterFormData['type_boog']>(
-    bestaand?.type_boog ?? 'Recurve'
+  // Bij een nieuwe schutter staat alles bewust leeg/ongekozen: de gebruiker
+  // moet boog, categorie, geslacht en afstand zelf selecteren (zie kanOpslaan).
+  const [typeBoog, setTypeBoog] = useState<SchutterFormData['type_boog'] | ''>(
+    bestaand?.type_boog ?? ''
   )
-  const [leeftijdscategorie, setLeeftijd] = useState<SchutterFormData['leeftijdscategorie']>(
-    bestaand?.leeftijdscategorie ?? 'Senior'
+  const [leeftijdscategorie, setLeeftijd] = useState<SchutterFormData['leeftijdscategorie'] | ''>(
+    bestaand?.leeftijdscategorie ?? ''
   )
-  const [geslacht, setGeslacht] = useState<SchutterFormData['geslacht']>(
-    bestaand?.geslacht ?? 'M'
+  const [geslacht, setGeslacht] = useState<SchutterFormData['geslacht'] | ''>(
+    bestaand?.geslacht ?? ''
   )
-  const [afstand, setAfstand] = useState<SchutterFormData['afstand']>(bestaand?.afstand ?? 25)
+  const [afstand, setAfstand] = useState<SchutterFormData['afstand'] | null>(
+    bestaand?.afstand ?? null
+  )
   const [gilden, setGilden] = useState<Gilde[]>([])
 
   useEffect(() => {
@@ -98,7 +99,6 @@ export default function SchutterFormulier({
         }
       }
       setGilden(lijst)
-      if (!bestaand && gildeId == null && lijst.length > 0) setGildeId(lijst[0].id)
     })
   }, [bestaand?.id, bestaand?.gilde_id])
 
@@ -106,28 +106,41 @@ export default function SchutterFormulier({
   const finaleBevestig =
     bevestigLabel ?? (bestaand ? 'Wijzigingen opslaan' : 'Schutter aanmaken')
 
-  const kanOpslaan = voornaam.trim().length > 0 && naam.trim().length > 0
+  const kanOpslaan =
+    voornaam.trim().length > 0 &&
+    naam.trim().length > 0 &&
+    typeBoog !== '' &&
+    leeftijdscategorie !== '' &&
+    geslacht !== '' &&
+    afstand !== null
 
-  function kiesCategorie(c: SchutterFormData['leeftijdscategorie']): void {
+  function kiesCategorie(c: SchutterFormData['leeftijdscategorie'] | ''): void {
+    if (c === '') {
+      setLeeftijd('')
+      return
+    }
     // Compound + Veteraan kan niet: het filter onder categorie-select voorkomt dit al,
     // maar wanneer een bestaande schutter wordt geladen via een ongeldige combo kan dit toch
     // gebeuren. We laten dat geval consistent door bij Veteraan + Compound de boog niet aan
-    // te raken hier (dat gebeurt in kiesBoogtype).
+    // te raken hier (dat gebeurt in kiesBoogtype). Bij een categorie met maar één toegestane
+    // afstand vullen we die meteen in; bij Jeugd (12m/18m) laten we de keuze open.
     if (VAST_25M.includes(c) && afstand !== 25) setAfstand(25)
     else if (VAST_KORT.includes(c) && afstand === 25) setAfstand(18)
     setLeeftijd(c)
   }
 
-  function kiesBoogtype(t: SchutterFormData['type_boog']): void {
+  function kiesBoogtype(t: SchutterFormData['type_boog'] | ''): void {
     if (t === 'Compound' && leeftijdscategorie === 'Veteraan') setLeeftijd('Senior')
     setTypeBoog(t)
   }
 
-  const beschikbareCategorieën = CATEGORIEËN.filter((c) => categorieToegestaan(c, typeBoog))
+  const beschikbareCategorieën =
+    typeBoog === '' ? CATEGORIEËN : CATEGORIEËN.filter((c) => categorieToegestaan(c, typeBoog))
 
   function submit(e: React.FormEvent): void {
     e.preventDefault()
-    if (!kanOpslaan) return
+    if (!kanOpslaan || typeBoog === '' || leeftijdscategorie === '' || geslacht === '' || afstand === null)
+      return
     onBevestig({
       voornaam: voornaam.trim(),
       naam: naam.trim(),
@@ -144,9 +157,6 @@ export default function SchutterFormulier({
     <form className="nieuw-form" onSubmit={submit}>
       <div className="nieuw-form-head">
         <strong>{finaleTitel}</strong>
-        <button type="button" className="btn btn-ghost btn-sm" onClick={onAnnuleer}>
-          <IconX /> Annuleer
-        </button>
       </div>
 
       <div className="nieuw-form-row two">
@@ -241,12 +251,15 @@ export default function SchutterFormulier({
           <select
             className="select"
             value={typeBoog}
-            onChange={(e) => kiesBoogtype(e.target.value as SchutterFormData['type_boog'])}
+            onChange={(e) => kiesBoogtype(e.target.value as SchutterFormData['type_boog'] | '')}
           >
-            <option>Recurve</option>
-            <option>Compound</option>
-            <option>Barebow</option>
-            <option>Andere</option>
+            <option value="" disabled>
+              — Kies boogtype —
+            </option>
+            <option value="Recurve">Recurve</option>
+            <option value="Compound">Compound</option>
+            <option value="Barebow">Barebow</option>
+            <option value="Andere">Andere</option>
           </select>
         </label>
         <label>
@@ -254,8 +267,13 @@ export default function SchutterFormulier({
           <select
             className="select"
             value={leeftijdscategorie}
-            onChange={(e) => kiesCategorie(e.target.value as SchutterFormData['leeftijdscategorie'])}
+            onChange={(e) =>
+              kiesCategorie(e.target.value as SchutterFormData['leeftijdscategorie'] | '')
+            }
           >
+            <option value="" disabled>
+              — Kies categorie —
+            </option>
             {beschikbareCategorieën.map((c) => (
               <option key={c}>{c}</option>
             ))}
@@ -283,7 +301,8 @@ export default function SchutterFormulier({
           <span>Afstand</span>
           <div className="segmented">
             {([12, 18, 25] as const).map((a) => {
-              const toegestaan = afstandToegestaan(leeftijdscategorie, a)
+              const toegestaan =
+                leeftijdscategorie === '' ? true : afstandToegestaan(leeftijdscategorie, a)
               return (
                 <button
                   key={a}
@@ -306,16 +325,6 @@ export default function SchutterFormulier({
       </div>
 
       <div className="nieuw-form-actions">
-        {onVerwijder && (
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            style={{ marginRight: 'auto', color: 'var(--red)' }}
-            onClick={onVerwijder}
-          >
-            Verwijderen
-          </button>
-        )}
         <button type="button" className="btn" onClick={onAnnuleer}>
           Annuleer
         </button>
@@ -324,23 +333,6 @@ export default function SchutterFormulier({
         </button>
       </div>
     </form>
-  )
-}
-
-function IconX(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M18 6 6 18M6 6l12 12" />
-    </svg>
   )
 }
 

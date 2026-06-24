@@ -11,6 +11,7 @@ Cyclus gestart vanaf [`0.2.4`](RELEASE_0.2.4.md) met de version-bump naar `0.2.5
 3. Een herstelde off-by-one in de positie-nummering waardoor de eerste schutter van elk doel wegviel in de preview, de print en de Excel-export.
 4. (Later in de cyclus) Een gerichte fix in het indelingsalgoritme zodat ook de laatst ingedeelde gilde op aaneengesloten doelen blijft staan i.p.v. verspreid te raken.
 5. (Later in de cyclus) Een **lexicografische verfijningsstap (fase 7)** boven op de greedy-constructie die mono-gilde-staarten opruimt, plus een **test-harnas** (`npm test`) dat "beter" meetbaar maakt en regressies vangt.
+6. (Later in de cyclus) Een **UI-opfrissing** rond verwijderen/bewerken: icoon-acties op het wedstrijd-overzicht en in de schutters-tabel, een gedeelde verwijder-bevestiging, en lege defaults bij het aanmaken van een schutter.
 
 Het database-schema blijft onaangeroerd. De twee-sporen-kern bleef ongewijzigd; fase 7 herverdeelt enkel binnen de reeds gekozen actieve doelen en kan de indeling per constructie nooit verslechteren.
 
@@ -84,3 +85,15 @@ Beide gestaafd met regressietests in [`test/optimaliteit.test.ts`](../test/optim
 **Docs in lockstep:** [ALGORITME_v2.0.md §9b/§10/§11](ALGORITME_v2.0.md), [ALGORITHM_SPEC.md §11](ALGORITHM_SPEC.md) (nota over de R6-positie), [RULES_HIERARCHY.md](RULES_HIERARCHY.md) en de nieuwe [ALGORITHM_DEFENSE.md](ALGORITHM_DEFENSE.md).
 
 Bewuste scope-beperking: fase 7 zoekt een lokaal (niet gegarandeerd globaal) optimum, opent geen nieuwe doelen en raakt dubbeldoelen niet. De twee-sporen-constructie en alle eerdere fasen blijven ongewijzigd; fase 7 is uitschakelbaar via `berekenIndeling(..., { lokaleZoektocht: false })`.
+
+### UI-opfrissing: icoon-acties, gedeelde verwijder-modal en lege schutter-defaults
+
+Een reeks kleine, samenhangende UI-wijzigingen rond verwijderen en bewerken. Geen wijziging aan het database-schema, de IPC-contracten of het algoritme.
+
+- **Prullenbak op de wedstrijdkaart.** Naast de bestaande download/export-knop op elke kaart in [`WedstrijdenPage`](../src/renderer/src/pages/WedstrijdenPage.tsx) staat nu een prullenbak-knop om een wedstrijd rechtstreeks vanuit het overzicht te verwijderen (met bevestiging). Beide knoppen zitten in een gedeelde container die bij hover op de kaart verschijnt.
+- **Gedeelde verwijder-bevestiging (DRY).** De bevestigingsmodal voor het verwijderen van een wedstrijd was inline gedupliceerd. Geextraheerd naar [`WedstrijdVerwijderModal`](../src/renderer/src/components/WedstrijdVerwijderModal.tsx) en hergebruikt door zowel het overzicht (de prullenbak) als de Gevarenzone van de [`ConfiguratieTab`](../src/renderer/src/pages/ConfiguratieTab.tsx), zodat bewoording en uitzicht op één plek staan.
+- **Icoon-acties in de schutters-tabel.** De tekstknoppen "Bewerken" en "Verwijder" in [`SchuttersPage`](../src/renderer/src/pages/SchuttersPage.tsx) zijn vervangen door icoonknoppen (potlood / prullenbak) in dezelfde stijl als de wedstrijdkaarten: ze verschijnen bij hover op de rij, met een rode danger-hover op de prullenbak. Gedeelde iconen [`IconPencil`](../src/renderer/src/components/icons/IconPencil.tsx) en [`IconTrash`](../src/renderer/src/components/icons/IconTrash.tsx) staan bij de andere inline-iconen; de knopstijl is een gedeelde `.icon-knop`-klasse in [`index.css`](../src/renderer/src/index.css) (de vroegere `.wedstrijd-card-actie` ging hierin op).
+- **Bewerk-modal opgeschoond.** In [`SchutterFormulier`](../src/renderer/src/components/SchutterFormulier.tsx) is de dubbele "Annuleer" (de kop-knop) weggehaald, en de "Verwijderen"-knop is verwijderd: verwijderen verloopt nu uitsluitend via de prullenbak in de tabel. De nu overbodige `onVerwijder`-prop is mee opgeruimd.
+- **Lege defaults bij een nieuwe schutter.** Een nieuwe schutter start volledig ongekozen: geen gilde, en boog/categorie/geslacht/afstand staan leeg (placeholder-opties in de selects, geen actieve knop in de segmented controls). De aanmaak-knop is disabled tot voornaam, naam, boog, categorie, geslacht en afstand allemaal gekozen zijn (gilde mag leeg blijven). De afhankelijkheidsregels blijven: een 25m-categorie vult 25m meteen in, Jeugd (12m/18m) laat de keuze open. Bewerken van een bestaande schutter laadt nog gewoon de opgeslagen waarden.
+
+Deze wijzigingen volgen de afspraak "hergebruiken, niet dupliceren": gedeelde modal, gedeelde iconen en een gedeelde knopstijl in plaats van gekopieerde varianten.

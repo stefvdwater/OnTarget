@@ -45,8 +45,7 @@
         <h1>Uitgebreide handleiding</h1>
         <p class="muted">
           Deze pagina is nog in opbouw. Hier komt binnenkort een uitgebreide
-          handleiding voor wedstrijdleiders en gilden, met screenshots en
-          uitleg over alle functies van OnTarget.
+          handleiding voor wedstrijdleiders en gilden, met uitleg over alle functies van OnTarget.
         </p>
         <a class="docs-back-link" href="/">← Terug naar home</a>
       </section>
@@ -450,7 +449,65 @@
             <span class="docs-section-title">Schutters</span>
           </summary>
           <div class="docs-section-body">
-            <p class="muted">Inhoud volgt.</p>
+            <p>
+              Het scherm <strong>Schutters</strong> is de centrale ledenlijst, los
+              van een specifieke wedstrijd. Hier beheer je alle schutters met hun
+              gegevens; vanuit een wedstrijd schrijf je ze vervolgens in (zie de
+              sectie Inschrijvingen). Bovenaan zie je hoeveel schutters er
+              geregistreerd zijn en over hoeveel gilden ze verdeeld zijn.
+            </p>
+
+            <h3>Schutters beheren</h3>
+            <p>
+              Met <strong>Nieuwe schutter</strong> voeg je iemand toe; je vult de
+              naam, de gilde, het boogtype, de categorie, het geslacht en de
+              afstand in. Een bestaande gilde kies je uit de lijst, een nieuwe typ
+              je gewoon in. Elke rij heeft een potlood om te bewerken en een
+              prullenbak om te verwijderen. Verwijderen haalt de schutter overal
+              weg, ook uit de inschrijvingen en indelingen van wedstrijden waarin
+              hij voorkomt.
+            </p>
+
+            <h3>Zoeken en filteren</h3>
+            <p>
+              Met het zoekveld zoek je op naam of gilde. Via <strong>Filter</strong>
+              beperk je de lijst tot een bepaald boogtype of een bepaalde afstand.
+            </p>
+
+            <h3>Importeren en exporteren (CSV)</h3>
+            <p>
+              De volledige schutterslijst kan als CSV-bestand bewaard en weer
+              ingelezen worden, handig om een ledenbestand in één keer in te voeren.
+            </p>
+            <ul>
+              <li>
+                <strong>Exporteren:</strong> bewaart alle schutters als CSV. Het
+                bestand opent vlot in Excel en is meteen weer importeerbaar.
+              </li>
+              <li>
+                <strong>Importeren:</strong> kies een CSV met de kolommen
+                <code>voornaam, naam, gilde_naam, type_boog, leeftijdscategorie,
+                geslacht, afstand</code>. Eerst verschijnt een controlescherm waar
+                je de rijen nakijkt: mogelijke duplicaten worden aangeduid, rijen
+                die niet aan de regels voldoen worden gemarkeerd, en je kan rijen
+                aan- of uitvinken voor je bevestigt. Onbekende gilden worden
+                automatisch aangemaakt.
+              </li>
+              <li>
+                <strong>Demo-data laden:</strong> vervangt alle schutters en gilden
+                door een set voorbeeld-schutters om de toepassing uit te proberen.
+                Dit is een onomkeerbare actie.
+              </li>
+            </ul>
+
+            <h3>Gevarenzone</h3>
+            <p>
+              Onderaan kan je in één keer <strong>alle schutters verwijderen</strong>
+              of enkel de <strong>lege gilden</strong> (gilden zonder schutters)
+              opruimen. De wedstrijden zelf blijven steeds bestaan, maar verliezen
+              wel hun inschrijvingen en indeling. Bij zo'n ingreep biedt het
+              programma aan om eerst een back-up van je wedstrijden te maken.
+            </p>
           </div>
         </details>
       </div>

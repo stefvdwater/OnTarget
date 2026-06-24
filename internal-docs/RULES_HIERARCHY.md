@@ -48,6 +48,9 @@ Regels zijn gegroepeerd per prioriteitsniveau. Hogere niveaus overrulen lagere n
 
 **R11.** Plaats **~2 schutters van hetzelfde gilde** per doel.
 
+**R11b.** Schutters van hetzelfde gilde staan op **aaneengesloten doelen** binnen hun zone, niet verspreid over de hal. Dit geldt ook voor de laatst ingedeelde gilde: overgebleven schutters worden per gilde als blok op naburige doelen geplaatst (zie [ALGORITME_v2.0.md §7](ALGORITME_v2.0.md)).
+- Bij **restplaatsing** weegt aaneengesloten houden zwaarder dan het streefgetal van 5 (R10): een doel mag dan tot 6 beurten gevuld worden om een gilde-blok samen te houden. De harde grens van 6 beurten (R3) blijft staan.
+
 **R12.** Bij over- of onderbezetting: kies liever voor **4 schutters** per doel dan voor **6**.
 
 **R13.** Een eerste-helft-dubbelschutter (EH) en een tweede-helft-dubbelschutter (TH) worden bij voorkeur **gecombineerd op hetzelfde doel**.
@@ -69,6 +72,23 @@ Regels zijn gegroepeerd per prioriteitsniveau. Hogere niveaus overrulen lagere n
 **R19.** Het geconfigureerde **aantal compound-doelen** is een bovengrens. De compound-zone wordt eerst verwerkt; compound-doelen die geen schutters kregen en niet vergrendeld zijn, worden herbestemd tot 25m-doelen. Zij behouden hun doelnummer (fysieke positie) en doen mee in de 25m-indeling. Op een herbestemd doel geldt de compound-conflictwaarschuwing niet.
 
 ---
+
+## Geimplementeerde doelfunctie (fase 7)
+
+De auto-indeling optimaliseert deze hierarchie als een **lexicografische score-vector**
+(zie [ALGORITME_v2.0.md §9b/§10](ALGORITME_v2.0.md)). Een verfijningsstap (lokale
+zoektocht) verbetert de greedy-constructie tot een lokaal optimum zonder ooit een
+hogere regel voor een lagere op te offeren. Twee punten verdienen aandacht bij het
+lezen van de niveaus hierboven:
+
+- **R2 (min 2 gilden per doel) weegt zwaar**, niet licht: de implementatie plaatst het
+  hoog in de doelfunctie, conform de voorbeelden in [ALGORITHM_SPEC §7.1/§7.4](ALGORITHM_SPEC.md).
+  De aanmeldvolgorde (R9) werkt op **gilde-niveau** (vroeger aangemelde gilden vooraan;
+  de volgorde binnen een gilde telt niet) en staat eronder.
+- De onderlinge volgorde van **R11b (aaneengesloten)** en de **2-2-1-vorm (R11)** is een
+  bewuste keuze (aaneengesloten weegt zwaarder dan een enkele 3-stapel vermijden).
+
+Volledige motivatie en openstaande beslispunten: [ALGORITHM_DEFENSE.md](ALGORITHM_DEFENSE.md).
 
 ## Configureerbare parameters (per wedstrijd)
 

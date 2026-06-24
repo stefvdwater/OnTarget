@@ -2,7 +2,8 @@
 
 ## 1. Schuttersdatabase
 
-- Schutters aanmaken, bewerken en verwijderen uit het schuttersbestand.
+- Schutters aanmaken, bewerken en verwijderen uit het schuttersbestand. In de schutterslijst gebeuren bewerken en verwijderen via een potlood- en een prullenbak-knop per rij (verwijderen vraagt eerst bevestiging).
+- Bij het aanmaken van een nieuwe schutter staat alles standaard leeg/ongekozen (geen gilde, geen boog, categorie, geslacht of afstand). De schutter kan pas opgeslagen worden als voornaam, naam, boog, categorie, geslacht en afstand allemaal gekozen zijn; een gilde is optioneel.
 - Per schutter opslaan:
   - Voornaam + Naam
   - Gilde
@@ -97,7 +98,7 @@ De app berekent automatisch hoeveel doelen per zone beschikbaar zijn op basis va
 
 ## 6. Wedstrijdbeheer
 
-- Overzicht van alle wedstrijden (verleden en toekomst).
+- Overzicht van alle wedstrijden (verleden en toekomst). Elke wedstrijdkaart heeft een download-knop (exporteren als backup) en een prullenbak-knop om de wedstrijd rechtstreeks vanuit het overzicht te verwijderen (met bevestiging).
 - Wedstrijdgegevens opslaan (datum, locatie, naam).
 - Inschrijvingslijst per wedstrijd raadpleegbaar.
 - Backup per wedstrijd: een wedstrijd volledig exporteren naar een JSON-bestand (met inschrijvingen, doelindeling en vergrendelde doelen) en later, op dezelfde of een andere installatie, terug importeren. Ook bulk-export van alle wedstrijden naar een map. Bij import met een naam- en datum-conflict kan de gebruiker kiezen tussen vervangen, als kopie importeren of overslaan. Het bestandsformaat staat in [BACKUP_FORMAT.md](BACKUP_FORMAT.md).

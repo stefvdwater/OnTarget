@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Wedstrijd } from '../types'
 import WedstrijdDetailPage from './WedstrijdDetailPage'
+import WedstrijdVerwijderModal from '../components/WedstrijdVerwijderModal'
+import { IconTrash } from '../components/icons/IconTrash'
 import {
   exporteerWedstrijd,
   exporteerWedstrijden,
@@ -38,6 +40,8 @@ export default function WedstrijdenPage(): JSX.Element {
   const [conflict, setConflict] = useState<ConflictDialog | null>(null)
   const [batchResultaat, setBatchResultaat] = useState<BatchResultaat[] | null>(null)
   const [exportResultaat, setExportResultaat] = useState<BulkExportResultaat | null>(null)
+  const [verwijderBevestig, setVerwijderBevestig] = useState<Wedstrijd | null>(null)
+  const [verwijderBezig, setVerwijderBezig] = useState(false)
   const ioRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   // Promise-resolver voor de conflict-modal: de batch-loop wacht hierop.
@@ -102,6 +106,16 @@ export default function WedstrijdenPage(): JSX.Element {
     setIoOpen(false)
     const res = await exporteerWedstrijden(wedstrijden)
     if (!res.geannuleerd) setExportResultaat(res)
+  }
+
+  // ── Verwijderen ─────────────────────────────────────────
+  async function verwijderWedstrijd(): Promise<void> {
+    if (!verwijderBevestig || verwijderBezig) return
+    setVerwijderBezig(true)
+    await window.api.wedstrijden.delete(verwijderBevestig.id)
+    setVerwijderBezig(false)
+    setVerwijderBevestig(null)
+    await laadWedstrijden()
   }
 
   // ── Import ──────────────────────────────────────────────
@@ -269,15 +283,30 @@ export default function WedstrijdenPage(): JSX.Element {
                 }
               }}
             >
-              <button
-                className="wedstrijd-card-export"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  exporteerWedstrijd(w)
-                }}
-              >
-                <IconDownload />
-              </button>
+              <div className="wedstrijd-card-acties">
+                <button
+                  className="icon-knop"
+                  title="Exporteren als backup"
+                  aria-label="Wedstrijd exporteren"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    exporteerWedstrijd(w)
+                  }}
+                >
+                  <IconDownload />
+                </button>
+                <button
+                  className="icon-knop danger"
+                  title="Wedstrijd verwijderen"
+                  aria-label="Wedstrijd verwijderen"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setVerwijderBevestig(w)
+                  }}
+                >
+                  <IconTrash />
+                </button>
+              </div>
               <div>
                 <h3>{w.naam}</h3>
                 <div className="meta" style={{ marginTop: 6 }}>
@@ -362,6 +391,15 @@ export default function WedstrijdenPage(): JSX.Element {
             </div>
           </div>
         </div>
+      )}
+
+      {verwijderBevestig && (
+        <WedstrijdVerwijderModal
+          wedstrijd={verwijderBevestig}
+          bezig={verwijderBezig}
+          onAnnuleer={() => setVerwijderBevestig(null)}
+          onBevestig={verwijderWedstrijd}
+        />
       )}
 
       {exportResultaat && (

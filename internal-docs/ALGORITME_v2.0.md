@@ -40,6 +40,10 @@ Fase 3 — Tweesporen-toewijzing (de "puzzle") op de voorste actieve doelen
 Fase 4 — Lone-schutters verdelen
 Fase 5 — R4-hard handhaving (≥ 4 beurten per actief doel)
 Fase 6 — Sortering binnen elk doel
+
+Daarna, over alle zones samen (uitschakelbaar via `opties.lokaleZoektocht`):
+
+Fase 7 - Lokale zoektocht: lexicografische verfijning (verplaats/ruil)
 ```
 
 ---
@@ -97,6 +101,13 @@ Per dubbeldoel worden verplichte normalen voor rusttijd (R8) toegevoegd
 via `kiesNormalenVoorDubbeldoel`. Daarna wordt het doel aangevuld tot
 5 beurten met respect voor R5 (max 2 per gilde), met fallback waar
 nodig om R10 (5 beurten) te halen.
+
+**Belangrijk (R8/R9):** de dubbeldoelen staan achteraan, dus hun normale
+vullers worden gekozen uit de **laatst aangemelde** normalen
+(`normalenAchteraan`, aflopend op aanmeldvolgorde). Anders zou de vulling de
+vroegste normalen pakken en een vroeg aangemelde gilde naar de achterste
+doelen zuigen. Zo blijven vroege gilden vooraan en vullen late gilden de
+dubbeldoelen - precies wat de aanmeldvolgorde vraagt.
 
 Na fase 1: de dubbel-doelen zijn gevuld; resterende normalen gaan in
 fase 2–3 naar `normaalDoelen`.
@@ -171,40 +182,39 @@ Dit voorkomt een mono-gilde-staart in extreme gevallen.
 
 ---
 
-## 7. Fase 4 — Lone-schutters verdelen
+## 7. Fase 4 — Leftover-schutters verdelen (`plaatsLeftovers`)
 
-Voor elke `L ∈ lones`, in aanmeldvolgorde:
+De leftovers zijn de losse schutters (`lones`, oneven gildeleden) plus de
+schutters van eventueel ontkoppelde overflow-paren (§6.4). Ze worden
+**per gilde als blok** geplaatst, zodat ook een gilde dat volledig in de
+leftover-pool belandt (bv. de laatst aangemelde gilde, waarvan het paar
+overflowde) op aaneengesloten doelen blijft staan.
 
-### Stap A — Voorkeurdoel (eigen gilde dichtbij)
+> **Prioriteit hier:** bij restplaatsing weegt **R10 (aaneengesloten gilde)
+> zwaarder dan het streefgetal 5**. Een doel mag tot 6 beurten gevuld worden
+> om een gilde-blok samen te houden. De harde grens van 6 beurten (R3/R2)
+> blijft staan.
 
-Zoek doelen waar gilde(L) reeds aanwezig is, of doelen die daaraan
-grenzen (index ± 1). Filter op:
-- `maxBeurten(doel) < 5`
-- Toevoeging past op het doel
+**Aanpak:**
 
-Sortering kandidaten:
-1. Doelen waar gilde(L) **nog niet** 2× aanwezig is (R5 respecteren).
-2. Doelen aangrenzend aan andere paren van gilde(L) (R10).
-3. Doelen met meeste schutters al (vul vol — R10).
+1. Groepeer de leftovers per gilde. Verwerk de gilde-blokken op vroegste
+   aanmeldvolgorde (R9: vroeg → voor, laat → achter — laat-aangemelde gilden
+   krijgen vanzelf de nog vrije achterste doelen).
+2. Per blok start de "thuisset" bij de doelindices waar dat gilde al staat
+   uit Fase 1/3 (anker). De set groeit mee terwijl leden geplaatst worden,
+   zodat het blok aaneengesloten blijft. De **voorkeurszone** = thuisset +
+   directe buren (index ± 1).
+3. Plaats elk lid (op aanmeldvolgorde) via de eerste stap die een doel vindt:
+   - **Stap a** — voorkeurszone, doel met `maxBeurten < 5` (compact bijvullen, streef 5).
+   - **Stap b** — voorkeurszone, sta `maxBeurten ≤ 6` toe (R10 > streef 5).
+   - **Stap c** — gilde nog nergens (volledig overflow): seed op een nog niet
+     vol doel (`maxBeurten < 5`) buiten een voorkeurszone.
+   - **Stap d** — laatste redmiddel: elk passend doel (`maxBeurten ≤ 6`).
+   - Geen plek: `L → nietIngedeeld` (zichtbaar als UI-waarschuwing).
 
-Kies kandidaten[0] indien beschikbaar.
-
-### Stap B — Geen voorkeurdoel
-
-Kies een doel met `< 2` verschillende gilden (R6 prioriteit), filter op
-`maxBeurten < 5`. Bij gelijkstand: laagste doelnummer (R9). Indien geen
-zulk doel: eerste doel met `maxBeurten < 5` in doelvolgorde.
-
-### Stap C — Geen plek met beurten < 5
-
-Versoepel naar `maxBeurten ≤ 6` (R3 harde grens). Sorteer kandidaten
-op minste schutters eerst, daarna minste van gilde(L). Plaats op
-kandidaat[0].
-
-### Stap D — Geen plek met beurten ≤ 6
-
-Voeg L toe aan `nietIngedeeld`. Wordt zichtbaar gemaakt als
-waarschuwing in de UI.
+Doelkeuze binnen elke stap (`kiesDoel`/`beterDoel`): voorkeur voor een doel
+dat het gilde al bevat (samenhouden), dan het **meest gevulde** doel (blok
+compact houden), dan het laagste doelnummer (R9-tiebreak).
 
 ---
 
@@ -248,21 +258,83 @@ Ongewijzigd t.o.v. v1, conform [ALGORITHM_SPEC.md §8](ALGORITHM_SPEC.md):
 
 ---
 
+## 9b. Fase 7: Lokale zoektocht (lexicografische verfijning)
+
+De gelaagde greedy-constructie (fase 0-6) geeft een goede, uitlegbare start, maar
+bereikt niet altijd het lexicografische optimum. Bij **scheve gildegroottes** stapelt
+ze het surplus van een gilde soms op het laatste actieve doel, wat een
+**mono-gilde-staart** oplevert (een doel met maar 1 gilde terwijl 2 gilden haalbaar
+waren). Klassiek voorbeeld: A×10, B×2 op 2 doelen gaf `A:4 B:2 | A:6` (D2 mono),
+terwijl [ALGORITHM_SPEC §7.4](ALGORITHM_SPEC.md) `A:5 B:1 | A:5 B:1` voorschrijft.
+
+Fase 7 lost dit op met **hill-climbing** over een kleine buurt, gestuurd door een
+**expliciete doelfunctie**. Per zone:
+
+1. Bereken de lexicografische zone-score (`scoreToestand`). De termvolgorde (hoog →
+   laag): `over6 → onder4 → overvol → mono → volgorde → aaneengesloten → uitgesmeerd
+   → stapeling → onderstreef`. De harde grenzen staan bovenaan en kunnen dus nooit
+   voor een zachte voorkeur worden ingeruild. Let op twee bewuste keuzes: (a) `overvol`
+   (>5 vermijden, gelijk verdelen) staat hoog, maar `onderstreef` (een doel naar 5
+   i.p.v. 4 brengen) staat HELEMAAL onderaan - een doel op 4 is prima en we smeren er
+   geen gilde voor uit; (b) `uitgesmeerd` (niet dunner dan ~2/doel) staat BOVEN
+   `stapeling` (3-stapel vermijden): een compacte 3-stapel is beter dan een gilde over
+   veel doelen verspreiden. Zie [ALGORITHM_DEFENSE.md §2](ALGORITHM_DEFENSE.md).
+2. Zoek de best verbeterende **zet**: een schutter VERPLAATSEN naar een ander actief
+   doel, of twee schutters RUILEN tussen twee doelen. Pas ze enkel toe als ze de
+   zone-score **strikt** verlaagt (best-improvement, deterministisch). Herhaal tot
+   geen verbetering meer mogelijk is (begrensd op 200 iteraties).
+
+**Veiligheid en garanties:**
+
+- **Nooit slechter.** Omdat enkel strikt verbeterende zetten worden aanvaard, kan de
+  uitkomst nooit een slechtere score hebben dan de constructie alleen. Bewezen op 400
+  fuzz-scenario's (`test/invarianten.test.ts`).
+- **Harde constraints blijven.** Geen doel boven 6 (elke zet gecheckt), elke schutter
+  blijft in zijn zone, en `over6`/`onder4` als bovenste score-termen beschermen R3/R4.
+- **Dubbeldoelen onaangeroerd.** Doelen met een dubbelschutter (R7/R8) en hun vulling
+  worden niet gewijzigd; een compound-schutter op een 25m-doel (R4b/R16) blijft staan.
+  Dubbeldoelen tellen wél mee in de fysieke rang-as, zodat contiguiteit correct meet.
+- **Geen nieuwe doelen.** Het aantal actieve doelen (fase 0) blijft; fase 7 herverdeelt
+  enkel binnen de actieve doelen.
+- **Determinisme.** Vaste iteratie- en tie-break-volgorde; dezelfde input → dezelfde
+  output.
+
+De finale binnen-doel-sortering (fase 6, `sorteerSchuttersOpDoel`) wordt ná fase 7
+toegepast, zodat de volgorderegels (R4b/R5/R15) op het verfijnde resultaat gelden.
+
+Uitschakelbaar via `berekenIndeling(..., { lokaleZoektocht: false })`, gebruikt door
+het test-harnas om constructie en verfijning te vergelijken.
+
+---
+
 ## 10. Prioriteitsvolgorde (samenvatting)
 
-Bij conflicterende regels:
+Bij conflicterende regels (dit is exact de score-vector van fase 7):
 
 1. **R1** Correcte zone (hard)
 2. **R3** Max 6 beurten (hard)
 3. **R3** Vergrendelde doelen respecteren (hard)
-4. **R4-hard** Min 4 beurten per doel (hard, uitz. zone-totaal < 4)
-5. **R7** Dubbelschutters op de laatste actieve doelen van hun zone
-6. **R9** Aanmeldvolgorde → doelvolgorde
-7. **R10** Streef 5 beurten per doel
-8. **R10b** Gelijke verdeling
-9. **R11/R15** Aaneengesloten gilden
-10. **R5** Max 2 per gilde per doel (zacht)
-11. **R6** Min 2 gilden per doel (zacht)
+4. **R2/R3b** Zoveel mogelijk plaatsen (minimaliseer nietIngedeeld)
+5. **R4-hard** Min 4 beurten per doel (hard, uitz. zone-totaal < 4)
+6. **R7** Dubbelschutters op de laatste actieve doelen van hun zone
+7. **R10b/R12** Overvol vermijden: nooit >5 als het anders kan, gelijk verdelen
+8. **R6** Min 2 gilden per doel (geen mono-gilde doel)
+9. **R8/R9** Vroeger aangemelde gilden op de voorste doelen (op gilde-niveau)
+10. **R11b** Gilden op aaneengesloten doelen (niet over de hal)
+11. **R11/R15** Compactheid: gilde niet dunner dan ~2 per doel (niet uitsmeren)
+12. **R5** Max ~2 per gilde per doel (2-2-1-vorm, geen 3-stapel)
+13. **R10** Streef 5: een doel op 4 naar 5 brengen (LAAGSTE, nooit door uit te smeren)
+
+> **Let op (afwijking van de oude tabel):** R6 (min 2 gilden) staat hier HOOG, niet
+> onderaan. De oude opsomming en [ALGORITHM_SPEC §11](ALGORITHM_SPEC.md) zetten R6
+> laatst, maar dat spreekt de canonieke voorbeelden §7.1/§7.4 tegen. De aanmeldvolgorde
+> (R8/R9) werkt op **gilde-niveau** (een vroeger aangemeld gilde hoort vooraan; de
+> volgorde binnen een gilde doet er niet toe), zodat ze niet botst met diversiteit of
+> compactheid. Motivatie en openstaande nota: [ALGORITHM_DEFENSE.md §2 en §6](ALGORITHM_DEFENSE.md).
+
+> **Uitzondering bij restplaatsing (Fase 4):** om een gilde-blok aaneengesloten
+> te houden mag een doel naar 6 beurten gevuld worden. Daar weegt aaneengesloten
+> gilde (R10) dus zwaarder dan het streefgetal 5 — enkel voor de leftover-schutters.
 
 ---
 
@@ -274,9 +346,14 @@ Verwacht gedrag voor de scenario's uit [ALGORITHM_SPEC.md §7](ALGORITHM_SPEC.md
 |---|---|---|
 | 7.1 | A×6, B×6, 2 doelen | LPT → A→spoorA, B→spoorB. Doel 1 & 2 elk `AABB+filler` |
 | 7.2 | A×8, 1 zone | Alles op spoorA, spoorB leeg. Doel 1: AAAA, Doel 2: AAAA |
-| 7.4 | A×10, B×2, 2 doelen | LPT → A(5p)→spoorA, B(1p)→spoorB. Spoor A overflow → ontkoppeld → lones verdelen via §7 R6-criterium |
+| 7.4 | A×10, B×2, 2 doelen | Constructie geeft `A:4 B:2 \| A:6` (D2 mono); **fase 7 ruilt → `A:5 B:1 \| A:5 B:1`**, exact zoals §7.4 voorschrijft |
 | 7.5 | Vergrendeld doel midden | Filtering vooraf, ongewijzigd |
 | 7.6 | Gilde-overflow | Geen Stap-B-style overflow nodig: paren+lones structureren reeds R5 |
+
+Sinds fase 7 zijn de mono-gilde-staarten uit deze klasse weg. Het volledige bewijs
+(strikte verbetering op de probleemgevallen, monotonie op 400 fuzz-cases, behoud van
+alle harde constraints) staat in [`test/`](../test/) en draait met `npm test`. Zie
+ook [ALGORITHM_DEFENSE.md §4-§5](ALGORITHM_DEFENSE.md).
 
 **Handmatige UI-test**:
 1. `npm run dev`

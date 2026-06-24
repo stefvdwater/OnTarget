@@ -367,3 +367,21 @@ Bij conflicterende regels geldt deze prioriteit (hoog → laag):
 8. Gilden op aaneengesloten doelen (R10)
 9. Max 2 per gilde per doel (R5) — zacht, zie §6.1
 10. Min 2 gilden per doel (R6) — zacht, uitzonderingen in §6.1 en §7.2
+
+> **Nota (te reconcilieren).** Deze tabel zet R6 (min 2 gilden) onderaan, maar dat
+> spreekt de eigen voorbeelden tegen: §7.1 houdt `A3B3/A3B3` aan (geen mono-doelen) en
+> §7.4 splitst het kleine gilde net voor diversiteit. De implementatie volgt de
+> voorbeelden en rangschikt **R6 hoog** (net onder de bezettings-/verdeel-regels, boven
+> R8-volgorde en de compactheidsregels). De aanmeldvolgorde (R8/R9) werkt daarbij op
+> **gilde-niveau** (vroeger aangemelde gilden vooraan; volgorde binnen een gilde telt
+> niet), zodat ze diversiteit niet ondermijnt. Zie de geimplementeerde
+> doelfunctie in [ALGORITME_v2.0.md §9b/§10](ALGORITME_v2.0.md) en de motivatie in
+> [ALGORITHM_DEFENSE.md §2 en §6](ALGORITHM_DEFENSE.md). Beslissing over de canonieke
+> volgorde ligt bij de maintainer.
+
+> **Uitzondering bij restplaatsing:** wanneer overgebleven schutters (losse
+> gildeleden + ontkoppelde overflow-paren) per gilde-blok worden geplaatst,
+> weegt "gilden op aaneengesloten doelen" (R10) zwaarder dan "streef 5 beurten"
+> (punt 6): een doel mag dan tot 6 beurten gevuld worden om een gilde-blok
+> samen te houden. Zo blijft ook de laatst ingedeelde gilde op naburige doelen.
+> Zie [ALGORITME_v2.0.md §7](ALGORITME_v2.0.md).

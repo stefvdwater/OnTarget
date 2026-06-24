@@ -92,7 +92,7 @@ a:hover { text-decoration: underline; }
 /* ─── Content layout ─────────────────────────────────── */
 
 .content {
-  flex: 1 0 auto;
+  flex: 0 0 auto;
   padding: 48px 32px;
   max-width: 1480px;
   width: 100%;
@@ -540,6 +540,7 @@ a:hover { text-decoration: underline; }
   color: var(--muted);
   font-size: 13px;
   flex-shrink: 0;
+  margin-top: auto;
   display: flex;
   justify-content: center;
   gap: 10px;

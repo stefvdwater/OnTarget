@@ -1,29 +1,14 @@
-// Raster-/spreadsheet-icoon in dezelfde lijn-stijl als de andere inline-SVG
-// iconen (currentColor stroke). Gebruikt voor de Excel-export.
+// Raster-/spreadsheet-icoon. Gebruikt voor de Excel-export.
+import { IconBase, type IconProps } from './IconBase'
 
-interface Props {
-  size?: number
-}
-
-export function IconExcel({ size = 14 }: Props): JSX.Element {
+export function IconExcel({ size }: IconProps): JSX.Element {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      style={{ display: 'block', flexShrink: 0 }}
-    >
+    <IconBase size={size}>
       <rect x="3" y="3" width="18" height="18" rx="2" />
       <line x1="3" y1="9" x2="21" y2="9" />
       <line x1="3" y1="15" x2="21" y2="15" />
       <line x1="9" y1="3" x2="9" y2="21" />
       <line x1="15" y1="3" x2="15" y2="21" />
-    </svg>
+    </IconBase>
   )
 }

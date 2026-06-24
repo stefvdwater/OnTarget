@@ -62,6 +62,19 @@ Schema + migraties in [`src/main/database.ts`](src/main/database.ts). Voor bulk-
 - **Wedstrijd-backup JSON**: gespecificeerd in [internal-docs/BACKUP_FORMAT.md](internal-docs/BACKUP_FORMAT.md). Doorheen versies stabiel: de top-level discriminator (`"type": "ontarget-wedstrijd-backup"`) en `schemaVersie` blijven, en binnen één versie zijn alleen additieve wijzigingen toegelaten. Een breaking change vereist een `schemaVersie`-bump met behoud van de oude lezer. Update het document mee zodra je iets aan de export- of import-handler raakt — dat is verplicht, geen optie.
 - **Schutter-CSV**: zie de "CSV import/export"-sectie onderaan dit document.
 
+## Website (GitHub Pages)
+
+De publieke website (`ontarget.stefvdwater.be`) staat **niet** in `main`. Ze leeft volledig op de losgekoppelde **`gh-pages`** branch en is bewust ontkoppeld van de app-versie: een commit op `main` triggert geen Pages-deploy, alleen een push naar `gh-pages` doet dat.
+
+- **`gh-pages`** is een orphan branch met de statische site aan de root (`index.html`, `handleiding.html`, `styles.css`, `404.html`, `CNAME`, `.nojekyll`). Geen app-code. Pages-bron in GitHub Settings staat op `gh-pages` /root.
+- **Worktree-workflow**: de site is uitgecheckt als sibling-folder `../target-assignment-site` (branch `gh-pages`), zodat je de live app-code in deze repo (`main`) kan lezen terwijl je de site bewerkt. Een feature documenteren = app-code hier lezen, pagina daar schrijven.
+- **Deployen** = committen en pushen in die worktree:
+  ```bash
+  cd ../target-assignment-site
+  git add -A && git commit -m "..." && git push
+  ```
+- Bestaat de worktree (nog) niet, dan: `git worktree add ../target-assignment-site gh-pages`.
+
 ## UI-conventies
 
 - **Geen Tailwind utility classes toevoegen**, ook al staat Tailwind in `devDependencies`. Alle styling gaat via bestaande klassen (`.btn`, `.card`, `.chip`, `.schutter`, `.doel`, `.aanmeldlijst`, `.split-pane`, `.config-card`, …) en CSS-variables uit `:root` / `:root.dark` in [`src/renderer/src/index.css`](src/renderer/src/index.css).

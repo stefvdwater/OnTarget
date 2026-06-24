@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OnTarget — komt binnenkort</title>
+    <meta
+      name="description"
+      content="OnTarget — automatische doel-indeling voor wedstrijden van schuttersgilden. Binnenkort beschikbaar."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <svg
+          class="brand-mark"
+          width="28"
+          height="28"
+          viewBox="0 0 32 32"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle cx="16" cy="16" r="15" fill="#1c1917" />
+          <circle cx="16" cy="16" r="11.5" fill="#1d70b8" />
+          <circle cx="16" cy="16" r="8" fill="#e63946" />
+          <circle cx="16" cy="16" r="4.5" fill="#f5c518" />
+          <circle cx="16" cy="16" r="1.2" fill="#fff" />
+        </svg>
+        <span>OnTarget</span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-right"><!-- Placeholder --></div>
+    </header>
+
+    <main class="content">
+      <section class="hero">
+        <svg
+          class="hero-mark"
+          width="120"
+          height="120"
+          viewBox="0 0 32 32"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle cx="16" cy="16" r="15" fill="#1c1917" />
+          <circle cx="16" cy="16" r="11.5" fill="#1d70b8" />
+          <circle cx="16" cy="16" r="8" fill="#e63946" />
+          <circle cx="16" cy="16" r="4.5" fill="#f5c518" />
+          <circle cx="16" cy="16" r="1.2" fill="#fff" />
+        </svg>
+        <h1>OnTarget</h1>
+        <p class="tagline">
+          Automatische doel-indeling voor wedstrijden van schuttersgilden.
+        </p>
+        <p class="muted">
+          OnTarget is een desktopapp die schutters automatisch over de doelen
+          verdeelt op wedstrijden van schuttersgilden. Je beheert gilden,
+          schutters en wedstrijden lokaal op je eigen computer. Er is geen
+          server en geen account nodig. De app houdt rekening met boogtype, afstand en
+          de volgorde waarin de schutters zich aanmelden, en levert een nette
+          indeling die je rechtstreeks kan afdrukken.
+        </p>
+      </section>
+
+      <section class="instructions-box" aria-label="Gebruiksinstructies">
+        <p class="release-label">Aan de slag</p>
+        <h2 class="instructions-title">Hoe werkt het?</h2>
+        <p class="muted instructions-intro">
+          Hier komt binnenkort een eenvoudige handleiding voor wedstrijdleiders
+          en gilden. We leggen stap voor stap uit hoe je OnTarget gebruikt.
+        </p>
+        <ol class="instructions-list">
+          <li>Download de installer of de draagbare versie.</li>
+          <li>Voeg schutters toe, of importeer ze uit een lijst.</li>
+          <li>Maak een wedstrijd aan en stel het aantal doelen per afstand in.</li>
+          <li>Open de inschrijvingen en duid aan wie er meedoet.</li>
+          <li>Laat OnTarget de indeling maken en druk ze af.</li>
+        </ol>
+        <a class="instructions-docs-link" href="handleiding.html">Uitgebreide handleiding →</a>
+      </section>
+
+      <aside
+        class="release-box"
+        id="release-box"
+        aria-live="polite"
+        aria-label="Laatste release"
+      >
+        <div class="release-skeleton" id="release-skeleton" aria-hidden="true">
+          <div class="skel skel-label"></div>
+          <div class="skel skel-title"></div>
+          <div class="skel skel-meta"></div>
+          <div class="skel-divider"></div>
+          <div class="skel skel-line"></div>
+          <div class="skel skel-line skel-line--short"></div>
+          <div class="skel skel-line"></div>
+          <div class="skel skel-line skel-line--mid"></div>
+          <div class="skel skel-line skel-line--short"></div>
+          <div class="skel-divider"></div>
+          <div class="skel skel-btn"></div>
+          <div class="skel skel-btn skel-btn--sm"></div>
+        </div>
+
+        <div class="release-content" id="release-content" hidden>
+          <p class="release-label">Laatste release</p>
+          <div class="release-header">
+            <span class="release-version-chip" id="release-tag"></span>
+            <span class="pre-release-badge" id="pre-release-badge" hidden>Pre-release</span>
+            <span class="release-date" id="release-date"></span>
+          </div>
+          <div class="release-notes prose" id="release-notes"></div>
+          <div class="release-downloads" id="release-downloads"></div>
+          <a
+            class="release-gh-link"
+            id="release-gh-link"
+            href="https://github.com/stefvdwater/OnTarget/releases"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Alle releases op GitHub →</a>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <span>© <span id="year"></span> Stef Van de Water</span>
+    </footer>
+
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear()
+
+      async function laadRelease() {
+        try {
+          const res = await fetch(
+            'https://api.github.com/repos/stefvdwater/OnTarget/releases?per_page=1',
+            { headers: { Accept: 'application/vnd.github+json' } }
+          )
+          if (!res.ok) { verbergReleaseBox(); return }
+          const lijst = await res.json()
+          if (!lijst.length) { verbergReleaseBox(); return }
+          const rel = lijst[0]
+
+          document.getElementById('release-tag').textContent = rel.tag_name
+
+          if (rel.prerelease) {
+            document.getElementById('pre-release-badge').hidden = false
+          }
+
+          const datum = new Date(rel.published_at)
+          document.getElementById('release-date').textContent =
+            datum.toLocaleDateString('nl-BE', {
+              day: 'numeric', month: 'long', year: 'numeric'
+            })
+
+          const notesEl = document.getElementById('release-notes')
+          if (rel.body && rel.body.trim()) {
+            notesEl.innerHTML = marked.parse(rel.body)
+          } else {
+            notesEl.hidden = true
+          }
+
+          const downloadsEl = document.getElementById('release-downloads')
+          const assets = rel.assets || []
+          const exe = assets.find(a => a.name.endsWith('.exe'))
+          const zip = assets.find(a => a.name.endsWith('.zip'))
+
+          if (exe) downloadsEl.appendChild(maakDownloadLink(exe.browser_download_url, 'Installer downloaden (.exe)', true))
+          if (zip) downloadsEl.appendChild(maakDownloadLink(zip.browser_download_url, 'Draagbare versie (.zip)', false))
+
+          document.getElementById('release-gh-link').href = rel.html_url
+
+          document.getElementById('release-skeleton').hidden = true
+          document.getElementById('release-content').hidden = false
+        } catch (e) {
+          verbergReleaseBox()
+        }
+      }
+
+      function maakDownloadLink(url, label, primary) {
+        const a = document.createElement('a')
+        a.href = url
+        a.className = 'download-btn' + (primary ? ' download-btn--primary' : ' download-btn--secondary')
+        a.textContent = label
+        return a
+      }
+
+      function verbergReleaseBox() {
+        document.getElementById('release-box').hidden = true
+      }
+
+      window.addEventListener('load', laadRelease)
+    </script>
+  </body>
+</html>

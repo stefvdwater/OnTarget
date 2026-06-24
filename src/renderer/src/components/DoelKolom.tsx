@@ -3,6 +3,8 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { DoelMetConflicten } from '../algoritme/types'
 import SchutterKaart from './SchutterKaart'
 import { IconWarn } from './icons/IconWarn'
+import { IconLock } from './icons/IconLock'
+import { IconUnlock } from './icons/IconUnlock'
 
 interface Props {
   doel: DoelMetConflicten
@@ -103,41 +105,5 @@ function berekenBeurten(slots: DoelMetConflicten['schutters'], helft: 'eerste' |
       return som + (s.dubbel_tweede_helft ? 2 : 1)
     }
   }, 0)
-}
-
-function IconLock(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="4" y="11" width="16" height="10" rx="2" />
-      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-    </svg>
-  )
-}
-
-function IconUnlock(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="4" y="11" width="16" height="10" rx="2" />
-      <path d="M8 11V7a4 4 0 0 1 7.4-2" />
-    </svg>
-  )
 }
 

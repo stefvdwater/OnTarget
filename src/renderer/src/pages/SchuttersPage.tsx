@@ -12,6 +12,14 @@ import { categorieLabel } from '../lib/labels'
 import { exporteerWedstrijden } from '../lib/wedstrijdBackup'
 import { IconPencil } from '../components/icons/IconPencil'
 import { IconTrash } from '../components/icons/IconTrash'
+import { IconSearch } from '../components/icons/IconSearch'
+import { IconPlus } from '../components/icons/IconPlus'
+import { IconFilter } from '../components/icons/IconFilter'
+import { IconExchange } from '../components/icons/IconExchange'
+import { IconUpload } from '../components/icons/IconUpload'
+import { IconDownload } from '../components/icons/IconDownload'
+import { IconSparkle } from '../components/icons/IconSparkle'
+import { IconChevron } from '../components/icons/IconChevron'
 
 type Modal = { type: 'nieuw'; zoek: string } | { type: 'bewerk'; schutter: Schutter } | null
 
@@ -791,144 +799,6 @@ function BoogChip({ boog }: { boog: string }): JSX.Element {
       <span className="chip-dot" />
       {boog}
     </span>
-  )
-}
-
-function IconSearch(): JSX.Element {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="11" cy="11" r="7" />
-      <path d="m21 21-4.3-4.3" />
-    </svg>
-  )
-}
-
-function IconPlus(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  )
-}
-
-function IconFilter(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 5h18l-7 9v6l-4-2v-4L3 5Z" />
-    </svg>
-  )
-}
-
-function IconExchange(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 7h14M14 4l3 3-3 3M21 17H7M10 14l-3 3 3 3" />
-    </svg>
-  )
-}
-
-function IconUpload(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 20V8M6 12l6-6 6 6M4 3h16" />
-    </svg>
-  )
-}
-
-function IconDownload(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 4v12M6 12l6 6 6-6M4 21h16" />
-    </svg>
-  )
-}
-
-function IconSparkle(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3Z" />
-      <path d="M19 14l.7 2.1L22 17l-2.3.9L19 20l-.7-2.1L16 17l2.3-.9L19 14Z" />
-    </svg>
-  )
-}
-
-function IconChevron(): JSX.Element {
-  return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m6 9 6 6 6-6" />
-    </svg>
   )
 }
 

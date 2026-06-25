@@ -311,7 +311,8 @@ export default function SchuttersPage(): JSX.Element {
         <div>
           <h1>Schutters</h1>
           <div className="sub">
-            {schutters.length} geregistreerde schutters in {gilden} gilden
+            {schutters.length} geregistreerde {schutters.length === 1 ? 'schutter' : 'schutters'} in{' '}
+            {gilden} {gilden === 1 ? 'gilde' : 'gilden'}
           </div>
         </div>
         <div className="page-actions">

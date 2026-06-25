@@ -270,14 +270,14 @@ export default function AfdrukkenTab({ wedstrijd }: Props): JSX.Element {
           )}
         </Sectie>
 
-        <Sectie label="Gildes">
+        <Sectie label="Gilden">
           <label className="afdruk-check">
             <input
               type="checkbox"
               checked={alleGildes}
               onChange={(e) => setAlleGildes(e.target.checked)}
             />
-            Alle gildes
+            Alle gilden
           </label>
           {!alleGildes && (
             <div className="afdruk-gildelijst">
@@ -301,7 +301,7 @@ export default function AfdrukkenTab({ wedstrijd }: Props): JSX.Element {
               ))}
               {gildeNamen.length === 0 && (
                 <div style={{ color: 'var(--muted)', fontSize: 12 }}>
-                  Geen gildes in de huidige indeling.
+                  Geen gilden in de huidige indeling.
                 </div>
               )}
             </div>
@@ -359,7 +359,7 @@ export default function AfdrukkenTab({ wedstrijd }: Props): JSX.Element {
       {/* Rechter paneel: preview */}
       <section className="afdrukken-preview-wrap">
         <div className="afdrukken-preview-meta">
-          Voorbeeld — A4 {orientatie === 'portret' ? 'portret' : 'landschap'}
+          Voorbeeld: A4 {orientatie === 'portret' ? 'portret' : 'landschap'}
         </div>
         <div className="afdrukken-preview-pagina">
           <div

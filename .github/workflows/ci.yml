@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Node 24: het test-harnas leunt op native TS-type-stripping (zie scripts/ts-resolver.mjs).
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # Algoritme-tests (scenario + fuzz).
+      - run: npm test
+
+      # Typecheck + bundeling via electron-vite (er is geen apart lint-script).
+      - run: npm run build

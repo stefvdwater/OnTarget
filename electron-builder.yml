@@ -13,11 +13,16 @@ asarUnpack:
   - resources/**
   - node_modules/better-sqlite3/**
 win:
+  # nsis = installer, zip = draagbare versie (uitpakken en draaien, bv. vanaf USB-stick)
   target:
     - target: nsis
       arch:
         - x64
+    - target: zip
+      arch:
+        - x64
   executableName: OnTarget
+  artifactName: OnTarget-${version}.${ext}
 nsis:
   artifactName: OnTarget-Setup-${version}.exe
   shortcutName: OnTarget

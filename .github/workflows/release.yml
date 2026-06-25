@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      # Alleen volledige releases (v0.2.5), geen pre-releases (v0.2.5-alpha.3).
+      # In semver staat alles na het koppelteken voor een pre-release-aanduiding,
+      # dus sluiten we elke tag met een koppelteken uit.
+      - 'v*'
+      - '!v*-*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # Tests moeten slagen voordat we een release publiceren.
+      - run: npm test
+
+      # Bouwt de Windows-installer (nsis) en de draagbare zip naar dist/.
+      - run: npm run build:win
+
+      - name: Publiceer release
+        # bash i.p.v. pwsh zodat de glob-patronen uitgevouwen worden voor gh.
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 0.x blijft een publieke pre-release; vanaf 1.0.0 is het een stabiele "Latest"-release.
+          if [[ "${GITHUB_REF_NAME}" == v0.* ]]; then
+            STABILITEIT="--prerelease"
+          else
+            STABILITEIT="--latest"
+          fi
+          gh release create "${GITHUB_REF_NAME}" \
+            dist/OnTarget-Setup-*.exe \
+            dist/OnTarget-*.zip \
+            --title "${GITHUB_REF_NAME}" \
+            ${STABILITEIT} \
+            --generate-notes

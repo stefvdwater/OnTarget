@@ -24,6 +24,25 @@ npm test             # algoritme-tests (Node test-runner, geen extra dependency)
 
 Er is **geen lint-script** geconfigureerd. TypeScript-typecheck loopt via `electron-vite build`. Voor het indelingsalgoritme is er wel een test-harnas: `npm test` draait de scenario- en fuzz-tests in [`test/`](test/) (zie [internal-docs/ALGORITHM_DEFENSE.md](internal-docs/ALGORITHM_DEFENSE.md)).
 
+## CI/CD en releases
+
+Twee GitHub Actions-workflows in [`.github/workflows/`](.github/workflows/):
+
+- **`ci.yml`** loopt op elke pull request en push naar `main`: `npm test` + `npm run build` (Node 24, want het test-harnas leunt op native TS-stripping). Een versie-bump triggert dus nooit een release, enkel CI.
+- **`release.yml`** loopt enkel op een tag-push `v*` en bouwt op een Windows-runner de installer (nsis) en de draagbare zip, en publiceert ze als GitHub-release.
+
+**Releases zijn altijd een bewuste, handmatige actie, nooit automatisch op een bump.** De cadans:
+
+```bash
+# alpha-bumps per feature blijven gewone commits, geen release:
+#   bump 0.2.5-alpha.N -> commit "0.2.5-alpha.N" -> push
+# pas bij een echte release:
+#   bump naar volledige versie (bv. 0.2.5) -> commit "0.2.5" -> push
+npm run release      # tagt v<versie> uit package.json en pusht -> release.yml
+```
+
+Pre-releases worden bewust niet publiek uitgebracht, op twee niveaus afgedwongen: `npm run release` ([`scripts/tag-release.mjs`](scripts/tag-release.mjs)) weigert elke versie met een koppelteken (`0.2.5-alpha.3`), en `release.yml` filtert die tags weg (`!v*-*`). De stabiliteit volgt de versie: `v0.x` wordt een publieke pre-release, `v1.0.0` en hoger een stabiele "Latest"-release.
+
 ## Architectuur
 
 Drie processen volgens het standaard electron-vite layout:

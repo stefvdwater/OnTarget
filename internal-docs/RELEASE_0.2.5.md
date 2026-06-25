@@ -14,6 +14,7 @@ Cyclus gestart vanaf [`0.2.4`](RELEASE_0.2.4.md) met de version-bump naar `0.2.5
 6. (Later in de cyclus) Een **UI-opfrissing** rond verwijderen/bewerken: icoon-acties op het wedstrijd-overzicht en in de schutters-tabel, een gedeelde verwijder-bevestiging, en lege defaults bij het aanmaken van een schutter.
 7. (Later in de cyclus) Een **icoon-refactor**: alle inline gedefinieerde `Icon*`-componenten gebundeld in `components/icons/` met een gedeelde `IconBase`-wrapper. Puur structureel, geen gedrags- of zichtbare wijziging.
 8. (Later in de cyclus) Een **opsplitsing van `SchuttersPage.tsx`** (CSV-helpers naar `lib/csv.ts`, vier inline modals naar een gedeelde `ConfirmModal`) plus een **taalcorrectie-pas** over de UI-teksten. Gedragsbehoudend, geen schema- of contractwijziging.
+9. (Later in de cyclus) **CI/CD via GitHub Actions**: tests op elke PR en een tag-gestuurde release-workflow die de installer en een draagbare zip bouwt en publiceert. Geen app-code, puur tooling.
 
 Het database-schema blijft onaangeroerd. De twee-sporen-kern bleef ongewijzigd; fase 7 herverdeelt enkel binnen de reeds gekozen actieve doelen en kan de indeling per constructie nooit verslechteren.
 
@@ -118,3 +119,16 @@ Bewuste scope-beperking: zuiver structureel. Geen nieuwe iconen, geen visuele wi
 - **Taalcorrectie-pas.** Alle modals en doorlopende teksten nagelezen op taalfouten. Rechtgetrokken: `gildes` -> `gilden` in [`AfdrukkenTab`](../src/renderer/src/pages/AfdrukkenTab.tsx) (consistent met de rest van de app), een onvolledige zin in [`InschrijvingenTab`](../src/renderer/src/pages/InschrijvingenTab.tsx) ("om er een toe te voegen"), `haar inschrijvingen` -> neutrale formulering in [`WedstrijdenPage`](../src/renderer/src/pages/WedstrijdenPage.tsx), em-/en-dashes uit labels in AfdrukkenTab en [`ConfiguratieTab`](../src/renderer/src/pages/ConfiguratieTab.tsx) (CLAUDE.md-conventie), en correct enkelvoud in de Wedstrijden- en Schutters-subtitel bij precies 1 item.
 
 Deze wijzigingen volgen de afspraak "hergebruiken, niet dupliceren": gedeelde helper-module en gedeelde modal in plaats van gekopieerde logica en markup. Geverifieerd met `npm run build` (typecheck).
+
+### CI/CD via GitHub Actions
+
+Tot dan liep alles met de hand: `npm test` lokaal draaien en de installer met de hand bouwen en in een GitHub-release slepen. De bestaande releases (v0.2.2 t/m v0.2.4) zijn zo ontstaan: een installer (`OnTarget-Setup-<versie>.exe`) plus een draagbare zip (`OnTarget-<versie>.zip`), gemarkeerd als pre-release. Twee workflows in [`.github/workflows/`](../.github/workflows/) automatiseren precies dat, zonder de bestaande conventie te wijzigen. Geen app-code, geen schema- of contractwijziging.
+
+- **CI op elke PR ([`ci.yml`](../.github/workflows/ci.yml)).** Op elke pull request en push naar `main`: `npm test` (het algoritme-harnas) en `npm run build` (typecheck via electron-vite). Draait op Ubuntu met **Node 24**, want het test-harnas leunt op native TS-type-stripping (zie [`scripts/ts-resolver.mjs`](../scripts/ts-resolver.mjs)). Zo kan een regressie in het algoritme `main` niet meer stil bereiken.
+- **Tag-gestuurde release ([`release.yml`](../.github/workflows/release.yml)).** Loopt enkel op een tag-push `v*`, op een Windows-runner (nodig voor `electron-builder --win`). Bouwt de installer en de draagbare zip en publiceert ze via `gh release create`. Een release is dus altijd een bewuste actie (een tag), nooit een automatisch gevolg van een versie-bump of een push naar `main`.
+- **Draagbare zip-target.** [`electron-builder.yml`](../electron-builder.yml) kreeg naast `nsis` een `zip`-target (`OnTarget-<versie>.zip`), zodat er een uitpak-en-draai-versie is (bv. vanaf een USB-stick). Dezelfde artefactnaam als de bestaande handmatige releases.
+- **Tag-helper ([`scripts/tag-release.mjs`](../scripts/tag-release.mjs), `npm run release`).** Tagt de huidige commit met de versie uit `package.json` en pusht de tag. Sluit aan op de bestaande conventie (versie-bump na de merge): bump, commit, push, dan `npm run release`.
+- **Alpha-builds blijven privé, op twee niveaus.** De feature-cadans is meerdere versie-bumps per dag (`0.2.5-alpha.N`); die mogen niet publiek uitkomen. `tag-release.mjs` weigert elke pre-release-versie (een versie met koppelteken), en `release.yml` filtert zulke tags weg (`!v*-*`). Enkel een volledige versie (`0.2.5`, straks `1.0.0`) bereikt het publiek.
+- **Stabiliteit volgt de versie.** `v0.x` wordt gepubliceerd als pre-release (zoals nu), `v1.0.0` en hoger als stabiele "Latest"-release. Geen handmatige vlag om om te zetten bij de 1.0-release.
+
+Bewuste scope-beperking: puur tooling rond bouwen en uitbrengen. Geen wijziging aan de app, het database-schema, de IPC-contracten of het algoritme. Code-signing blijft achterwege (de builds zijn ongesigneerd, net als de lokale `build:win`).

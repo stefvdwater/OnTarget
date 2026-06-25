@@ -13,6 +13,7 @@ Cyclus gestart vanaf [`0.2.4`](RELEASE_0.2.4.md) met de version-bump naar `0.2.5
 5. (Later in de cyclus) Een **lexicografische verfijningsstap (fase 7)** boven op de greedy-constructie die mono-gilde-staarten opruimt, plus een **test-harnas** (`npm test`) dat "beter" meetbaar maakt en regressies vangt.
 6. (Later in de cyclus) Een **UI-opfrissing** rond verwijderen/bewerken: icoon-acties op het wedstrijd-overzicht en in de schutters-tabel, een gedeelde verwijder-bevestiging, en lege defaults bij het aanmaken van een schutter.
 7. (Later in de cyclus) Een **icoon-refactor**: alle inline gedefinieerde `Icon*`-componenten gebundeld in `components/icons/` met een gedeelde `IconBase`-wrapper. Puur structureel, geen gedrags- of zichtbare wijziging.
+8. (Later in de cyclus) Een **opsplitsing van `SchuttersPage.tsx`** (CSV-helpers naar `lib/csv.ts`, vier inline modals naar een gedeelde `ConfirmModal`) plus een **taalcorrectie-pas** over de UI-teksten. Gedragsbehoudend, geen schema- of contractwijziging.
 
 Het database-schema blijft onaangeroerd. De twee-sporen-kern bleef ongewijzigd; fase 7 herverdeelt enkel binnen de reeds gekozen actieve doelen en kan de indeling per constructie nooit verslechteren.
 
@@ -107,3 +108,13 @@ Verlengstuk van de "hergebruiken, niet dupliceren"-lijn hierboven. Tot dan stond
 - **Gedeelde `IconBase`-wrapper.** Alle 25 iconen deelden exact dezelfde SVG-wrapper (`viewBox`, `currentColor` stroke, ronde uiteinden, `aria-hidden` en de `display`/`flexShrink`-stijl). Die staat nu een keer in [`IconBase`](../src/renderer/src/components/icons/IconBase.tsx); elk icoon levert nog enkel zijn pad(en) en stelt waar nodig een afwijkende `strokeWidth` of default-grootte in. De gedeelde `IconProps` leeft mee in `IconBase`. Een toekomstige wijziging aan de gemeenschappelijke rendering (a11y, theming, default-stijl) is daardoor een aanpassing op een plek in plaats van in 25 bestanden.
 
 Bewuste scope-beperking: zuiver structureel. Geen nieuwe iconen, geen visuele wijziging, geen aanraking aan de IPC-contracten, het database-schema of het algoritme. Geverifieerd met `npm run build` (typecheck) en `npm test` (23/23).
+
+### Opsplitsing SchuttersPage + taalcorrectie-pas
+
+[`SchuttersPage.tsx`](../src/renderer/src/pages/SchuttersPage.tsx) mengde te veel verantwoordelijkheden (1042 regels). Twee cohesie-verbeteringen, gedragsbehoudend, gevolgd door een taalcorrectie over de hele UI. Geen wijziging aan het database-schema, de IPC-contracten of het algoritme.
+
+- **CSV-helpers naar `lib/csv.ts`.** De pure `parseCSV` (RFC 4180-stijl quoted fields, CRLF/LF, BOM-strip) en `csvEscape` zijn uit `SchuttersPage` geextraheerd naar een React- en domeinvrije module [`lib/csv.ts`](../src/renderer/src/lib/csv.ts), zodat ze afzonderlijk testbaar zijn. De domeinspecifieke mapping `parseImportTekst` (CSV -> `ImportRij`) blijft in de pagina en leunt op de geextraheerde parser.
+- **Gedeelde `ConfirmModal`.** De vier inline `*Bevestig`/`*Bezig`-bevestigingsmodals (verwijder-een, verwijder-alle, lege-gilden, demo) zijn vervangen door een herbruikbare [`ConfirmModal`](../src/renderer/src/components/ConfirmModal.tsx) met props voor titel, bevestig-label, `bezig`-label en een `danger`/`primary`-variant. Eén plek voor bewoording en uitzicht, in lijn met de bestaande [`WedstrijdVerwijderModal`](../src/renderer/src/components/WedstrijdVerwijderModal.tsx). `SchuttersPage` ging van 1042 naar 755 regels.
+- **Taalcorrectie-pas.** Alle modals en doorlopende teksten nagelezen op taalfouten. Rechtgetrokken: `gildes` -> `gilden` in [`AfdrukkenTab`](../src/renderer/src/pages/AfdrukkenTab.tsx) (consistent met de rest van de app), een onvolledige zin in [`InschrijvingenTab`](../src/renderer/src/pages/InschrijvingenTab.tsx) ("om er een toe te voegen"), `haar inschrijvingen` -> neutrale formulering in [`WedstrijdenPage`](../src/renderer/src/pages/WedstrijdenPage.tsx), em-/en-dashes uit labels in AfdrukkenTab en [`ConfiguratieTab`](../src/renderer/src/pages/ConfiguratieTab.tsx) (CLAUDE.md-conventie), en correct enkelvoud in de Wedstrijden- en Schutters-subtitel bij precies 1 item.
+
+Deze wijzigingen volgen de afspraak "hergebruiken, niet dupliceren": gedeelde helper-module en gedeelde modal in plaats van gekopieerde logica en markup. Geverifieerd met `npm run build` (typecheck).

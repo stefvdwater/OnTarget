@@ -10,6 +10,8 @@ import ImportReviewModal, {
 } from '../components/ImportReviewModal'
 import { categorieLabel } from '../lib/labels'
 import { exporteerWedstrijden } from '../lib/wedstrijdBackup'
+import { parseCSV, csvEscape } from '../lib/csv'
+import ConfirmModal from '../components/ConfirmModal'
 import { IconPencil } from '../components/icons/IconPencil'
 import { IconTrash } from '../components/icons/IconTrash'
 import { IconSearch } from '../components/icons/IconSearch'
@@ -309,7 +311,8 @@ export default function SchuttersPage(): JSX.Element {
         <div>
           <h1>Schutters</h1>
           <div className="sub">
-            {schutters.length} geregistreerde schutters in {gilden} gilden
+            {schutters.length} geregistreerde {schutters.length === 1 ? 'schutter' : 'schutters'} in{' '}
+            {gilden} {gilden === 1 ? 'gilde' : 'gilden'}
           </div>
         </div>
         <div className="page-actions">
@@ -552,94 +555,55 @@ export default function SchuttersPage(): JSX.Element {
       )}
 
       {verwijderAllesBevestig && (
-        <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
-          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
-            <header className="modal-head">Alle schutters verwijderen?</header>
-            <div className="modal-text">
-              <p>
-                <strong className="mono">{schutters.length}</strong> schutter
-                {schutters.length !== 1 ? 's' : ''} en al hun inschrijvingen +
-                doelindelingen worden permanent verwijderd. Gilden en wedstrijden zelf
-                blijven behouden. Deze actie kan niet ongedaan gemaakt worden.
-              </p>
-              <WedstrijdBackupBlok wedstrijden={wedstrijden} />
-            </div>
-            <div className="modal-actions">
-              <button
-                className="btn"
-                onClick={() => setVerwijderAllesBevestig(false)}
-                disabled={verwijderAllesBezig}
-              >
-                Annuleer
-              </button>
-              <button
-                className="btn danger"
-                onClick={handleVerwijderAlles}
-                disabled={verwijderAllesBezig}
-              >
-                {verwijderAllesBezig ? 'Bezig…' : 'Definitief verwijderen'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmModal
+          titel="Alle schutters verwijderen?"
+          bevestigLabel="Definitief verwijderen"
+          bezigLabel="Bezig…"
+          bezig={verwijderAllesBezig}
+          onAnnuleer={() => setVerwijderAllesBevestig(false)}
+          onBevestig={handleVerwijderAlles}
+        >
+          <p>
+            <strong className="mono">{schutters.length}</strong> schutter
+            {schutters.length !== 1 ? 's' : ''} en al hun inschrijvingen +
+            doelindelingen worden permanent verwijderd. Gilden en wedstrijden zelf
+            blijven behouden. Deze actie kan niet ongedaan gemaakt worden.
+          </p>
+          <WedstrijdBackupBlok wedstrijden={wedstrijden} />
+        </ConfirmModal>
       )}
 
       {legeGildenBevestig && (
-        <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
-          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
-            <header className="modal-head">Lege gilden verwijderen?</header>
-            <div className="modal-text">
-              <strong className="mono">{aantalLegeGilden}</strong> gilde
-              {aantalLegeGilden !== 1 ? 'n' : ''} zonder schutters worden permanent
-              verwijderd. Gilden met minstens één schutter blijven uiteraard behouden.
-            </div>
-            <div className="modal-actions">
-              <button
-                className="btn"
-                onClick={() => setLegeGildenBevestig(false)}
-                disabled={legeGildenBezig}
-              >
-                Annuleer
-              </button>
-              <button
-                className="btn danger"
-                onClick={handleVerwijderLegeGilden}
-                disabled={legeGildenBezig}
-              >
-                {legeGildenBezig ? 'Bezig…' : 'Verwijderen'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmModal
+          titel="Lege gilden verwijderen?"
+          bevestigLabel="Verwijderen"
+          bezigLabel="Bezig…"
+          bezig={legeGildenBezig}
+          onAnnuleer={() => setLegeGildenBevestig(false)}
+          onBevestig={handleVerwijderLegeGilden}
+        >
+          <strong className="mono">{aantalLegeGilden}</strong> gilde
+          {aantalLegeGilden !== 1 ? 'n' : ''} zonder schutters worden permanent
+          verwijderd. Gilden met minstens één schutter blijven uiteraard behouden.
+        </ConfirmModal>
       )}
 
       {verwijderBevestig && (
-        <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
-          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
-            <header className="modal-head">Schutter verwijderen?</header>
-            <div className="modal-text">
-              <strong>
-                {verwijderBevestig.voornaam} {verwijderBevestig.naam}
-              </strong>{' '}
-              wordt permanent verwijderd, samen met al diens inschrijvingen en
-              doelindelingen.
-            </div>
-            <div className="modal-actions">
-              <button className="btn" onClick={() => setVerwijderBevestig(null)}>
-                Annuleer
-              </button>
-              <button
-                className="btn danger"
-                onClick={async () => {
-                  await handleVerwijder(verwijderBevestig.id)
-                  setVerwijderBevestig(null)
-                }}
-              >
-                Verwijder
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmModal
+          titel="Schutter verwijderen?"
+          bevestigLabel="Verwijder"
+          onAnnuleer={() => setVerwijderBevestig(null)}
+          onBevestig={async () => {
+            await handleVerwijder(verwijderBevestig.id)
+            setVerwijderBevestig(null)
+          }}
+        >
+          <strong>
+            {verwijderBevestig.voornaam} {verwijderBevestig.naam}
+          </strong>{' '}
+          wordt permanent verwijderd, samen met al diens inschrijvingen en
+          doelindelingen.
+        </ConfirmModal>
       )}
 
       {importResultaat && (
@@ -696,27 +660,22 @@ export default function SchuttersPage(): JSX.Element {
       )}
 
       {demoBevestig && (
-        <div className="modal-backdrop" onClick={(e) => e.stopPropagation()}>
-          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
-            <header className="modal-head">Demo data laden?</header>
-            <div className="modal-text">
-              <p>
-                Dit verwijdert <strong>alle bestaande schutters en gilden</strong> en laadt
-                demo-schutters. Inschrijvingen en doelindelingen van bestaande wedstrijden
-                gaan verloren; de wedstrijden zelf blijven bestaan (maar zonder schutters).
-              </p>
-              <WedstrijdBackupBlok wedstrijden={wedstrijden} />
-            </div>
-            <div className="modal-actions">
-              <button className="btn" onClick={() => setDemoBevestig(false)}>
-                Annuleer
-              </button>
-              <button className="btn btn-primary" onClick={handleLaadDemo} disabled={demoBezig}>
-                {demoBezig ? 'Bezig…' : 'Demo data laden'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmModal
+          titel="Demo data laden?"
+          bevestigLabel="Demo data laden"
+          bezigLabel="Bezig…"
+          variant="primary"
+          bezig={demoBezig}
+          onAnnuleer={() => setDemoBevestig(false)}
+          onBevestig={handleLaadDemo}
+        >
+          <p>
+            Dit verwijdert <strong>alle bestaande schutters en gilden</strong> en laadt
+            demo-schutters. Inschrijvingen en doelindelingen van bestaande wedstrijden
+            gaan verloren; de wedstrijden zelf blijven bestaan (maar zonder schutters).
+          </p>
+          <WedstrijdBackupBlok wedstrijden={wedstrijden} />
+        </ConfirmModal>
       )}
     </>
   )
@@ -802,7 +761,9 @@ function BoogChip({ boog }: { boog: string }): JSX.Element {
   )
 }
 
-// ── CSV helpers ─────────────────────────────────────────
+// ── CSV → schutter-rijen ────────────────────────────────
+// De generieke CSV-parser/escaper staan in lib/csv.ts; hieronder enkel de
+// domeinspecifieke mapping van CSV-tekst naar import-rijen.
 
 type ParseResultaat =
   | { ok: true; rijen: ImportRij[] }
@@ -847,65 +808,4 @@ function parseImportTekst(tekst: string): ParseResultaat {
     })
   }
   return { ok: true, rijen: result }
-}
-
-function csvEscape(waarde: string): string {
-  if (waarde == null) return ''
-  const s = String(waarde)
-  if (/[",\r\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"'
-  return s
-}
-
-/**
- * Parser voor CSV met quoted fields (RFC 4180-stijl). Ondersteunt embedded
- * komma's, dubbele aanhalingstekens (escaped als "") en CRLF/LF regeleindes.
- */
-function parseCSV(tekst: string): string[][] {
-  // Verwijder eventuele UTF-8 BOM
-  if (tekst.charCodeAt(0) === 0xfeff) tekst = tekst.slice(1)
-
-  const rijen: string[][] = []
-  let rij: string[] = []
-  let veld = ''
-  let inQuotes = false
-
-  for (let i = 0; i < tekst.length; i++) {
-    const c = tekst[i]
-
-    if (inQuotes) {
-      if (c === '"') {
-        if (tekst[i + 1] === '"') {
-          veld += '"'
-          i++
-        } else {
-          inQuotes = false
-        }
-      } else {
-        veld += c
-      }
-      continue
-    }
-
-    if (c === '"') {
-      inQuotes = true
-    } else if (c === ',') {
-      rij.push(veld)
-      veld = ''
-    } else if (c === '\r') {
-      // negeer; LF erna closet de rij
-    } else if (c === '\n') {
-      rij.push(veld)
-      rijen.push(rij)
-      rij = []
-      veld = ''
-    } else {
-      veld += c
-    }
-  }
-  // laatste veld/rij flushen
-  if (veld.length > 0 || rij.length > 0) {
-    rij.push(veld)
-    rijen.push(rij)
-  }
-  return rijen
 }

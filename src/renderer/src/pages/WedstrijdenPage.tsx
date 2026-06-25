@@ -215,7 +215,9 @@ export default function WedstrijdenPage(): JSX.Element {
       <div className="page-head">
         <div>
           <h1>Wedstrijden</h1>
-          <div className="sub">{wedstrijden.length} wedstrijden gepland</div>
+          <div className="sub">
+            {wedstrijden.length} {wedstrijden.length === 1 ? 'wedstrijd' : 'wedstrijden'} gepland
+          </div>
         </div>
         <div className="page-actions">
           <div className="filter-dropdown" ref={ioRef}>
@@ -357,7 +359,7 @@ export default function WedstrijdenPage(): JSX.Element {
               <ul style={{ marginTop: 10, paddingLeft: 18, color: 'var(--text-2)' }}>
                 <li>
                   <strong>Vervangen</strong>: de bestaande wedstrijd wordt verwijderd (samen met
-                  haar inschrijvingen en doelindeling) en de backup wordt geïmporteerd.
+                  de bijbehorende inschrijvingen en doelindeling) en de backup wordt geïmporteerd.
                 </li>
                 <li>
                   <strong>Als kopie importeren</strong>: er wordt een nieuwe wedstrijd aangemaakt

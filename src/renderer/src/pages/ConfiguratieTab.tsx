@@ -154,13 +154,13 @@ export default function ConfiguratieTab({ wedstrijd, onUpdate, onVerwijder }: Pr
                 ? '—'
                 : aantalCompound === 1
                   ? `Doel ${String(w.compound_startdoel).padStart(2, '0')}`
-                  : `Doel ${String(w.compound_startdoel).padStart(2, '0')} – ${String(compoundEind).padStart(2, '0')}`}
+                  : `Doel ${String(w.compound_startdoel).padStart(2, '0')}-${String(compoundEind).padStart(2, '0')}`}
             </div>
           </Veld>
         </div>
         {compoundBuitenZone && aantalCompound > 0 && (
           <div className="config-warn">
-            <IconWarn size={16} /> Compound-doelen vallen buiten de 25m-zone (1 – {aantal25m}).
+            <IconWarn size={16} /> Compound-doelen vallen buiten de 25m-zone (1-{aantal25m}).
           </div>
         )}
       </section>

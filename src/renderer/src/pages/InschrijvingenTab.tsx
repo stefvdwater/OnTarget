@@ -196,7 +196,7 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
                     >
                       <IconPlus />
                     </span>{' '}
-                    om er toe te voegen.
+                    om er een toe te voegen.
                   </td>
                 </tr>
               )}

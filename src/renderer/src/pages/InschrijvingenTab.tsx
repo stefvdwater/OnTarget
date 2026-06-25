@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Inschrijving, Schutter, SchutterFormData, Wedstrijd } from '../types'
 import SchutterFormulier from '../components/SchutterFormulier'
 import { categorieLabel } from '../lib/labels'
+import { IconSearch } from '../components/icons/IconSearch'
+import { IconPlus } from '../components/icons/IconPlus'
+import { IconMinus } from '../components/icons/IconMinus'
 
 interface Props {
   wedstrijd: Wedstrijd
@@ -299,57 +302,5 @@ function BoogChip({ boog }: { boog: string }): JSX.Element {
       <span className="chip-dot" />
       {boog}
     </span>
-  )
-}
-
-function IconSearch(): JSX.Element {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="11" cy="11" r="7" />
-      <path d="m21 21-4.3-4.3" />
-    </svg>
-  )
-}
-
-function IconPlus(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  )
-}
-
-function IconMinus(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 12h14" />
-    </svg>
   )
 }

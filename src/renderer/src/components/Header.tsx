@@ -1,3 +1,7 @@
+import { IconZon } from './icons/IconZon'
+import { IconMaan } from './icons/IconMaan'
+import { IconWereldbol } from './icons/IconWereldbol'
+
 type Pagina = 'wedstrijden' | 'schutters'
 
 interface Props {
@@ -63,60 +67,6 @@ function TargetMark({ className }: { className?: string }): JSX.Element {
       <circle cx="16" cy="16" r="8" fill="#e63946" />
       <circle cx="16" cy="16" r="4.5" fill="#f5c518" />
       <circle cx="16" cy="16" r="1.2" fill="#fff" />
-    </svg>
-  )
-}
-
-function IconZon(): JSX.Element {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="16"
-      height="16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-    </svg>
-  )
-}
-
-function IconMaan(): JSX.Element {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="16"
-      height="16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-    </svg>
-  )
-}
-
-function IconWereldbol(): JSX.Element {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="16"
-      height="16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <line x1="2" y1="12" x2="22" y2="12" />
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
     </svg>
   )
 }

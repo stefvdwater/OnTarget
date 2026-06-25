@@ -4,6 +4,7 @@ import InschrijvingenTab from './InschrijvingenTab'
 import IndelingTab from './IndelingTab'
 import ConfiguratieTab from './ConfiguratieTab'
 import AfdrukkenTab from './AfdrukkenTab'
+import { IconArrowLeft } from '../components/icons/IconArrowLeft'
 
 // Debounce voor configuratie-wijzigingen: één DB-write per CONFIG_SAVE_DEBOUNCE_MS
 // na de laatste toetsaanslag, in plaats van per karakter.
@@ -188,22 +189,5 @@ function Tab({
     <button className={'tab' + (actief ? ' active' : '')} onClick={onClick}>
       {label}
     </button>
-  )
-}
-
-function IconArrowLeft(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m12 19-7-7 7-7M19 12H5" />
-    </svg>
   )
 }

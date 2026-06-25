@@ -19,6 +19,10 @@ import SchutterKaart from '../components/SchutterKaart'
 import DoelKolom from '../components/DoelKolom'
 import NietIngedeeldBalk from '../components/NietIngedeeldBalk'
 import { IconWarn } from '../components/icons/IconWarn'
+import { IconX } from '../components/icons/IconX'
+import { IconLock } from '../components/icons/IconLock'
+import { IconUnlock } from '../components/icons/IconUnlock'
+import { IconMagic } from '../components/icons/IconMagic'
 
 interface Props {
   wedstrijd: Wedstrijd
@@ -544,76 +548,4 @@ function inschrijvingNaarSlot(i: Inschrijving, idx: number): DoelSlot {
     dubbel_tweede_helft: !!i.dubbel_tweede_helft,
     positie: idx
   }
-}
-
-function IconX(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M18 6 6 18M6 6l12 12" />
-    </svg>
-  )
-}
-
-function IconLock(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="4" y="11" width="16" height="10" rx="2" />
-      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-    </svg>
-  )
-}
-
-function IconUnlock(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="4" y="11" width="16" height="10" rx="2" />
-      <path d="M8 11V7a4 4 0 0 1 7.4-2" />
-    </svg>
-  )
-}
-
-function IconMagic(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m15 4 1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2Z" />
-      <path d="M4 20 14 10" />
-      <path d="m20 16 .8 1.6L22.4 18.4l-1.6.8L20 21l-.8-1.8L17.6 18.4l1.6-.8L20 16Z" />
-    </svg>
-  )
 }

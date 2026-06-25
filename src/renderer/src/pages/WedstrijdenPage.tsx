@@ -3,6 +3,13 @@ import type { Wedstrijd } from '../types'
 import WedstrijdDetailPage from './WedstrijdDetailPage'
 import WedstrijdVerwijderModal from '../components/WedstrijdVerwijderModal'
 import { IconTrash } from '../components/icons/IconTrash'
+import { IconPlus } from '../components/icons/IconPlus'
+import { IconCalendar } from '../components/icons/IconCalendar'
+import { IconPin } from '../components/icons/IconPin'
+import { IconExchange } from '../components/icons/IconExchange'
+import { IconUpload } from '../components/icons/IconUpload'
+import { IconDownload } from '../components/icons/IconDownload'
+import { IconChevron } from '../components/icons/IconChevron'
 import {
   exporteerWedstrijd,
   exporteerWedstrijden,
@@ -538,126 +545,5 @@ function BatchSamenvatting({ resultaten }: { resultaten: BatchResultaat[] }): JS
         ))}
       </ul>
     </>
-  )
-}
-
-function IconPlus(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  )
-}
-
-function IconCalendar(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <path d="M16 2v4M8 2v4M3 10h18" />
-    </svg>
-  )
-}
-
-function IconPin(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 22s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12Z" />
-      <circle cx="12" cy="10" r="2.5" />
-    </svg>
-  )
-}
-
-function IconExchange(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 7h14M14 4l3 3-3 3M21 17H7M10 14l-3 3 3 3" />
-    </svg>
-  )
-}
-
-function IconUpload(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 20V8M6 12l6-6 6 6M4 3h16" />
-    </svg>
-  )
-}
-
-function IconDownload(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 4v12M6 12l6 6 6-6M4 21h16" />
-    </svg>
-  )
-}
-
-function IconChevron(): JSX.Element {
-  return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m6 9 6 6 6-6" />
-    </svg>
   )
 }

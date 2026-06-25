@@ -12,6 +12,8 @@ import {
   type PrintFilters,
   type PrintOpties
 } from '../components/afdruk-helpers'
+import { IconPrinter } from '../components/icons/IconPrinter'
+import { IconExcel } from '../components/icons/IconExcel'
 
 interface Props {
   wedstrijd: Wedstrijd
@@ -438,45 +440,5 @@ function RadioGroep<T extends string>({
         </label>
       ))}
     </div>
-  )
-}
-
-function IconPrinter(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="6 9 6 2 18 2 18 9" />
-      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-      <rect x="6" y="14" width="12" height="8" />
-    </svg>
-  )
-}
-
-function IconExcel(): JSX.Element {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <line x1="3" y1="9" x2="21" y2="9" />
-      <line x1="3" y1="15" x2="21" y2="15" />
-      <line x1="9" y1="3" x2="9" y2="21" />
-      <line x1="15" y1="3" x2="15" y2="21" />
-    </svg>
   )
 }

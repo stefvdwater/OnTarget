@@ -8,6 +8,7 @@
     "build": "electron-vite build",
     "build:win": "npm run build && electron-builder --win",
     "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/ts-resolver.mjs --test \"test/**/*.test.ts\"",
+    "release": "node scripts/tag-release.mjs",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {

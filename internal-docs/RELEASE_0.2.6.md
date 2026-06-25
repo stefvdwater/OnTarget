@@ -10,8 +10,9 @@ Cyclus gestart vanaf `0.2.5`. Tot nu toe puur tooling rond de ontwikkelervaring,
 
 1. Een **dev-versie-markering** in de rechteronderhoek: de dev-server toont een ander versienummer dan een echte build, zodat je in een oogopslag ziet in welke instantie je zit.
 2. De **versie- en release-workflow vastgelegd**: beleid in CLAUDE.md, een uitvoerbare `/release`-skill, en een doc-onderhoud-beleid om de docs waarheidsgetrouw te houden.
+3. De **algoritme-/regel-docs geconsolideerd** (5 to 3) met een canonieke regelnummering, ook doorgetrokken in de code-comments.
 
-Het database-schema, de IPC-contracten en het algoritme blijven onaangeroerd.
+Het database-schema, de IPC-contracten en het algoritme zelf blijven onaangeroerd (de code-wijziging is comment-only).
 
 ## Wijziging
 
@@ -34,3 +35,15 @@ Tot nu toe leefde de release-procedure in iemands hoofd. Ze is nu expliciet, met
 - **Doc-onderhoud-beleid** (nieuwe sectie "Documentatie-onderhoud" in CLAUDE.md): een bron van waarheid per feit, verplichte same-PR doc-updates, en een waarheidspas (incl. dode-link-check en website-check) als stap in de release-skill. De `RELEASE_*.md`-changelogs blijven append-only momentopnames.
 
 Bewuste scope-beperking: puur proces en tooling. Geen wijziging aan de app, het database-schema, de IPC-contracten of het algoritme. De geplande consolidatie van de algoritme-/regel-docs (5 to 3) gebeurt in een aparte PR.
+
+### Algoritme-/regel-docs geconsolideerd (5 naar 3)
+
+De vijf overlappende algoritme-/regel-docs hadden een groot drift-probleem: de **regelnummering verschilde tussen documenten en zelfs binnen de code** (min-2-gilden was nu eens R2, dan R6; aaneengesloten nu eens R10, dan R11b). Geconsolideerd tot drie, met een canonieke nummering.
+
+- **Canonieke nummering = die van het vroegere `RULES_HIERARCHY.md`** (R1-R19, C1-C4). De meeste code-comments gebruikten die al; de afwijkende refs (R6 to R2 voor min-2-gilden, R10 to R11b voor aaneengesloten, R2-hard to R3 voor max-6, R8/R9 to R9 voor volgorde, een overtollige R4) zijn rechtgetrokken in [`indeling.ts`](../src/renderer/src/algoritme/indeling.ts). Comment-only, geen gedragswijziging; `npm test` blijft 23/23.
+- **`RULES.md`** is nu de canonieke regellijst: het vroegere `RULES.md` (gewone taal) + `RULES_HIERARCHY.md` (prioriteit/nummering) + de open beslispunten uit het vroegere `ALGORITHM_DEFENSE.md` §6, in één bestand.
+- **`ALGORITHM.md`** (nieuw) bundelt het vroegere `ALGORITME_v2.0.md` (implementatie, fase 0-7) en `ALGORITHM_DEFENSE.md` (doelfunctie + waarom de verfijning beter is).
+- **`ALGORITHM_SPEC.md`** blijft (het "wat": gewenst gedrag, randgevallen, I/O), herschreven met de canonieke nummering en bijgewerkte verwijzingen.
+- **Verwijderd:** `RULES_HIERARCHY.md`, `ALGORITME_v2.0.md`, `ALGORITHM_DEFENSE.md`. Verwijzingen in CLAUDE.md en README.md mee bijgewerkt; de `RELEASE_*.md`-changelogs blijven ongemoeid (append-only momentopnames, dus hun oude links blijven historisch staan).
+
+Bewuste scope-beperking: enkel documentatie en code-comments. Geen wijziging aan het gedrag van het algoritme, het database-schema of de IPC-contracten. Geverifieerd met een dode-link-check en `npm test` (23/23).

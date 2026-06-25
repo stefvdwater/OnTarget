@@ -37,8 +37,8 @@ doelen en aanmeldvolgorde.
   een modal vanuit dezelfde flow.
 - **Automatische doelindeling**: één-klik indeling die rekening houdt met
   alle regels (zone, gilde-diversiteit, dubbelschutters, registratievolgorde).
-  Gebruikt het paren-gebaseerde algoritme met tweesporen-toewijzing —
-  zie [internal-docs/ALGORITME_v2.0.md](internal-docs/ALGORITME_v2.0.md).
+  Gebruikt het paren-gebaseerde algoritme met tweesporen-toewijzing,
+  zie [internal-docs/ALGORITHM.md](internal-docs/ALGORITHM.md).
 - **Handmatige aanpassing**: schutters slepen tussen doelen of terug naar
   de aanmeldlijst, doelen individueel of allemaal tegelijk vergrendelen,
   indeling leegmaken.
@@ -118,10 +118,9 @@ Alle inhoudelijke specificaties staan in [`docs/`](docs/):
 | Document | Inhoud |
 |---|---|
 | [FEATURES.md](internal-docs/FEATURES.md) | Functioneel overzicht van het programma |
-| [RULES.md](internal-docs/RULES.md) | Indelingsregels in gewone taal |
-| [RULES_HIERARCHY.md](internal-docs/RULES_HIERARCHY.md) | Regels per prioriteitsniveau (R1–R18) |
+| [RULES.md](internal-docs/RULES.md) | Canonieke indelingsregels: gewone taal + prioriteit (R1-R19) |
 | [ALGORITHM_SPEC.md](internal-docs/ALGORITHM_SPEC.md) | Gewenst gedrag van de indeling (input/output, randgevallen) |
-| [ALGORITME_v2.0.md](internal-docs/ALGORITME_v2.0.md) | Werking van het huidige algoritme (paren + tweesporen-toewijzing) |
+| [ALGORITHM.md](internal-docs/ALGORITHM.md) | Werking van het algoritme (paren + tweesporen) en de doelfunctie |
 | [AFDRUKKEN.md](internal-docs/AFDRUKKEN.md) | Print-systeem: opties, document-structuur, `@media print`-architectuur |
 
 ## Schutter-validatieregels
@@ -207,10 +206,10 @@ schutterkaart: blauw=Recurve, rood=Compound, geel=Barebow.
 ## Voor AI-agents
 
 Bij wijzigingen aan het **indelingsalgoritme**:
-1. Lees eerst [internal-docs/ALGORITHM_SPEC.md](internal-docs/ALGORITHM_SPEC.md) (gewenst gedrag)
-   en [internal-docs/RULES_HIERARCHY.md](internal-docs/RULES_HIERARCHY.md) (prioriteit).
-2. Voor de huidige implementatie zie
-   [internal-docs/ALGORITME_v2.0.md](internal-docs/ALGORITME_v2.0.md) en
+1. Lees eerst [internal-docs/RULES.md](internal-docs/RULES.md) (canonieke regels + prioriteit)
+   en [internal-docs/ALGORITHM_SPEC.md](internal-docs/ALGORITHM_SPEC.md) (gewenst gedrag).
+2. Voor de huidige implementatie en de doelfunctie zie
+   [internal-docs/ALGORITHM.md](internal-docs/ALGORITHM.md) en
    [`src/renderer/src/algoritme/indeling.ts`](src/renderer/src/algoritme/indeling.ts).
 
 Bij wijzigingen aan de **UI**:

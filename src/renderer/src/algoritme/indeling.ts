@@ -298,8 +298,8 @@ function kiesDoel(
 }
 
 // Fase 4: leftover-schutters (losse schutters + ontkoppelde overflow-paren) per gilde plaatsen.
-// Elk gilde-blok blijft op aaneengesloten doelen (R10). R10 weegt hier zwaarder dan het streefgetal 5:
-// een doel mag tot 6 beurten gevuld worden om een gilde samen te houden (cap blijft 6 wegens R2-hard).
+// Elk gilde-blok blijft op aaneengesloten doelen (R11b). R11b weegt hier zwaarder dan het streefgetal 5:
+// een doel mag tot 6 beurten gevuld worden om een gilde samen te houden (cap blijft 6 wegens R3).
 function plaatsLeftovers(
   leftovers: Schutter[],
   actieveDoelen: Doel[],
@@ -345,7 +345,7 @@ function plaatsLeftovers(
         (d, i) => inVoorkeur(i) && maxBeurten(d.schutters) < 5 && passtOpDoel(d, L),
         g
       )
-      // Stap b: binnen de voorkeurszone, sta 5 -> 6 toe om het gilde samen te houden (R10 > streef 5).
+      // Stap b: binnen de voorkeurszone, sta 5 -> 6 toe om het gilde samen te houden (R11b > streef 5).
       if (doelIdx < 0) {
         doelIdx = kiesDoel(actieveDoelen, (d, i) => inVoorkeur(i) && passtOpDoel(d, L), g)
       }
@@ -479,7 +479,7 @@ function isDubbelSlot(s: DoelSlot): boolean {
 // in fysieke volgorde. De termvolgorde codeert de prioriteitshierarchie:
 //   [ over6, onder4, overvol, mono, volgorde, aaneengesloten, stapeling, uitgesmeerd, onderstreef ]
 // over6/onder4 (harde grenzen) en overvol (>5 vermijden, gelijk verdelen) bovenaan;
-// dan mono (>= 2 gilden per doel, R6), de aanmeldvolgorde op gilde-niveau, en de
+// dan mono (>= 2 gilden per doel, R2), de aanmeldvolgorde op gilde-niveau, en de
 // compactheid. ONDERSTREEF (een doel naar 5 i.p.v. 4 brengen) staat HELEMAAL
 // onderaan: een doel op 4 is prima (R4-hard voldaan), en het is NIET de moeite
 // waard om er een gilde voor uit te smeren (1-per-doel). Zo voorkomen we dat een
@@ -512,7 +512,7 @@ function scoreToestand(state: DoelSlot[][], aanmeldById: Map<number, number>): n
     for (const n of perGilde.values()) stapeling += Math.max(0, n - 2)
   }
 
-  // Volgorde (R8/R9): gilden die VROEGER aanmelden horen op de VOORSTE doelen. We
+  // Volgorde (R9): gilden die VROEGER aanmelden horen op de VOORSTE doelen. We
   // meten dit op GILDE-niveau: per gilde een aanmeld-sleutel (gemiddelde
   // aanmeldvolgorde van zijn leden) en een positie (gemiddelde doel-rang). We tellen
   // de inversies: paren gilden waarbij het vroeger aangemelde gilde gemiddeld op een
@@ -697,7 +697,7 @@ function verwerkZone(
     return
   }
 
-  // Fase 0: bepaal aantal actieve doelen op basis van ALLE zonebeurten (R4, R4-hard, R10)
+  // Fase 0: bepaal aantal actieve doelen op basis van ALLE zonebeurten (R10 streef 5, R4-hard min 4)
   const totaleBeurten = schutters.reduce((sum, s) => sum + (isVolDubbel(s) ? 2 : 1), 0)
   let aantalActief: number
   if (totaleBeurten < 4) {

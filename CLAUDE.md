@@ -24,24 +24,29 @@ npm test             # algoritme-tests (Node test-runner, geen extra dependency)
 
 Er is **geen lint-script** geconfigureerd. TypeScript-typecheck loopt via `electron-vite build`. Voor het indelingsalgoritme is er wel een test-harnas: `npm test` draait de scenario- en fuzz-tests in [`test/`](test/) (zie [internal-docs/ALGORITHM_DEFENSE.md](internal-docs/ALGORITHM_DEFENSE.md)).
 
-## CI/CD en releases
+## Versie- en release-workflow
 
-Twee GitHub Actions-workflows in [`.github/workflows/`](.github/workflows/):
+Dit is het beleid. De volledige stap-voor-stap runbook staat in de [`/release`-skill](.claude/skills/release/SKILL.md), niet hier.
 
-- **`ci.yml`** loopt op elke pull request en push naar `main`: `npm test` + `npm run build` (Node 24, want het test-harnas leunt op native TS-stripping). Een versie-bump triggert dus nooit een release, enkel CI.
-- **`release.yml`** loopt enkel op een tag-push `v*` en bouwt op een Windows-runner de installer (nsis) en de draagbare zip, en publiceert ze als GitHub-release.
+- **Trunk-based.** `main` is de enige ontwikkellijn: feature-branch to PR to `main`, releases zijn tags op `main`. Geen langlevende release- of onderhoudsbranches; er is altijd maar een huidige versie in omloop.
+- **Semver.** patch (`1.0.1`) = enkel bugfixes, minor (`1.1.0`) = nieuwe functie met behoud van compatibiliteit, major (`2.0.0`) = breaking change (bv. een `schemaVersie`-bump in [BACKUP_FORMAT](internal-docs/BACKUP_FORMAT.md) die de oude lezer breekt). De zwaarste wijziging in een cyclus bepaalt de bump, en je bumpt maar een keer (een release met een functie en drie fixes is een minor).
+- **Cadans: bumpen pas bij de release.** Tussen releases blijft `package.json` op de laatste uitgebrachte versie; feature-merges bumpen niet. Bij het releasen kies je in een keer het volgende nummer op basis van wat sinds de vorige tag is gemerged. Git vertelt je wat onuitgebracht is, niet het versienummer.
+- **Een release uitvoeren:** bump naar de volledige versie, commit (kaal versienummer als message), push `main`, dan `npm run release` (tagt `v<versie>` uit `package.json` to triggert `release.yml`). De [`/release`-skill](.claude/skills/release/SKILL.md) doet dit volledig, inclusief het afwachten en **expliciet verifieren** van de workflow-conclusie en het zetten van de gecureerde release-notes.
+- **Hotfix.** Is `main` nog gelijk aan de laatste release, dan fix je op `main` en bump je een patch. Loopt `main` al voor met onuitgebracht werk, dan een korte `hotfix/x`-branch vanaf de release-tag, fix + patch-release, daarna terug mergen naar `main`.
+- **Geen publieke pre-releases.** Testen gebeurt lokaal (test-harnas + `npm run dev`). Op twee niveaus afgedwongen: `npm run release` ([`scripts/tag-release.mjs`](scripts/tag-release.mjs)) weigert elke versie met een koppelteken, en `release.yml` filtert die tags weg (`!v*-*`). Stabiliteit volgt de versie: `v0.x` to publieke pre-release, `v1.0.0` en hoger to stabiele "Latest"-release.
+- **Dev-versie in de UI.** De rechteronderhoek toont `__APP_VERSION__` ([`electron.vite.config.ts`](electron.vite.config.ts)): een echte build toont het kale nummer (`1.0.0`), de dev-server toont `1.0.0-dev+<hash>[-dirty]` zodat je de dev- en stable-instantie naast elkaar uit elkaar houdt.
+- **CI.** [`ci.yml`](.github/workflows/ci.yml) draait `npm test` + `npm run build` op elke PR en push naar `main` (Node 24, want het test-harnas leunt op native TS-stripping). Een versie-bump triggert dus nooit een release, enkel een tag-push doet dat. [`release.yml`](.github/workflows/release.yml) bouwt op die tag de installer (nsis) en de draagbare zip op een Windows-runner.
+- **Signing.** De builds zijn voorlopig ongesigneerd (Windows SmartScreen waarschuwt). Aanvaard voor handverdeling onder gilden; te herbekijken bij bredere verdeling.
 
-**Releases zijn altijd een bewuste, handmatige actie, nooit automatisch op een bump.** De cadans:
+## Documentatie-onderhoud
 
-```bash
-# alpha-bumps per feature blijven gewone commits, geen release:
-#   bump 0.2.5-alpha.N -> commit "0.2.5-alpha.N" -> push
-# pas bij een echte release:
-#   bump naar volledige versie (bv. 0.2.5) -> commit "0.2.5" -> push
-npm run release      # tagt v<versie> uit package.json en pusht -> release.yml
-```
+Doel: docs blijven waarheidsgetrouw zonder reactief opkuiswerk (zoals de "documentatie waarheidsgetrouw gemaakt"-pas in [RELEASE_0.2.5](internal-docs/RELEASE_0.2.5.md)). Drie regels:
 
-Pre-releases worden bewust niet publiek uitgebracht, op twee niveaus afgedwongen: `npm run release` ([`scripts/tag-release.mjs`](scripts/tag-release.mjs)) weigert elke versie met een koppelteken (`0.2.5-alpha.3`), en `release.yml` filtert die tags weg (`!v*-*`). De stabiliteit volgt de versie: `v0.x` wordt een publieke pre-release, `v1.0.0` en hoger een stabiele "Latest"-release.
+1. **Een bron van waarheid per feit, de rest linkt ernaar.** Herhaal een feit niet in meerdere docs; verwijs met een link of een regel-ID. De algoritme-/regel-docs worden hiertoe geconsolideerd (5 to 3: een canonieke regellijst, een spec, een implementatie+verdediging).
+2. **Same-PR doc-updates (verplicht).** Een PR die gedrag X wijzigt, werkt in dezelfde PR de doc(s) bij die X beschrijven. Geldt expliciet voor [BACKUP_FORMAT](internal-docs/BACKUP_FORMAT.md) (contract), [FEATURES.md](internal-docs/FEATURES.md) (gebruikersgedrag) en de regel-/algoritme-docs.
+3. **Waarheidspas bij elke release.** De [`/release`-skill](.claude/skills/release/SKILL.md) bevat een doc-auditstap: loop de docs na die deze cyclus geraakt zijn, controleer op dode interne links, en kijk of de website-handleiding mee moet.
+
+De `RELEASE_*.md`-changelogs zijn append-only momentopnames en worden nooit herschreven, ook niet bij een doc-consolidatie. Voor de website-handleiding: een gebruikerszichtbare gedragswijziging kan een handleiding-aanpassing vereisen, en screenshots zijn een extra drift-risico bij UI-wijzigingen.
 
 ## Architectuur
 

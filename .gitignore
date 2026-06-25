@@ -4,7 +4,9 @@ dist
 *.db
 *.tsbuildinfo
 .env
-.claude
+# Lokale Claude-config negeren, maar gedeelde project-skills wel tracken
+.claude/*
+!.claude/skills/
 
 # Lokaal test-bestand met echte schutters-data, niet committen
 schutters-herselt.csv

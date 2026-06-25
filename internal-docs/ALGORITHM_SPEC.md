@@ -1,9 +1,8 @@
 # On Target — Specificatie: Doelindelingsalgoritme
 
-Dit document beschrijft het verwachte **gedrag** van de automatische doelindeling
-voor een boogschieten-wedstrijd: regels, prioriteiten, randgevallen en
-input/output. Het beschrijft **niet** hoe het algoritme intern werkt — daarvoor
-zie [ALGORITME_v2.0.md](ALGORITME_v2.0.md).
+Dit document beschrijft het verwachte **gedrag** van de automatische doelindeling voor een boogschieten-wedstrijd: zonetoewijzing, randgevallen, conflictdetectie en input/output. Het beschrijft **niet** hoe het algoritme intern werkt; daarvoor zie [ALGORITHM.md](ALGORITHM.md).
+
+> De canonieke regellijst en -nummering (R1-R19) staat in [RULES.md](RULES.md). Dit document gebruikt diezelfde nummering. De korte tabellen in §2-§3 zijn een samenvatting; bij twijfel is RULES.md de bron van waarheid.
 
 ---
 
@@ -28,9 +27,11 @@ zie [ALGORITME_v2.0.md](ALGORITME_v2.0.md).
 | Code | Regel |
 |---|---|
 | R1 | Elke schutter staat op een doel in de **correcte zone** (juiste afstand, boogtype) |
-| R2 | Een doel mag **nooit meer dan 6 beurten** per helft bevatten |
-| R3 | Een **vergrendeld doel** wordt niet gewijzigd; de schutters erop worden als "al geplaatst" beschouwd |
-| R4-hard | Een doel heeft **altijd minimaal 4 beurten** per helft. Uitzondering: als de hele zone minder dan 4 beurten kan leveren, of als het resterende aantal schutters onvoldoende is om elk actief doel op 4 beurten te brengen (dan worden de resterende schutters samengebracht op zo weinig mogelijk doelen). |
+| R3 | Een doel mag **nooit meer dan 6 beurten** per helft bevatten |
+| (vergrendeld) | Een **vergrendeld doel** wordt niet gewijzigd; de schutters erop worden als "al geplaatst" beschouwd |
+| min-4-hard | Een doel heeft **altijd minimaal 4 beurten** per helft. Uitzondering: als de hele zone minder dan 4 beurten kan leveren, of als het resterende aantal schutters onvoldoende is om elk actief doel op 4 beurten te brengen (dan worden de resterende schutters samengebracht op zo weinig mogelijk doelen). |
+
+> `min-4-hard` heet in de code en de tests historisch "R4-hard", maar is **niet** rule R4 (compound apart); het is de harde ondergrens van R10.
 
 ---
 
@@ -38,13 +39,13 @@ zie [ALGORITME_v2.0.md](ALGORITME_v2.0.md).
 
 | Code | Regel | Toelichting |
 |---|---|---|
-| R4 | **Streef naar 5 beurten** per doel per helft | Ideale bezetting |
-| R5 | **Maximaal 2 schutters van hetzelfde gilde** per doel | Zachte bovengrens; zie §6 voor uitzonderingen |
-| R6 | **Minimaal 2 verschillende gilden** per doel | Uitzondering: §6 |
+| R10 | **Streef naar 5 beurten** per doel per helft | Ideale bezetting |
+| R11 | **Maximaal ~2 schutters van hetzelfde gilde** per doel | Zachte bovengrens; zie §6 voor uitzonderingen |
+| R2 | **Minimaal 2 verschillende gilden** per doel | Uitzondering: §6 |
 | R7 | **Dubbelschutters op de laatste actieve doelen** van hun zone | Achteraan in het gevulde blok, niet op fysiek lege doelen |
-| R8 | Schutters met een **lagere aanmeldvolgorde op een lager doelnummer** | Registratievolgorde → doelvolgorde |
-| R9 | **Gelijkmatige verdeling**: alle doelen zo gelijk mogelijk gevuld | Voorkeur voor 4 boven 6 als er meer doelen beschikbaar zijn |
-| R10 | Schutters van hetzelfde gilde op **aaneengesloten doelen** | Niet verspreid over de hele zaal |
+| R9 | Schutters met een **lagere aanmeldvolgorde op een lager doelnummer** | Registratievolgorde → doelvolgorde (op gilde-niveau, zie §11) |
+| R10b | **Gelijkmatige verdeling**: alle doelen zo gelijk mogelijk gevuld | Voorkeur voor 4 boven 6 als er meer doelen beschikbaar zijn (R12) |
+| R11b | Schutters van hetzelfde gilde op **aaneengesloten doelen** | Niet verspreid over de hele zaal |
 
 ---
 
@@ -65,33 +66,19 @@ afstand = 12                         → 12m-zone
 
 Als de compound-zone minder dan 3 schutters heeft, worden die schutters toegevoegd aan de 25m-zone en krijgen ze positie vóórin hun doel (visueel onderscheid zonder apart doel).
 
-### 4.2b Variabele compound-doelen (R17)
+### 4.2b Variabele compound-doelen (R19)
 
-`aantalCompoundDoelen` in de wedstrijdconfiguratie is een **bovengrens**, geen vast aantal.
-Het algoritme bepaalt zelf hoeveel compound-doelen écht nodig zijn op basis van de
-aanwezige compound-schutters en de gewone bezettingslogica (streef 5 per doel,
-R4-hard min 4). **Ongebruikte compound-doelen worden herbestemd tot 25m-doelen**
-en doen mee in de indeling van de 25m-zone.
+`aantalCompoundDoelen` in de wedstrijdconfiguratie is een **bovengrens**, geen vast aantal. Het algoritme bepaalt zelf hoeveel compound-doelen écht nodig zijn op basis van de aanwezige compound-schutters en de gewone bezettingslogica (streef 5 per doel, min-4). **Ongebruikte compound-doelen worden herbestemd tot 25m-doelen** en doen mee in de indeling van de 25m-zone.
 
 Praktisch:
 
 1. De compound-zone wordt **vóór** de 25m-zone verwerkt (afwijking op §4.3).
-2. Daarna worden alle compound-doelen die geen enkele schutter kregen én niet
-   vergrendeld zijn, omgezet naar `zone = '25m'`. Ze behouden hun doelnummer
-   (fysieke positie) en worden in de samengevoegde 25m-zone gesorteerd op nummer.
-3. De 25m-zone bestaat dan logisch uit `[oorspronkelijke 25m-doelnummers] ∪
-   [herbestemde compound-doelnummers]`. R8 (aanmeldvolgorde → doelnummer) en
-   R7 (dubbels op laatste actieve doelen) gelden over die samengevoegde zone.
-4. Een **vergrendeld** compound-doel blijft compound, ook als het leeg is — de
-   gebruiker heeft het bewust gereserveerd.
-5. Voor **conflictdetectie** (§9) geldt: een herbestemd doel telt voor alle
-   doeleinden als 25m-doel. De waarschuwing "niet-compound schutter op compound
-   doel" geldt dus niet op een herbestemd doel.
+2. Daarna worden alle compound-doelen die geen enkele schutter kregen én niet vergrendeld zijn, omgezet naar `zone = '25m'`. Ze behouden hun doelnummer (fysieke positie) en worden in de samengevoegde 25m-zone gesorteerd op nummer.
+3. De 25m-zone bestaat dan logisch uit `[oorspronkelijke 25m-doelnummers] ∪ [herbestemde compound-doelnummers]`. R9 (aanmeldvolgorde → doelnummer) en R7 (dubbels op laatste actieve doelen) gelden over die samengevoegde zone.
+4. Een **vergrendeld** compound-doel blijft compound, ook als het leeg is; de gebruiker heeft het bewust gereserveerd.
+5. Voor **conflictdetectie** (§9) geldt: een herbestemd doel telt voor alle doeleinden als 25m-doel. De waarschuwing "niet-compound schutter op compound doel" geldt dus niet op een herbestemd doel.
 
-Compound-overflow (méér compound-schutters dan de voorziene compound-doelen
-kunnen bevatten bij 6 beurten/doel) blijft hard: resterende compound-schutters
-worden `nietIngedeeld`. Compound-schutters lopen nooit over naar 25m (behalve
-via de bestaande R16-uitzondering bij <3 schutters).
+Compound-overflow (méér compound-schutters dan de voorziene compound-doelen kunnen bevatten bij 6 beurten/doel) blijft hard: resterende compound-schutters worden `nietIngedeeld`. Compound-schutters lopen nooit over naar 25m (behalve via de bestaande R16-uitzondering bij <3 schutters).
 
 ### 4.3 Verwerkingsvolgorde per zone
 
@@ -105,27 +92,21 @@ via de bestaande R16-uitzondering bij <3 schutters).
 
 ### 5.1 Groepering en plaatsing
 
-Dubbelschutters komen altijd op de **laatste actieve doelen** van hun zone (R7) — dat wil zeggen, op de achterste M doelen van het gebruikte (gevulde) blok, **niet** op fysiek lege doelen helemaal achteraan de zone. Concreet: als de zone er N actieve doelen heeft en M dubbelgroepen, dan staan de dubbelgroepen op `actieveDoelen[N-M .. N-1]`. De vroegst aangemelde groep komt op het laagste van die M doelen.
+Dubbelschutters komen altijd op de **laatste actieve doelen** van hun zone (R7): op de achterste M doelen van het gebruikte (gevulde) blok, **niet** op fysiek lege doelen helemaal achteraan de zone. Concreet: als de zone N actieve doelen heeft en M dubbelgroepen, dan staan de dubbelgroepen op `actieveDoelen[N-M .. N-1]`. De vroegst aangemelde groep komt op het laagste van die M doelen.
 
 Groepeer ze als volgt:
 - **Vol-dubbelaars** (EH + TH): maximaal 2 per doel. Twee vol-dubbelaars bezetten 4 beurten per helft; er is nog ruimte voor 1 normale schutter (→ 5 beurten).
-- **EH-dubbel + TH-dubbel combinaties**: koppel bij voorkeur een EH-dubbel aan een TH-dubbel van een **ander gilde** (R6). Elk koppel gaat op één doel.
+- **EH-dubbel + TH-dubbel combinaties**: koppel bij voorkeur een EH-dubbel aan een TH-dubbel van een **ander gilde** (R13). Elk koppel gaat op één doel.
 - Resterende EH- of TH-dubbelaars gaan elk afzonderlijk op een doel.
 
 ### 5.2 Normale schutters aanvullen op dubbeldoelen
 
-Een dubbeldoel wordt aangevuld met normale schutters tot **5 beurten** per helft.
-Daarbij gelden:
+Een dubbeldoel wordt aangevuld met normale schutters tot **5 beurten** per helft. Daarbij gelden:
 
-- **Minimum normalen voor rust (R8)**: als de groep 2 vol-dubbelaars of een
-  EH+TH-koppel bevat, is minstens 1 normale schutter verplicht (scoreschrijver).
-  Bij 2 EH én 2 TH op hetzelfde doel: minstens 2 normalen, uit verschillende gilden.
-- **R6 (min 2 gilden)**: als alle dubbelaars op het doel van hetzelfde gilde zijn,
-  moet de eerste aanvullende normaal van een **ander** gilde komen.
-- **R5 (max 2 per gilde)**: geldt ook bij aanvulling. Een gilde dat al 2× aanwezig
-  is op het doel wordt overgeslagen.
-- Selectie van normalen gebeurt op **registratievolgorde**, met overslaan waar
-  bovenstaande regels dat vereisen.
+- **Minimum normalen voor rust (R8)**: als de groep 2 vol-dubbelaars of een EH+TH-koppel bevat, is minstens 1 normale schutter verplicht (scoreschrijver). Bij 2 EH én 2 TH op hetzelfde doel: minstens 2 normalen, uit verschillende gilden.
+- **R2 (min 2 gilden)**: als alle dubbelaars op het doel van hetzelfde gilde zijn, moet de eerste aanvullende normaal van een **ander** gilde komen.
+- **R11 (max ~2 per gilde)**: geldt ook bij aanvulling. Een gilde dat al 2× aanwezig is op het doel wordt overgeslagen.
+- Selectie van normalen gebeurt op **registratievolgorde**, met overslaan waar bovenstaande regels dat vereisen.
 
 ### 5.3 Voorbeeld: 4 vol-dubbelaars (A1, A2 van gilde A; B1, B2 van gilde B)
 
@@ -138,7 +119,7 @@ Doel 2: A2 (vol-dubbel) + B2 (vol-dubbel) + N2 (normaal van gilde C of D)  → 5
 
 ## 6. Normale schutters verdelen
 
-### 6.1 Gildegrens (R5/R6) — prioriteitsvolgorde
+### 6.1 Gildegrens (R11/R2) — prioriteitsvolgorde
 
 De gildegrens is **zacht** en wordt stapsgewijs versoepeld:
 
@@ -148,23 +129,17 @@ De gildegrens is **zacht** en wordt stapsgewijs versoepeld:
 | 2 (versoepeld) | max 3 per gilde per doel | Als stap 1 leidt tot ondervulde doelen (< 5 beurten) én er geen extra doel beschikbaar is |
 | 3 (noodgeval) | onbeperkt (maar ≤ 6 beurten) | Enkel als alle bovenstaande stappen mislukken |
 
-**Uitzondering R6 (min 2 gilden)**: als de zone slechts 1 gilde bevat, vervalt de 2-gilden-eis. Er wordt **geen conflictwaarschuwing** gegeven in dat geval.
+**Uitzondering R2 (min 2 gilden)**: als de zone slechts 1 gilde bevat, vervalt de 2-gilden-eis. Er wordt **geen conflictwaarschuwing** gegeven in dat geval.
 
 ### 6.2 Aantal actieve doelen
 
 Het aantal te gebruiken doelen wordt bepaald door:
 
-- **Streefbezetting**: 5 beurten per doel (R4). Het aantal doelen wordt zo
-  gekozen dat de streefbezetting zo dicht mogelijk benaderd wordt.
-- **R4-hard (minimum 4)**: een doel krijgt nooit minder dan 4 beurten per
-  helft. Het aantal actieve doelen wordt daarom nooit zo hoog gezet dat
-  doelen onder 4 moeten zakken.
-- **Maximum 6 beurten (R3)**: een doel krijgt nooit meer dan 6 beurten per
-  helft. Bij gebrek aan doelcapaciteit worden schutters als
-  niet-ingedeeld gemarkeerd.
+- **Streefbezetting**: 5 beurten per doel (R10). Het aantal doelen wordt zo gekozen dat de streefbezetting zo dicht mogelijk benaderd wordt.
+- **min-4-hard**: een doel krijgt nooit minder dan 4 beurten per helft. Het aantal actieve doelen wordt daarom nooit zo hoog gezet dat doelen onder 4 moeten zakken.
+- **Maximum 6 beurten (R3)**: een doel krijgt nooit meer dan 6 beurten per helft. Bij gebrek aan doelcapaciteit worden schutters als niet-ingedeeld gemarkeerd.
 
-`aantalBeurten` = som van de beurten van alle schutters in de zone (normaal = 1,
-vol-dubbel = 2).
+`aantalBeurten` = som van de beurten van alle schutters in de zone (normaal = 1, vol-dubbel = 2).
 
 | Beurten | Doelen beschikbaar | Verwachte verdeling |
 |---|---|---|
@@ -173,8 +148,7 @@ vol-dubbel = 2).
 | 17 | ≥ 4 | 4 doelen (5+4+4+4) |
 | 17 | 3 | 3 doelen (6+6+5) |
 
-**Uitzondering (R4-hard)**: als de totale beurten in de zone < 4, worden alle
-schutters op 1 doel geplaatst zonder de min-4-eis.
+**Uitzondering (min-4-hard)**: als de totale beurten in de zone < 4, worden alle schutters op 1 doel geplaatst zonder de min-4-eis.
 
 ---
 
@@ -191,7 +165,7 @@ schutters op 1 doel geplaatst zonder de min-4-eis.
 Doel 1: A1 A2 B1 B2 A3   (A:3 B:2, 5 schutters)
 Doel 2: A4 A5 B3 B4 B5   (A:2 B:3, 5 schutters) ← of A:3 B:2 als B's zijn opgebruikt
 ```
-→ Gildegrens wordt versoepeld tot 3 per doel (R5 stap 2 uit §6.1). **Geen extra doel openen.**
+→ Gildegrens wordt versoepeld tot 3 per doel (R11 stap 2 uit §6.1). **Geen extra doel openen.**
 
 ### 7.2 Eén gilde in een zone
 
@@ -212,7 +186,7 @@ Doel 2: A5 A6 A7 A8   (A:4, 4 beurten)
 
 **Beslissingsregel**:
 - Als er **4 of meer doelen beschikbaar** zijn: gebruik een extra doel → bijv. `5+4+4+4`.  
-  *Voorkeur: 4 boven 6, zelfs als dat een extra doel kost.*
+  *Voorkeur: 4 boven 6, zelfs als dat een extra doel kost (R12).*
 - Als er **exact 3 doelen** zijn (geen extra): spreiding met 6 → `6+6+5`.
 
 ```
@@ -238,20 +212,13 @@ Doel 2: A6 A7 A8 A9 A10 B2  (A:5, B:1 → 6 beurten)
 
 **Situatie**: zone heeft 5 doelen; doel 3 is vergrendeld.
 
-**Verwacht resultaat**: vergrendeld doel wordt **volledig overgeslagen** bij de
-verdeling. De overige 4 doelen (1, 2, 4, 5) worden gevuld alsof het vergrendelde
-doel niet bestaat. De registratievolgorde (R8) geldt t.o.v. de *relatieve*
-positie in de gefilterde lijst.
+**Verwacht resultaat**: vergrendeld doel wordt **volledig overgeslagen** bij de verdeling. De overige 4 doelen (1, 2, 4, 5) worden gevuld alsof het vergrendelde doel niet bestaat. De registratievolgorde (R9) geldt t.o.v. de *relatieve* positie in de gefilterde lijst.
 
 ### 7.6 Gilde-overflow: één gilde op alle doelen al 2×
 
-**Situatie**: er blijven 3 schutters van gilde K over terwijl alle doelen al
-K:2 hebben.
+**Situatie**: er blijven 3 schutters van gilde K over terwijl alle doelen al K:2 hebben.
 
-**Verwacht resultaat**: K-schutters komen op de meest ondervulde doelen
-(voorkeur voor bijvullen tot 5 beurten), ook al stijgt K boven 2 per gilde
-(R5-versoepeling, §6.1). Houd K-schutters bij voorkeur op **aaneengesloten
-doelen** (R10).
+**Verwacht resultaat**: K-schutters komen op de meest ondervulde doelen (voorkeur voor bijvullen tot 5 beurten), ook al stijgt K boven 2 per gilde (R11-versoepeling, §6.1). Houd K-schutters bij voorkeur op **aaneengesloten doelen** (R11b).
 
 ```
 Voorbeeld:
@@ -275,10 +242,10 @@ Doel 15: 4 schutters (K:2) → K5 gaat hier (K:3, 5 schutters)
 
 Na de volledige indeling wordt de volgorde binnen elk doel als volgt bepaald:
 
-1. **Compound-schutters op een niet-compound 25m-doel** (R16-uitzondering): allereerst
-2. **EH-dubbel en vol-dubbel schutters**: vóórin (kunnen vroeg vertrekken na EH)
-3. **Normale schutters**: gegroepeerd per gilde
-4. **TH-only dubbelschutters**: achteraan (komen later aan)
+1. **Compound-schutters op een niet-compound 25m-doel** (R16-uitzondering, R4b): allereerst
+2. **EH-dubbel en vol-dubbel schutters** (R5): vóórin (kunnen vroeg vertrekken na EH)
+3. **Normale schutters** (R15): gegroepeerd per gilde
+4. **TH-only dubbelschutters** (R5): achteraan (komen later aan)
 
 ---
 
@@ -354,34 +321,20 @@ Elk doel heeft:
 
 ## 11. Samenvatting prioriteitsvolgorde
 
-Bij conflicterende regels geldt deze prioriteit (hoog → laag):
+Bij conflicterende regels geldt deze prioriteit (hoog → laag). Dit is exact de score-vector van fase 7; de implementatie staat in [ALGORITHM.md §17](ALGORITHM.md).
 
-1. Correcte zone (R1) — harde regel
-2. Max 6 beurten (R2) — harde regel
-3. Vergrendelde doelen respecteren (R3)
-4. Min 4 beurten per doel (R4-hard) — harde regel, uitzondering: onvoldoende beurten in zone
-4. Dubbelschutters op de laatste actieve doelen van hun zone (R7)
-5. Registratievolgorde → doelvolgorde (R8)
-6. Streef 5 beurten per doel (R4)
-7. Gelijke verdeling over doelen (R9), voorkeur 4 boven 6
-8. Gilden op aaneengesloten doelen (R10)
-9. Max 2 per gilde per doel (R5) — zacht, zie §6.1
-10. Min 2 gilden per doel (R6) — zacht, uitzonderingen in §6.1 en §7.2
+1. Correcte zone (R1) — hard
+2. Max 6 beurten (R3) — hard
+3. Vergrendelde doelen respecteren — hard
+4. Min 4 beurten per doel (min-4-hard) — hard, uitzondering: onvoldoende beurten in zone
+5. Dubbelschutters op de laatste actieve doelen van hun zone (R7)
+6. Overvol vermijden / gelijke verdeling (R10b/R12), voorkeur 4 boven 6
+7. Min 2 gilden per doel (R2) — geen mono-gilde doel
+8. Vroeger aangemelde gilden op de voorste doelen (R9, op gilde-niveau)
+9. Gilden op aaneengesloten doelen (R11b)
+10. Compactheid: gilde niet uitsmeren, ~2 per gilde, 2-2-1-vorm (R11)
+11. Streef 5: een doel op 4 naar 5 brengen (R10) — laagste, nooit door uit te smeren
 
-> **Nota (te reconcilieren).** Deze tabel zet R6 (min 2 gilden) onderaan, maar dat
-> spreekt de eigen voorbeelden tegen: §7.1 houdt `A3B3/A3B3` aan (geen mono-doelen) en
-> §7.4 splitst het kleine gilde net voor diversiteit. De implementatie volgt de
-> voorbeelden en rangschikt **R6 hoog** (net onder de bezettings-/verdeel-regels, boven
-> R8-volgorde en de compactheidsregels). De aanmeldvolgorde (R8/R9) werkt daarbij op
-> **gilde-niveau** (vroeger aangemelde gilden vooraan; volgorde binnen een gilde telt
-> niet), zodat ze diversiteit niet ondermijnt. Zie de geimplementeerde
-> doelfunctie in [ALGORITME_v2.0.md §9b/§10](ALGORITME_v2.0.md) en de motivatie in
-> [ALGORITHM_DEFENSE.md §2 en §6](ALGORITHM_DEFENSE.md). Beslissing over de canonieke
-> volgorde ligt bij de maintainer.
+> **Diversiteit (R2) staat hoog**, niet onderaan: dat volgt de canonieke voorbeelden §7.1 (`A3B3/A3B3`, geen mono-doelen) en §7.4 (klein gilde splitsen voor diversiteit). De aanmeldvolgorde (R9) werkt op **gilde-niveau** (vroeger aangemelde gilden vooraan; volgorde binnen een gilde telt niet), zodat ze diversiteit niet ondermijnt. Motivatie en open beslispunten: [RULES.md](RULES.md) en [ALGORITHM.md §11](ALGORITHM.md).
 
-> **Uitzondering bij restplaatsing:** wanneer overgebleven schutters (losse
-> gildeleden + ontkoppelde overflow-paren) per gilde-blok worden geplaatst,
-> weegt "gilden op aaneengesloten doelen" (R10) zwaarder dan "streef 5 beurten"
-> (punt 6): een doel mag dan tot 6 beurten gevuld worden om een gilde-blok
-> samen te houden. Zo blijft ook de laatst ingedeelde gilde op naburige doelen.
-> Zie [ALGORITME_v2.0.md §7](ALGORITME_v2.0.md).
+> **Uitzondering bij restplaatsing:** wanneer overgebleven schutters (losse gildeleden + ontkoppelde overflow-paren) per gilde-blok worden geplaatst, weegt "gilden op aaneengesloten doelen" (R11b) zwaarder dan "streef 5 beurten" (R10): een doel mag dan tot 6 beurten gevuld worden om een gilde-blok samen te houden. Zo blijft ook de laatst ingedeelde gilde op naburige doelen. Zie [ALGORITHM.md §7](ALGORITHM.md).

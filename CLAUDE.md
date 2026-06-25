@@ -22,7 +22,7 @@ npm run build:win    # Windows installer (.exe) via electron-builder
 npm test             # algoritme-tests (Node test-runner, geen extra dependency)
 ```
 
-Er is **geen lint-script** geconfigureerd. TypeScript-typecheck loopt via `electron-vite build`. Voor het indelingsalgoritme is er wel een test-harnas: `npm test` draait de scenario- en fuzz-tests in [`test/`](test/) (zie [internal-docs/ALGORITHM_DEFENSE.md](internal-docs/ALGORITHM_DEFENSE.md)).
+Er is **geen lint-script** geconfigureerd. TypeScript-typecheck loopt via `electron-vite build`. Voor het indelingsalgoritme is er wel een test-harnas: `npm test` draait de scenario- en fuzz-tests in [`test/`](test/) (zie [internal-docs/ALGORITHM.md](internal-docs/ALGORITHM.md)).
 
 ## Versie- en release-workflow
 
@@ -58,14 +58,13 @@ Drie processen volgens het standaard electron-vite layout:
 
 ### Het indelingsalgoritme (`src/renderer/src/algoritme/`)
 
-Paren-gebaseerd algoritme met LPT bin-packing over twee sporen — zie [internal-docs/ALGORITME_v2.0.md](internal-docs/ALGORITME_v2.0.md). **Stabiel — alleen aanraken als nodig**, en eerst lezen:
+Paren-gebaseerd algoritme met LPT bin-packing over twee sporen, zie [internal-docs/ALGORITHM.md](internal-docs/ALGORITHM.md). **Stabiel, alleen aanraken als nodig**, en eerst lezen:
 
-1. [internal-docs/ALGORITHM_SPEC.md](internal-docs/ALGORITHM_SPEC.md) — gewenst gedrag, input/output, randgevallen.
-2. [internal-docs/RULES_HIERARCHY.md](internal-docs/RULES_HIERARCHY.md) — regels per prioriteit (harde → zachte).
-3. [internal-docs/ALGORITME_v2.0.md](internal-docs/ALGORITME_v2.0.md) - huidige implementatie (incl. fase 7, de lexicografische verfijning).
-4. [internal-docs/ALGORITHM_DEFENSE.md](internal-docs/ALGORITHM_DEFENSE.md) - de doelfunctie, waarom de verfijning beter is, en openstaande regelnotities.
+1. [internal-docs/RULES.md](internal-docs/RULES.md) - de canonieke regellijst en -nummering (R1-R19), per prioriteit, met de open beslispunten.
+2. [internal-docs/ALGORITHM_SPEC.md](internal-docs/ALGORITHM_SPEC.md) - gewenst gedrag, input/output, randgevallen.
+3. [internal-docs/ALGORITHM.md](internal-docs/ALGORITHM.md) - de implementatie (fase 0-7), de doelfunctie en waarom de verfijning beter is.
 
-[internal-docs/RULES.md](internal-docs/RULES.md) bevat alle regels in gewone taal; [internal-docs/FEATURES.md](internal-docs/FEATURES.md) is het functioneel overzicht.
+[internal-docs/FEATURES.md](internal-docs/FEATURES.md) is het functioneel overzicht.
 
 ### Release-notities
 

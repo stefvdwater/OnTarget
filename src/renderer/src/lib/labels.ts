@@ -14,16 +14,19 @@ export function geslachtLabel(g: Schutter['geslacht']): 'Heer' | 'Dame' {
  *
  * Als `afstand` meegegeven wordt, krijgen Aspirant en Jeugd die erachter
  * ("Jeugd 12m"): die twee categorieën zijn niet op het eerste gezicht
- * duidelijk over welke afstand ze schieten. Callers die afstand al apart
- * tonen (bv. een tabelkolom) laten dit veld weg.
+ * duidelijk over welke afstand ze schieten. Bewust een los argument (niet
+ * een veld op `s`) zodat callers die `afstand` al apart tonen (bv. een
+ * tabelkolom) er niet per ongeluk een dubbele weergave bij krijgen.
  */
-export function categorieLabel(s: {
-  leeftijdscategorie: string
-  geslacht: Schutter['geslacht']
-  type_boog: string
+export function categorieLabel(
+  s: {
+    leeftijdscategorie: string
+    geslacht: Schutter['geslacht']
+    type_boog: string
+  },
   afstand?: number
-}): string {
-  const { leeftijdscategorie: cat, geslacht: g, type_boog: boog, afstand } = s
+): string {
+  const { leeftijdscategorie: cat, geslacht: g, type_boog: boog } = s
   const metAfstand = (label: string): string =>
     (cat === 'Aspirant' || cat === 'Jeugd') && afstand !== undefined
       ? `${label} ${afstand}m`

@@ -297,6 +297,53 @@ export function formatDatum(datum: string): string {
   return `${parseInt(d, 10)} ${MAANDEN[parseInt(m, 10) - 1]} ${y}`
 }
 
+/** "2026-06-13" → "13/06/2026". */
+export function formatDatumKort(datum: string): string {
+  const [y, m, d] = datum.split('-')
+  return `${d}/${m}/${y}`
+}
+
+// ── Schutterskaarten (blanco scorekaarten per schutter) ─────
+
+/**
+ * Een pagina komt overeen met exact één doel (max. 6 posities, zie R10 in
+ * RULES.md). `posities` is altijd lengte 6, index = 0-based positie (A..F);
+ * `null` = lege positie, die als blanco kaart wordt afgedrukt.
+ */
+export interface SchutterskaartPagina {
+  doelNummer: number
+  posities: (DoelSlot | null)[]
+}
+
+/**
+ * Bouwt één pagina per doel dat door het doel-interval komt en minstens één
+ * schutter heeft die de afstandsfilter passeert. Doelen zonder enige
+ * passerende schutter (leeg of volledig weggefilterd) krijgen geen pagina.
+ */
+export function bouwSchutterskaartPaginas(
+  doelen: DoelMetConflicten[],
+  filters: PrintFilters
+): SchutterskaartPagina[] {
+  const paginas: SchutterskaartPagina[] = []
+  const zichtbaar = doelen
+    .filter((d) => doelPasseertFilter(d.nummer, filters))
+    .sort((a, b) => a.nummer - b.nummer)
+
+  for (const doel of zichtbaar) {
+    const posities: (DoelSlot | null)[] = []
+    let heeftInhoud = false
+    for (let p = 0; p < 6; p++) {
+      const slot =
+        doel.schutters.find((s) => s.positie === p && passeertFilters(s, doel.nummer, filters)) ??
+        null
+      if (slot) heeftInhoud = true
+      posities.push(slot)
+    }
+    if (heeftInhoud) paginas.push({ doelNummer: doel.nummer, posities })
+  }
+  return paginas
+}
+
 // ── Excel-model (serializeerbaar, naar het main-proces) ─────
 
 // Kolombreedtes (in Excel-karaktereenheden) afgeleid van de preview-verhoudingen

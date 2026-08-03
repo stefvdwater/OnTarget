@@ -2072,6 +2072,108 @@ input:focus-visible,
   margin-bottom: 2px;
 }
 
+/* ─── Schutterskaarten (blanco scorekaarten) ───────────── */
+
+.afdruk-modus-toggle {
+  margin-bottom: 16px;
+}
+
+.schutterskaarten-pagina {
+  margin-bottom: 14mm;
+}
+.schutterskaarten-pagina:last-child {
+  margin-bottom: 0;
+}
+
+.schutterskaarten-titel {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #000;
+  margin-bottom: 4mm;
+}
+
+.schutterskaarten-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 5mm;
+}
+
+.schutterskaart {
+  border: 1px dashed #999;
+  padding: 3mm;
+  display: flex;
+  flex-direction: column;
+  min-height: 120mm;
+  color: #000;
+}
+
+.schutterskaart-kop {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 7.5pt;
+  border-bottom: 1px solid #000;
+  padding-bottom: 2mm;
+  margin-bottom: 2mm;
+}
+
+.schutterskaart-info {
+  margin-bottom: 2mm;
+  min-height: 9mm;
+}
+
+.schutterskaart-naam {
+  font-size: 10pt;
+  font-weight: 700;
+}
+
+.schutterskaart-info-rij {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 7.5pt;
+  color: #333;
+  margin-top: 1mm;
+}
+
+.schutterskaart-tabel {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 7.5pt;
+  color: #000;
+  flex: 1;
+}
+.schutterskaart-tabel th,
+.schutterskaart-tabel td {
+  border: 1px solid #000;
+  padding: 1px 3px;
+  text-align: center;
+}
+.schutterskaart-tabel thead th {
+  background: #f0f0f0;
+  font-weight: 700;
+}
+.schutterskaart-cel-rijnr {
+  color: #555;
+  font-weight: 600;
+}
+
+.schutterskaart-voet {
+  display: flex;
+  border: 1px solid #000;
+  border-top: 0;
+  font-size: 7.5pt;
+}
+.schutterskaart-voet div {
+  flex: 1;
+  padding: 1.5mm 2mm;
+  border-right: 1px solid #000;
+}
+.schutterskaart-voet div:last-child {
+  border-right: 0;
+}
+
 /* ─── App version badge ────────────────────────────────── */
 
 .app-version {
@@ -2127,5 +2229,17 @@ input:focus-visible,
   .print-totalen,
   .print-waarschuwingen {
     page-break-inside: auto;
+  }
+
+  .schutterskaarten-pagina {
+    page-break-after: always;
+    page-break-inside: avoid;
+    margin-bottom: 0;
+  }
+  .schutterskaarten-pagina:last-child {
+    page-break-after: auto;
+  }
+  .schutterskaart {
+    page-break-inside: avoid;
   }
 }

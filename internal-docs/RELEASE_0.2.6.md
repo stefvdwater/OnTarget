@@ -6,13 +6,14 @@ Doel van dit document: een agent of mens die voor het eerst aan deze codebase we
 
 ## Overzicht
 
-Cyclus gestart vanaf `0.2.5`. Tot nu toe puur tooling rond de ontwikkelervaring, geen wijziging aan de app voor de eindgebruiker:
+Cyclus gestart vanaf `0.2.5`. Grotendeels tooling rond de ontwikkelervaring, met één zichtbare wijziging voor de eindgebruiker (de stappenbalk hieronder):
 
 1. Een **dev-versie-markering** in de rechteronderhoek: de dev-server toont een ander versienummer dan een echte build, zodat je in een oogopslag ziet in welke instantie je zit.
 2. De **versie- en release-workflow vastgelegd**: beleid in CLAUDE.md, een uitvoerbare `/release`-skill, en een doc-onderhoud-beleid om de docs waarheidsgetrouw te houden.
 3. De **algoritme-/regel-docs geconsolideerd** (5 to 3) met een canonieke regelnummering, ook doorgetrokken in de code-comments.
+4. De **wedstrijd-tabbalk herwerkt naar een stappenbalk** (puur visueel, geen gedragswijziging).
 
-Het database-schema, de IPC-contracten en het algoritme zelf blijven onaangeroerd (de code-wijziging is comment-only).
+Het database-schema, de IPC-contracten en het algoritme zelf blijven onaangeroerd (de tabbalk-wijziging is UI-only, de rest is comment-only).
 
 ## Wijziging
 
@@ -47,3 +48,14 @@ De vijf overlappende algoritme-/regel-docs hadden een groot drift-probleem: de *
 - **Verwijderd:** `RULES_HIERARCHY.md`, `ALGORITME_v2.0.md`, `ALGORITHM_DEFENSE.md`. Verwijzingen in CLAUDE.md en README.md mee bijgewerkt; de `RELEASE_*.md`-changelogs blijven ongemoeid (append-only momentopnames, dus hun oude links blijven historisch staan).
 
 Bewuste scope-beperking: enkel documentatie en code-comments. Geen wijziging aan het gedrag van het algoritme, het database-schema of de IPC-contracten. Geverifieerd met een dode-link-check en `npm test` (23/23).
+
+### Wedstrijd-tabbalk herwerkt naar stappenbalk
+
+De tabbalk in het wedstrijd-detailscherm (`Configuratie` / `Inschrijvingen` / `Indeling` / `Afdrukken`) is optisch vervangen door een stappenbalk in de stijl van [Ant Design Steps](https://ant.design/components/steps), om de gesuggereerde volgorde te tonen zonder de vrije navigatie te beperken.
+
+- **Puur visueel.** Elke stap blijft een gewone knop, op elk moment klikbaar. Geen enforced volgorde en geen "voltooid"-status per stap: een tussenversie met een live, per-tab afgeleide voltooid-status is bewust weer verwijderd nadat bleek dat de betekenis van "voltooid" per tab te sterk uiteenliep (data-compleet, louter bezocht, of niet van toepassing) om consistent aan te voelen.
+- **Vast icoon per stap**: tandwiel (Configuratie), potlood (Inschrijvingen), pagina-met-lijntjes (Indeling), printer (Afdrukken), verbonden met chevron-connectors. Twee nieuwe iconen toegevoegd: [`IconGear.tsx`](../src/renderer/src/components/icons/IconGear.tsx) en [`IconDocument.tsx`](../src/renderer/src/components/icons/IconDocument.tsx); potlood en printer bestonden al en zijn hergebruikt.
+- **`IconChevron` kreeg een `richting`-prop** (`omlaag` als default voor het bestaande dropdown-gebruik, `rechts` voor de stap-connectors) in plaats van de rotatie via een losse CSS-transform op de aanroepende plek te regelen, zodat een volgende plek die een gedraaid chevron-icoon nodig heeft dezelfde API kan hergebruiken.
+- Icoon + label per stap staat nu in één centrale `STAPPEN`-lijst in [`WedstrijdDetailPage.tsx`](../src/renderer/src/pages/WedstrijdDetailPage.tsx), gedeeld met het broodkruimel-label (voorheen twee plekken die uit elkaar konden lopen).
+
+Bewuste scope-beperking: enkel de tabbalk van het wedstrijd-detailscherm. Geen wijziging aan navigatielogica, database, IPC of het indelingsalgoritme.

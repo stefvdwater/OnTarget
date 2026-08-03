@@ -1,12 +1,12 @@
-# Release 0.2.6 (vs 0.2.5)
+# Release 1.0.0 (vs 0.2.5)
 
-Doel van dit document: een agent of mens die voor het eerst aan deze codebase werkt tijdens of na cyclus 0.2.6 snel laten begrijpen wat er is gewijzigd ten opzichte van [`0.2.5`](RELEASE_0.2.5.md).
+Doel van dit document: een agent of mens die voor het eerst aan deze codebase werkt tijdens of na cyclus 1.0.0 snel laten begrijpen wat er is gewijzigd ten opzichte van [`0.2.5`](RELEASE_0.2.5.md).
 
-> Voorlopige versienaam. Deze cyclus kan ook de stap naar `1.0.0` worden. Hernoem dit bestand als de volgende release effectief 1.0.0 is.
+> Eerste stabiele release. Puur tooling rond de ontwikkelervaring; de gelijktijdig ontwikkelde gebruikerszichtbare wijzigingen (stappenbalk, afstand op de schutterskaart) zijn bewust uitgesteld naar [`1.1.0`](RELEASE_1.1.0.md) zodat deze milestone een zuivere tooling-cyclus blijft.
 
 ## Overzicht
 
-Cyclus gestart vanaf `0.2.5`. Tot nu toe puur tooling rond de ontwikkelervaring, geen wijziging aan de app voor de eindgebruiker:
+Cyclus gestart vanaf `0.2.5`. Puur tooling rond de ontwikkelervaring, geen wijziging aan de app voor de eindgebruiker:
 
 1. Een **dev-versie-markering** in de rechteronderhoek: de dev-server toont een ander versienummer dan een echte build, zodat je in een oogopslag ziet in welke instantie je zit.
 2. De **versie- en release-workflow vastgelegd**: beleid in CLAUDE.md, een uitvoerbare `/release`-skill, en een doc-onderhoud-beleid om de docs waarheidsgetrouw te houden.

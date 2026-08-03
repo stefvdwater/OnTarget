@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 // Gedeelde SVG-wrapper voor alle lijn-iconen (currentColor stroke, 24x24
 // viewBox, ronde uiteinden). Elk concreet icoon levert enkel zijn pad(en)
@@ -12,11 +12,10 @@ export interface IconProps {
 
 interface IconBaseProps extends IconProps {
   strokeWidth?: number
-  style?: CSSProperties
   children: ReactNode
 }
 
-export function IconBase({ size = 14, strokeWidth = 2, style, children }: IconBaseProps): JSX.Element {
+export function IconBase({ size = 14, strokeWidth = 2, children }: IconBaseProps): JSX.Element {
   return (
     <svg
       width={size}
@@ -28,7 +27,7 @@ export function IconBase({ size = 14, strokeWidth = 2, style, children }: IconBa
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      style={{ display: 'block', flexShrink: 0, ...style }}
+      style={{ display: 'block', flexShrink: 0 }}
     >
       {children}
     </svg>

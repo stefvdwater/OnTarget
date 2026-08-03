@@ -5,11 +5,6 @@ import IndelingTab from './IndelingTab'
 import ConfiguratieTab from './ConfiguratieTab'
 import AfdrukkenTab from './AfdrukkenTab'
 import { IconArrowLeft } from '../components/icons/IconArrowLeft'
-import { IconChevron } from '../components/icons/IconChevron'
-import { IconGear } from '../components/icons/IconGear'
-import { IconPencil } from '../components/icons/IconPencil'
-import { IconDocument } from '../components/icons/IconDocument'
-import { IconPrinter } from '../components/icons/IconPrinter'
 
 // Debounce voor configuratie-wijzigingen: één DB-write per CONFIG_SAVE_DEBOUNCE_MS
 // na de laatste toetsaanslag, in plaats van per karakter.
@@ -22,19 +17,6 @@ interface Props {
 }
 
 type Tab = 'configuratie' | 'inschrijvingen' | 'indeling' | 'afdrukken'
-
-// Enige bron van waarheid voor de stappenbalk: icoon + label per tab,
-// gebruikt voor zowel de stappenbalk als het broodkruimel-label.
-const STAPPEN: { tab: Tab; icon: React.ReactNode; label: string }[] = [
-  { tab: 'configuratie', icon: <IconGear size={14} />, label: 'Configuratie' },
-  { tab: 'inschrijvingen', icon: <IconPencil size={14} />, label: 'Inschrijvingen' },
-  { tab: 'indeling', icon: <IconDocument size={14} />, label: 'Indeling' },
-  { tab: 'afdrukken', icon: <IconPrinter size={14} />, label: 'Afdrukken' }
-]
-
-const tabLabel: Record<Tab, string> = Object.fromEntries(
-  STAPPEN.map((s) => [s.tab, s.label])
-) as Record<Tab, string>
 
 export default function WedstrijdDetailPage({
   wedstrijd,
@@ -131,6 +113,13 @@ export default function WedstrijdDetailPage({
     onTerug(true)
   }
 
+  const tabLabel: Record<Tab, string> = {
+    configuratie: 'Configuratie',
+    inschrijvingen: 'Inschrijvingen',
+    indeling: 'Indeling',
+    afdrukken: 'Afdrukken'
+  }
+
   return (
     <>
       <div className="crumb">
@@ -155,21 +144,22 @@ export default function WedstrijdDetailPage({
         </div>
       </div>
 
-      <div className="steps">
-        {STAPPEN.map((s) => (
-          <Step
-            key={s.tab}
-            icon={s.icon}
-            label={s.label}
-            badge={
-              s.tab === 'inschrijvingen' ? (
-                <span className="step-badge mono">{aantalInschrijvingen}</span>
-              ) : undefined
-            }
-            actief={tab === s.tab}
-            onClick={() => setTab(s.tab)}
-          />
-        ))}
+      <div className="tabs">
+        <Tab label="Configuratie" actief={tab === 'configuratie'} onClick={() => setTab('configuratie')} />
+        <Tab
+          label={
+            <>
+              Inschrijvingen{' '}
+              <span className="mono" style={{ color: 'var(--muted)', marginLeft: 4 }}>
+                {aantalInschrijvingen}
+              </span>
+            </>
+          }
+          actief={tab === 'inschrijvingen'}
+          onClick={() => setTab('inschrijvingen')}
+        />
+        <Tab label="Indeling" actief={tab === 'indeling'} onClick={() => setTab('indeling')} />
+        <Tab label="Afdrukken" actief={tab === 'afdrukken'} onClick={() => setTab('afdrukken')} />
       </div>
 
       {tab === 'configuratie' && (
@@ -186,31 +176,18 @@ export default function WedstrijdDetailPage({
   )
 }
 
-function Step({
-  icon,
+function Tab({
   label,
-  badge,
   actief,
   onClick
 }: {
-  icon: React.ReactNode
-  label: string
-  badge?: React.ReactNode
+  label: React.ReactNode
   actief: boolean
   onClick: () => void
 }): JSX.Element {
   return (
-    <div className={'step' + (actief ? ' actief' : '')}>
-      <button className="step-btn" onClick={onClick}>
-        <span className="step-circle">{icon}</span>
-        <span className="step-tekst">
-          <span className="step-label">{label}</span>
-          {badge}
-        </span>
-      </button>
-      <span className="step-connector">
-        <IconChevron size={14} richting="rechts" />
-      </span>
-    </div>
+    <button className={'tab' + (actief ? ' active' : '')} onClick={onClick}>
+      {label}
+    </button>
   )
 }

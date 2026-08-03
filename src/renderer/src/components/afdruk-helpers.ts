@@ -316,13 +316,15 @@ export interface ScorekaartPagina {
 }
 
 /**
- * Bouwt één pagina per doel dat door het doel-interval komt en minstens één
- * schutter heeft die de afstandsfilter passeert. Doelen zonder enige
- * passerende schutter (leeg of volledig weggefilterd) krijgen geen pagina.
+ * Bouwt één pagina per doel dat door het doel-interval komt. Doelen zonder
+ * enige passerende schutter (leeg of volledig weggefilterd) krijgen enkel
+ * een pagina (met 6 blanco kaarten) als `legeDoelenOpnemen` aan staat;
+ * anders worden ze overgeslagen.
  */
 export function bouwScorekaartPaginas(
   doelen: DoelMetConflicten[],
-  filters: PrintFilters
+  filters: PrintFilters,
+  legeDoelenOpnemen: boolean = false
 ): ScorekaartPagina[] {
   const paginas: ScorekaartPagina[] = []
   const zichtbaar = doelen
@@ -339,7 +341,7 @@ export function bouwScorekaartPaginas(
       if (slot) heeftInhoud = true
       posities.push(slot)
     }
-    if (heeftInhoud) paginas.push({ doelNummer: doel.nummer, posities })
+    if (heeftInhoud || legeDoelenOpnemen) paginas.push({ doelNummer: doel.nummer, posities })
   }
   return paginas
 }

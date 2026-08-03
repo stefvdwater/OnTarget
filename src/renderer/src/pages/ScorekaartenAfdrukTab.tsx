@@ -27,6 +27,8 @@ export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element
   const [afstand18, setAfstand18] = useState(true)
   const [afstand12, setAfstand12] = useState(true)
 
+  const [legeDoelenOpnemen, setLegeDoelenOpnemen] = useState(false)
+
   // ── Parsing doel-interval (live) ───────────────────────
   useEffect(() => {
     if (alleDoelen) {
@@ -55,7 +57,10 @@ export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element
     }
   }, [alleDoelen, doelIntervalGeldig, afstand12, afstand18, afstand25])
 
-  const paginas = useMemo(() => bouwScorekaartPaginas(doelen, filters), [doelen, filters])
+  const paginas = useMemo(
+    () => bouwScorekaartPaginas(doelen, filters, legeDoelenOpnemen),
+    [doelen, filters, legeDoelenOpnemen]
+  )
 
   // ── Dynamische @page styling: scorekaarten zijn altijd A4 portret ──
   useEffect(() => {
@@ -131,6 +136,17 @@ export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element
               onChange={(e) => setAfstand12(e.target.checked)}
             />
             12m
+          </label>
+        </Sectie>
+
+        <Sectie label="Extra">
+          <label className="afdruk-check">
+            <input
+              type="checkbox"
+              checked={legeDoelenOpnemen}
+              onChange={(e) => setLegeDoelenOpnemen(e.target.checked)}
+            />
+            Lege doelen ook opnemen
           </label>
         </Sectie>
 

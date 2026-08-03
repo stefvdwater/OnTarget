@@ -145,7 +145,10 @@ export default function SchutterskaartenAfdrukTab({ wedstrijd }: Props): JSX.Ele
           Voorbeeld: {paginas.length} {paginas.length === 1 ? 'pagina' : "pagina's"} (A4 portret)
         </div>
         <div className="afdrukken-preview-pagina">
-          <div className="print-root" style={{ width: `${A4_KORT}mm` }}>
+          <div
+            className="print-root schutterskaarten-print-root"
+            style={{ width: `${A4_KORT}mm` }}
+          >
             <SchutterskaartenDocument wedstrijd={wedstrijd} paginas={paginas} />
             {paginas.length === 0 && (
               <div style={{ color: 'var(--muted)', fontSize: 13, padding: '8px 0' }}>

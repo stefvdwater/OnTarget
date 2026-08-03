@@ -2085,11 +2085,21 @@ input:focus-visible,
   margin-bottom: 0;
 }
 
+/* .print-root heeft standaard 14mm padding (zie hoger), maar wordt tijdens
+   het afdrukken op 0 gezet (@media print). Voor schutterskaarten is dat
+   nodig omdat 2 rijen van 128mm kaarten al bijna de volledige A4-hoogte
+   opeisen: de @page-marge (12mm, zie SchutterskaartenAfdrukTab) is dan de
+   enige echte paginarand. In de schermvoorbeeld blijft een kleine padding
+   staan voor het oog. */
+.schutterskaarten-print-root {
+  padding: 6mm;
+}
+
 .schutterskaarten-titel {
-  font-size: 12pt;
+  font-size: 10pt;
   font-weight: 700;
   color: #000;
-  margin-bottom: 4mm;
+  margin-bottom: 2mm;
 }
 
 .schutterskaarten-grid {
@@ -2100,11 +2110,10 @@ input:focus-visible,
 }
 
 .schutterskaart {
-  border: 1px dashed #999;
-  padding: 3mm;
+  padding: 4mm;
   display: flex;
   flex-direction: column;
-  min-height: 120mm;
+  min-height: 128mm;
   color: #000;
 }
 
@@ -2112,19 +2121,19 @@ input:focus-visible,
   display: flex;
   justify-content: space-between;
   gap: 6px;
-  font-size: 7.5pt;
+  font-size: 9pt;
   border-bottom: 1px solid #000;
-  padding-bottom: 2mm;
-  margin-bottom: 2mm;
+  padding-bottom: 2.5mm;
+  margin-bottom: 2.5mm;
 }
 
 .schutterskaart-info {
-  margin-bottom: 2mm;
-  min-height: 9mm;
+  margin-bottom: 3mm;
+  min-height: 11mm;
 }
 
 .schutterskaart-naam {
-  font-size: 10pt;
+  font-size: 13pt;
   font-weight: 700;
 }
 
@@ -2132,27 +2141,47 @@ input:focus-visible,
   display: flex;
   justify-content: space-between;
   gap: 6px;
-  font-size: 7.5pt;
+  font-size: 9pt;
   color: #333;
-  margin-top: 1mm;
+  margin-top: 1.5mm;
 }
 
 .schutterskaart-tabel {
   border-collapse: collapse;
+  table-layout: fixed;
   width: 100%;
-  font-size: 7.5pt;
+  font-size: 9pt;
   color: #000;
   flex: 1;
 }
 .schutterskaart-tabel th,
 .schutterskaart-tabel td {
   border: 1px solid #000;
-  padding: 1px 3px;
+  padding: 3px 5px;
   text-align: center;
 }
 .schutterskaart-tabel thead th {
   background: #f0f0f0;
   font-weight: 700;
+}
+/* Kolomvolgorde: rijnummer, 1, 2, 3, Tot., Alg.Tot. */
+.schutterskaart-tabel th:nth-child(1),
+.schutterskaart-tabel td:nth-child(1) {
+  width: 10%;
+}
+.schutterskaart-tabel th:nth-child(2),
+.schutterskaart-tabel td:nth-child(2),
+.schutterskaart-tabel th:nth-child(3),
+.schutterskaart-tabel td:nth-child(3),
+.schutterskaart-tabel th:nth-child(4),
+.schutterskaart-tabel td:nth-child(4) {
+  width: 16%;
+}
+.schutterskaart-tabel th:nth-child(5),
+.schutterskaart-tabel td:nth-child(5),
+.schutterskaart-tabel th:nth-child(6),
+.schutterskaart-tabel td:nth-child(6) {
+  width: 21%;
 }
 .schutterskaart-cel-rijnr {
   color: #555;
@@ -2163,11 +2192,11 @@ input:focus-visible,
   display: flex;
   border: 1px solid #000;
   border-top: 0;
-  font-size: 7.5pt;
+  font-size: 9pt;
 }
 .schutterskaart-voet div {
   flex: 1;
-  padding: 1.5mm 2mm;
+  padding: 2mm 3mm;
   border-right: 1px solid #000;
 }
 .schutterskaart-voet div:last-child {

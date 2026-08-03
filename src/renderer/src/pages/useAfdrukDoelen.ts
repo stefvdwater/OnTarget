@@ -6,7 +6,7 @@ import { pasRuntimeCompoundZoneToe } from '../algoritme/zones'
 
 /**
  * Laadt de huidige indeling van een wedstrijd als DoelMetConflicten[],
- * gedeeld tussen IndelingAfdrukTab en SchutterskaartenAfdrukTab zodat beide
+ * gedeeld tussen IndelingAfdrukTab en ScorekaartenAfdrukTab zodat beide
  * exact dezelfde doelen-/conflictenopbouw gebruiken.
  */
 export function useAfdrukDoelen(wedstrijd: Wedstrijd): DoelMetConflicten[] {

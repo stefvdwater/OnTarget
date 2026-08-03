@@ -1,24 +1,24 @@
 import type { DoelSlot } from '../algoritme/types'
 import type { Wedstrijd } from '../types'
 import { categorieLabel } from '../lib/labels'
-import { formatDatumKort, type SchutterskaartPagina } from './afdruk-helpers'
+import { formatDatumKort, type ScorekaartPagina } from './afdruk-helpers'
 
 interface Props {
   wedstrijd: Wedstrijd
-  paginas: SchutterskaartPagina[]
+  paginas: ScorekaartPagina[]
 }
 
 const RIJEN = Array.from({ length: 10 }, (_, i) => i + 1)
 
-export default function SchutterskaartenDocument({ wedstrijd, paginas }: Props): JSX.Element {
+export default function ScorekaartenDocument({ wedstrijd, paginas }: Props): JSX.Element {
   return (
     <>
       {paginas.map((pagina) => (
-        <div key={pagina.doelNummer} className="schutterskaarten-pagina">
-          <div className="schutterskaarten-titel">Doel {pagina.doelNummer}</div>
-          <div className="schutterskaarten-grid">
+        <div key={pagina.doelNummer} className="scorekaarten-pagina">
+          <div className="scorekaarten-titel">Doel {pagina.doelNummer}</div>
+          <div className="scorekaarten-grid">
             {pagina.posities.map((slot, i) => (
-              <Schutterskaart key={i} wedstrijd={wedstrijd} slot={slot} />
+              <Scorekaart key={i} wedstrijd={wedstrijd} slot={slot} />
             ))}
           </div>
         </div>
@@ -27,7 +27,7 @@ export default function SchutterskaartenDocument({ wedstrijd, paginas }: Props):
   )
 }
 
-function Schutterskaart({
+function Scorekaart({
   wedstrijd,
   slot
 }: {
@@ -35,30 +35,30 @@ function Schutterskaart({
   slot: DoelSlot | null
 }): JSX.Element {
   return (
-    <div className="schutterskaart">
-      <div className="schutterskaart-kop">
+    <div className="scorekaart">
+      <div className="scorekaart-kop">
         <span>{wedstrijd.naam}</span>
         <span>{formatDatumKort(wedstrijd.datum)}</span>
       </div>
 
-      <div className="schutterskaart-info">
+      <div className="scorekaart-info">
         {slot ? (
           <>
-            <div className="schutterskaart-naam">
+            <div className="scorekaart-naam">
               {slot.voornaam} {slot.naam}
             </div>
-            <div className="schutterskaart-info-rij">
+            <div className="scorekaart-info-rij">
               <span>{slot.gilde_naam ?? '—'}</span>
               <span>{categorieLabel(slot, slot.afstand)}</span>
               <span>{slot.type_boog}</span>
             </div>
           </>
         ) : (
-          <div className="schutterskaart-naam">&nbsp;</div>
+          <div className="scorekaart-naam">&nbsp;</div>
         )}
       </div>
 
-      <table className="schutterskaart-tabel">
+      <table className="scorekaart-tabel">
         <thead>
           <tr>
             <th></th>
@@ -76,7 +76,7 @@ function Schutterskaart({
         <tbody>
           {RIJEN.map((r) => (
             <tr key={r}>
-              <td className="schutterskaart-cel-rijnr">{r}</td>
+              <td className="scorekaart-cel-rijnr">{r}</td>
               <td></td>
               <td></td>
               <td></td>
@@ -87,7 +87,7 @@ function Schutterskaart({
         </tbody>
       </table>
 
-      <div className="schutterskaart-voet">
+      <div className="scorekaart-voet">
         <div>Rozen</div>
         <div>Punten</div>
       </div>

@@ -303,14 +303,14 @@ export function formatDatumKort(datum: string): string {
   return `${d}/${m}/${y}`
 }
 
-// ── Schutterskaarten (blanco scorekaarten per schutter) ─────
+// ── Scorekaarten (blanco kaarten per schutter) ──────────
 
 /**
  * Een pagina komt overeen met exact één doel (max. 6 posities, zie R10 in
  * RULES.md). `posities` is altijd lengte 6, index = 0-based positie (A..F);
  * `null` = lege positie, die als blanco kaart wordt afgedrukt.
  */
-export interface SchutterskaartPagina {
+export interface ScorekaartPagina {
   doelNummer: number
   posities: (DoelSlot | null)[]
 }
@@ -320,11 +320,11 @@ export interface SchutterskaartPagina {
  * schutter heeft die de afstandsfilter passeert. Doelen zonder enige
  * passerende schutter (leeg of volledig weggefilterd) krijgen geen pagina.
  */
-export function bouwSchutterskaartPaginas(
+export function bouwScorekaartPaginas(
   doelen: DoelMetConflicten[],
   filters: PrintFilters
-): SchutterskaartPagina[] {
-  const paginas: SchutterskaartPagina[] = []
+): ScorekaartPagina[] {
+  const paginas: ScorekaartPagina[] = []
   const zichtbaar = doelen
     .filter((d) => doelPasseertFilter(d.nummer, filters))
     .sort((a, b) => a.nummer - b.nummer)

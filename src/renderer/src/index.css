@@ -2072,44 +2072,52 @@ input:focus-visible,
   margin-bottom: 2px;
 }
 
-/* ─── Schutterskaarten (blanco scorekaarten) ───────────── */
+/* ─── Scorekaarten (blanco kaarten per schutter) ───────── */
 
+/* Placeholder: staat in de stappenbalk (.steps is display:flex), rechts
+   uitgelijnd via margin-left:auto. Hergebruikt de .step/.step-btn-opmaak
+   van de stappen zelf (zie ModusKnop in WedstrijdDetailPage.tsx), enkel
+   zonder icoon in de cirkel en zonder chevron-connector - dit zijn geen
+   stappen in een volgorde. Definitieve vormgeving ligt nog niet vast. */
 .afdruk-modus-toggle {
-  margin-bottom: 16px;
+  margin-left: auto;
+  align-self: center;
+  display: flex;
+  gap: 20px;
 }
 
-.schutterskaarten-pagina {
+.scorekaarten-pagina {
   margin-bottom: 14mm;
 }
-.schutterskaarten-pagina:last-child {
+.scorekaarten-pagina:last-child {
   margin-bottom: 0;
 }
 
 /* .print-root heeft standaard 14mm padding (zie hoger), maar wordt tijdens
-   het afdrukken op 0 gezet (@media print). Voor schutterskaarten is dat
+   het afdrukken op 0 gezet (@media print). Voor scorekaarten is dat
    nodig omdat 2 rijen van 128mm kaarten al bijna de volledige A4-hoogte
-   opeisen: de @page-marge (12mm, zie SchutterskaartenAfdrukTab) is dan de
+   opeisen: de @page-marge (12mm, zie ScorekaartenAfdrukTab) is dan de
    enige echte paginarand. In de schermvoorbeeld blijft een kleine padding
    staan voor het oog. */
-.schutterskaarten-print-root {
+.scorekaarten-print-root {
   padding: 6mm;
 }
 
-.schutterskaarten-titel {
+.scorekaarten-titel {
   font-size: 10pt;
   font-weight: 700;
   color: #000;
   margin-bottom: 2mm;
 }
 
-.schutterskaarten-grid {
+.scorekaarten-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(2, 1fr);
   gap: 5mm;
 }
 
-.schutterskaart {
+.scorekaart {
   padding: 4mm;
   display: flex;
   flex-direction: column;
@@ -2117,7 +2125,7 @@ input:focus-visible,
   color: #000;
 }
 
-.schutterskaart-kop {
+.scorekaart-kop {
   display: flex;
   justify-content: space-between;
   gap: 6px;
@@ -2127,17 +2135,17 @@ input:focus-visible,
   margin-bottom: 2.5mm;
 }
 
-.schutterskaart-info {
+.scorekaart-info {
   margin-bottom: 3mm;
   min-height: 11mm;
 }
 
-.schutterskaart-naam {
+.scorekaart-naam {
   font-size: 13pt;
   font-weight: 700;
 }
 
-.schutterskaart-info-rij {
+.scorekaart-info-rij {
   display: flex;
   justify-content: space-between;
   gap: 6px;
@@ -2146,7 +2154,7 @@ input:focus-visible,
   margin-top: 1.5mm;
 }
 
-.schutterskaart-tabel {
+.scorekaart-tabel {
   border-collapse: collapse;
   table-layout: fixed;
   width: 100%;
@@ -2154,52 +2162,52 @@ input:focus-visible,
   color: #000;
   flex: 1;
 }
-.schutterskaart-tabel th,
-.schutterskaart-tabel td {
+.scorekaart-tabel th,
+.scorekaart-tabel td {
   border: 1px solid #000;
   padding: 3px 5px;
   text-align: center;
 }
-.schutterskaart-tabel thead th {
+.scorekaart-tabel thead th {
   background: #f0f0f0;
   font-weight: 700;
 }
 /* Kolomvolgorde: rijnummer, 1, 2, 3, Tot., Alg.Tot. */
-.schutterskaart-tabel th:nth-child(1),
-.schutterskaart-tabel td:nth-child(1) {
+.scorekaart-tabel th:nth-child(1),
+.scorekaart-tabel td:nth-child(1) {
   width: 10%;
 }
-.schutterskaart-tabel th:nth-child(2),
-.schutterskaart-tabel td:nth-child(2),
-.schutterskaart-tabel th:nth-child(3),
-.schutterskaart-tabel td:nth-child(3),
-.schutterskaart-tabel th:nth-child(4),
-.schutterskaart-tabel td:nth-child(4) {
+.scorekaart-tabel th:nth-child(2),
+.scorekaart-tabel td:nth-child(2),
+.scorekaart-tabel th:nth-child(3),
+.scorekaart-tabel td:nth-child(3),
+.scorekaart-tabel th:nth-child(4),
+.scorekaart-tabel td:nth-child(4) {
   width: 16%;
 }
-.schutterskaart-tabel th:nth-child(5),
-.schutterskaart-tabel td:nth-child(5),
-.schutterskaart-tabel th:nth-child(6),
-.schutterskaart-tabel td:nth-child(6) {
+.scorekaart-tabel th:nth-child(5),
+.scorekaart-tabel td:nth-child(5),
+.scorekaart-tabel th:nth-child(6),
+.scorekaart-tabel td:nth-child(6) {
   width: 21%;
 }
-.schutterskaart-cel-rijnr {
+.scorekaart-cel-rijnr {
   color: #555;
   font-weight: 600;
 }
 
-.schutterskaart-voet {
+.scorekaart-voet {
   display: flex;
   border: 1px solid #000;
   border-top: 0;
   font-size: 9pt;
 }
-.schutterskaart-voet div {
+.scorekaart-voet div {
   flex: 1;
   padding: 2mm 3mm;
   border-right: 1px solid #000;
 }
-.schutterskaart-voet div:last-child {
+.scorekaart-voet div:last-child {
   border-right: 0;
 }
 
@@ -2260,15 +2268,15 @@ input:focus-visible,
     page-break-inside: auto;
   }
 
-  .schutterskaarten-pagina {
+  .scorekaarten-pagina {
     page-break-after: always;
     page-break-inside: avoid;
     margin-bottom: 0;
   }
-  .schutterskaarten-pagina:last-child {
+  .scorekaarten-pagina:last-child {
     page-break-after: auto;
   }
-  .schutterskaart {
+  .scorekaart {
     page-break-inside: avoid;
   }
 }

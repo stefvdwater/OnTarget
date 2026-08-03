@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Wedstrijd } from '../types'
 import { useAfdrukDoelen } from './useAfdrukDoelen'
-import SchutterskaartenDocument from '../components/SchutterskaartenDocument'
+import ScorekaartenDocument from '../components/ScorekaartenDocument'
 import {
-  bouwSchutterskaartPaginas,
+  bouwScorekaartPaginas,
   parseDoelInterval,
   type PrintFilters
 } from '../components/afdruk-helpers'
@@ -15,7 +15,7 @@ interface Props {
 
 const A4_KORT = 210
 
-export default function SchutterskaartenAfdrukTab({ wedstrijd }: Props): JSX.Element {
+export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element {
   const doelen = useAfdrukDoelen(wedstrijd)
 
   const [alleDoelen, setAlleDoelen] = useState(true)
@@ -55,9 +55,9 @@ export default function SchutterskaartenAfdrukTab({ wedstrijd }: Props): JSX.Ele
     }
   }, [alleDoelen, doelIntervalGeldig, afstand12, afstand18, afstand25])
 
-  const paginas = useMemo(() => bouwSchutterskaartPaginas(doelen, filters), [doelen, filters])
+  const paginas = useMemo(() => bouwScorekaartPaginas(doelen, filters), [doelen, filters])
 
-  // ── Dynamische @page styling: schutterskaarten zijn altijd A4 portret ──
+  // ── Dynamische @page styling: scorekaarten zijn altijd A4 portret ──
   useEffect(() => {
     const id = 'ontarget-dynamic-page'
     let stijl = document.getElementById(id) as HTMLStyleElement | null
@@ -146,13 +146,13 @@ export default function SchutterskaartenAfdrukTab({ wedstrijd }: Props): JSX.Ele
         </div>
         <div className="afdrukken-preview-pagina">
           <div
-            className="print-root schutterskaarten-print-root"
+            className="print-root scorekaarten-print-root"
             style={{ width: `${A4_KORT}mm` }}
           >
-            <SchutterskaartenDocument wedstrijd={wedstrijd} paginas={paginas} />
+            <ScorekaartenDocument wedstrijd={wedstrijd} paginas={paginas} />
             {paginas.length === 0 && (
               <div style={{ color: 'var(--muted)', fontSize: 13, padding: '8px 0' }}>
-                Geen schutterskaarten om te tonen voor de huidige filters.
+                Geen scorekaarten om te tonen voor de huidige filters.
               </div>
             )}
           </div>

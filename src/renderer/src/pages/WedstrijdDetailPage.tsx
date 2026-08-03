@@ -3,7 +3,7 @@ import type { Wedstrijd } from '../types'
 import InschrijvingenTab from './InschrijvingenTab'
 import IndelingTab from './IndelingTab'
 import ConfiguratieTab from './ConfiguratieTab'
-import AfdrukkenTab from './AfdrukkenTab'
+import AfdrukkenTab, { type AfdrukModus } from './AfdrukkenTab'
 import { IconArrowLeft } from '../components/icons/IconArrowLeft'
 import { IconChevron } from '../components/icons/IconChevron'
 import { IconGear } from '../components/icons/IconGear'
@@ -42,6 +42,7 @@ export default function WedstrijdDetailPage({
   onTerug
 }: Props): JSX.Element {
   const [tab, setTab] = useState<Tab>(initialTab)
+  const [afdrukModus, setAfdrukModus] = useState<AfdrukModus>('indeling')
   const [huidig, setHuidig] = useState<Wedstrijd>(wedstrijd)
   const [aantalInschrijvingen, setAantalInschrijvingen] = useState(0)
 
@@ -170,6 +171,21 @@ export default function WedstrijdDetailPage({
             onClick={() => setTab(s.tab)}
           />
         ))}
+
+        {tab === 'afdrukken' && (
+          <div className="afdruk-modus-toggle">
+            <ModusKnop
+              label="Indeling"
+              actief={afdrukModus === 'indeling'}
+              onClick={() => setAfdrukModus('indeling')}
+            />
+            <ModusKnop
+              label="Scorekaarten"
+              actief={afdrukModus === 'scorekaarten'}
+              onClick={() => setAfdrukModus('scorekaarten')}
+            />
+          </div>
+        )}
       </div>
 
       {tab === 'configuratie' && (
@@ -181,7 +197,7 @@ export default function WedstrijdDetailPage({
       )}
       {tab === 'inschrijvingen' && <InschrijvingenTab wedstrijd={huidig} />}
       {tab === 'indeling' && <IndelingTab wedstrijd={huidig} />}
-      {tab === 'afdrukken' && <AfdrukkenTab wedstrijd={huidig} />}
+      {tab === 'afdrukken' && <AfdrukkenTab wedstrijd={huidig} modus={afdrukModus} />}
     </>
   )
 }
@@ -211,6 +227,30 @@ function Step({
       <span className="step-connector">
         <IconChevron size={14} richting="rechts" />
       </span>
+    </div>
+  )
+}
+
+// Zelfde opmaak als Step (.step/.step-btn/.step-label), maar zonder cirkel,
+// zonder icoon en zonder chevron-connector: dit zijn geen stappen in een
+// volgorde, enkel twee gelijkwaardige print-modi. De actieve status blijft
+// zichtbaar via dezelfde gele onderstreping en vetgedrukt label.
+function ModusKnop({
+  label,
+  actief,
+  onClick
+}: {
+  label: string
+  actief: boolean
+  onClick: () => void
+}): JSX.Element {
+  return (
+    <div className={'step' + (actief ? ' actief' : '')}>
+      <button className="step-btn" onClick={onClick}>
+        <span className="step-tekst">
+          <span className="step-label">{label}</span>
+        </span>
+      </button>
     </div>
   )
 }

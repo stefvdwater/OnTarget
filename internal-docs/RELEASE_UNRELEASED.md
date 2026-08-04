@@ -99,6 +99,35 @@ opgelost:
   `align-items: flex-start` laat `.print-root` weer op eigen inhoudshoogte
   groeien.
 
+### Afdrukken-preview: losse pagina's die overeenkomen met de echte afdruk
+
+Vervolg op de vorige sectie. De schermvoorbeeld-pagina's tonen nu wat er ook
+echt wordt afgedrukt, in plaats van één doorlopende preview.
+
+Voor **Scorekaarten** was dit goedkoop: de pagina's waren al vooraf
+1-per-doel opgebouwd (`bouwScorekaartPaginas`), enkel de schermweergave
+moest per pagina in een eigen vel gesplitst worden.
+
+Voor **Indeling** ligt de paginascheiding niet vast: de browser beslist dat
+pas bij het echte afdrukken via `page-break-inside: avoid`. Om de preview
+daarmee te laten overeenkomen, rendert een nieuwe hook
+(`usePrintPaginering.ts`) een verborgen, ongepagineerde kopie, meet de
+werkelijke hoogtes van elke doel-groep/gilde-rij/waarschuwing, en pakt ze
+greedy in pagina's (`pakInPaginas` in `afdruk-helpers.ts`) op basis van de
+echte `@page`-marge (12mm, nu een gedeelde `PRINT_PAGINA_MARGE_MM`-constante
+i.p.v. losse magic numbers). Herbruikbare stukken (header, tabelkop, rijen,
+totalen, waarschuwingen) zijn uit `PrintDocument.tsx` geëxporteerd zodat
+preview en afdruk exact dezelfde opmaak delen. Waarschuwingen worden per
+item gepakt (net als bij het echte afdrukken, dat een lange lijst ook kan
+splitsen); totalen blijft bewust één atomair blok (altijd 4 vaste regels).
+De echte afdruk blijft ongewijzigd: een verborgen, ongepagineerde kopie
+(`.print-root-meetkopie > .print-root`) is de enige bron voor `window.print`.
+
+Bekende, bewust aanvaarde beperking: de meting en de echte afdruk kunnen in
+theorie een paar px uit elkaar lopen bij sub-pixel afronding; dat maakt de
+`.print-pagina-vel`-vellen hooguit een fractie hoger dan strikt nodig
+(`minHeight`, geen harde clip), niet fout.
+
 ## Bekend aandachtspunt (niet opgelost deze cyclus)
 
 Tab-lokale UI-state (filters, toggles, zoekvelden) in alle sub-tabs van

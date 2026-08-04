@@ -128,6 +128,23 @@ theorie een paar px uit elkaar lopen bij sub-pixel afronding; dat maakt de
 `.print-pagina-vel`-vellen hooguit een fractie hoger dan strikt nodig
 (`minHeight`, geen harde clip), niet fout.
 
+### Scorekaarten: 2 kaarten voor een volledige dubbelschutter
+
+Een volledige dubbelschutter (1e+2e) schiet als eerste én als laatste
+beurt binnen zijn doel (R5 in [RULES.md](RULES.md)), maar kreeg tot nu toe
+maar 1 scorekaart. `bouwScorekaartPaginas`/`bouwKaartPosities` in
+[`afdruk-helpers.ts`](../src/renderer/src/components/afdruk-helpers.ts)
+geven zo'n schutter nu 2 kaarten: één op zijn normale plaats in de
+schietvolgorde, één op de effectief laatste positie van de pagina (niet
+zomaar de eerstvolgende vrije positie). Bij meerdere volledige
+dubbelschutters op hetzelfde doel blijft hun onderlinge volgorde in beide
+groepen behouden, bv. `A B C _ A B` in plaats van `A B C A B _`. Zie
+[AFDRUKKEN.md](AFDRUKKEN.md#volledige-dubbelschutters-krijgen-2-kaarten).
+
+Bewuste scope-beperking: enkel de scorekaarten-print. Halve
+dubbelschutters (enkel EH of TH) en het indelingsalgoritme zelf blijven
+onaangeroerd.
+
 ## Bekend aandachtspunt (niet opgelost deze cyclus)
 
 Tab-lokale UI-state (filters, toggles, zoekvelden) in alle sub-tabs van

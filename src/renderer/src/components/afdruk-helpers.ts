@@ -442,12 +442,45 @@ export function formatDatumKort(datum: string): string {
 
 /**
  * Een pagina komt overeen met exact één doel (max. 6 posities, zie R10 in
- * RULES.md). `posities` is altijd lengte 6, index = 0-based positie (A..F);
- * `null` = lege positie, die als blanco kaart wordt afgedrukt.
+ * RULES.md). `posities` is altijd lengte 6; `null` = lege positie, die als
+ * blanco kaart wordt afgedrukt. Een volledige dubbelschutter (1e+2e) kan
+ * tweemaal voorkomen (zie `bouwKaartPosities`).
  */
 export interface ScorekaartPagina {
   doelNummer: number
   posities: (DoelSlot | null)[]
+}
+
+const AANTAL_POSITIES = 6
+
+function isVolledigDubbel(s: DoelSlot): boolean {
+  return s.dubbel_eerste_helft && s.dubbel_tweede_helft
+}
+
+/**
+ * Bouwt de 6 kaartposities voor één doel. Elke schutter krijgt normaal 1
+ * kaart, in de schietvolgorde (`positie`, al gesorteerd conform R5/R13),
+ * vanaf de eerste positie. Een volledige dubbelschutter (1e+2e) schiet als
+ * eerste én als laatste beurt binnen het doel (R5 in RULES.md): zijn tweede
+ * kaart komt daarom niet zomaar na de andere kaarten, maar telt terug vanaf
+ * de laatste positie van de pagina, zodat de effectief laatste kaart van het
+ * doel ook zijn laatste beurt is. Bij meerdere volledige dubbelschutters
+ * blijft hun onderlinge volgorde behouden, bv. `A B C _ A B` (zie RULES.md,
+ * "Volledig dubbel"). Tussenliggende lege posities blijven blanco kaarten.
+ */
+function bouwKaartPosities(schutters: DoelSlot[]): (DoelSlot | null)[] {
+  const gesorteerd = schutters.slice().sort((a, b) => a.positie - b.positie)
+  const volDubbelaars = gesorteerd.filter(isVolledigDubbel)
+
+  const posities: (DoelSlot | null)[] = new Array(AANTAL_POSITIES).fill(null)
+  gesorteerd.forEach((s, i) => {
+    if (i < AANTAL_POSITIES) posities[i] = s
+  })
+  volDubbelaars.forEach((s, i) => {
+    const idx = AANTAL_POSITIES - volDubbelaars.length + i
+    if (idx >= 0 && idx < AANTAL_POSITIES) posities[idx] = s
+  })
+  return posities
 }
 
 /**
@@ -467,16 +500,12 @@ export function bouwScorekaartPaginas(
     .sort((a, b) => a.nummer - b.nummer)
 
   for (const doel of zichtbaar) {
-    const posities: (DoelSlot | null)[] = []
-    let heeftInhoud = false
-    for (let p = 0; p < 6; p++) {
-      const slot =
-        doel.schutters.find((s) => s.positie === p && passeertFilters(s, doel.nummer, filters)) ??
-        null
-      if (slot) heeftInhoud = true
-      posities.push(slot)
+    const passerend = doel.schutters.filter((s) => passeertFilters(s, doel.nummer, filters))
+    const posities = bouwKaartPosities(passerend)
+    const heeftInhoud = posities.some((s) => s !== null)
+    if (heeftInhoud || legeDoelenOpnemen) {
+      paginas.push({ doelNummer: doel.nummer, posities })
     }
-    if (heeftInhoud || legeDoelenOpnemen) paginas.push({ doelNummer: doel.nummer, posities })
   }
   return paginas
 }

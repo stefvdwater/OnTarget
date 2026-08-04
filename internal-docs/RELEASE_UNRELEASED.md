@@ -1,8 +1,10 @@
-# Release 1.2.0 (vs 1.1.0)
+# Release onuitgebracht (vs 1.1.0)
 
 Doel van dit document: een agent of mens die voor het eerst aan deze codebase
-werkt tijdens of na cyclus 1.2.0 snel laten begrijpen wat er is gewijzigd ten
-opzichte van [`1.1.0`](RELEASE_1.1.0.md).
+werkt tijdens deze cyclus snel laten begrijpen wat er is gewijzigd ten
+opzichte van [`1.1.0`](RELEASE_1.1.0.md). Het versienummer in de titel en de
+bestandsnaam wordt pas bij de release zelf ingevuld (zie de `/release`-skill);
+tot dan heet dit bestand `RELEASE_UNRELEASED.md`.
 
 ## Overzicht
 

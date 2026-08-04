@@ -2072,6 +2072,145 @@ input:focus-visible,
   margin-bottom: 2px;
 }
 
+/* ─── Scorekaarten (blanco kaarten per schutter) ───────── */
+
+/* Placeholder: staat in de stappenbalk (.steps is display:flex), rechts
+   uitgelijnd via margin-left:auto. Hergebruikt de .step/.step-btn-opmaak
+   van de stappen zelf (zie ModusKnop in WedstrijdDetailPage.tsx), enkel
+   zonder icoon in de cirkel en zonder chevron-connector - dit zijn geen
+   stappen in een volgorde. Definitieve vormgeving ligt nog niet vast. */
+.afdruk-modus-toggle {
+  margin-left: auto;
+  align-self: center;
+  display: flex;
+  gap: 20px;
+}
+
+.scorekaarten-pagina {
+  margin-bottom: 14mm;
+}
+.scorekaarten-pagina:last-child {
+  margin-bottom: 0;
+}
+
+/* .print-root heeft standaard 14mm padding (zie hoger), maar wordt tijdens
+   het afdrukken op 0 gezet (@media print). Voor scorekaarten is dat
+   nodig omdat 2 rijen van 128mm kaarten al bijna de volledige A4-hoogte
+   opeisen: de @page-marge (12mm, zie ScorekaartenAfdrukTab) is dan de
+   enige echte paginarand. In de schermvoorbeeld blijft een kleine padding
+   staan voor het oog. */
+.scorekaarten-print-root {
+  padding: 6mm;
+}
+
+.scorekaarten-titel {
+  font-size: 10pt;
+  font-weight: 700;
+  color: #000;
+  margin-bottom: 2mm;
+}
+
+.scorekaarten-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 5mm;
+}
+
+.scorekaart {
+  padding: 4mm;
+  display: flex;
+  flex-direction: column;
+  min-height: 128mm;
+  color: #000;
+}
+
+.scorekaart-kop {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 9pt;
+  border-bottom: 1px solid #000;
+  padding-bottom: 2.5mm;
+  margin-bottom: 2.5mm;
+}
+
+.scorekaart-info {
+  margin-bottom: 3mm;
+  min-height: 11mm;
+}
+
+.scorekaart-naam {
+  font-size: 13pt;
+  font-weight: 700;
+}
+
+.scorekaart-info-rij {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 9pt;
+  color: #333;
+  margin-top: 1.5mm;
+}
+
+.scorekaart-tabel {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  font-size: 9pt;
+  color: #000;
+  flex: 1;
+}
+.scorekaart-tabel th,
+.scorekaart-tabel td {
+  border: 1px solid #000;
+  padding: 3px 5px;
+  text-align: center;
+}
+.scorekaart-tabel thead th {
+  background: #f0f0f0;
+  font-weight: 700;
+}
+/* Kolomvolgorde: rijnummer, 1, 2, 3, Tot., Alg.Tot. */
+.scorekaart-tabel th:nth-child(1),
+.scorekaart-tabel td:nth-child(1) {
+  width: 10%;
+}
+.scorekaart-tabel th:nth-child(2),
+.scorekaart-tabel td:nth-child(2),
+.scorekaart-tabel th:nth-child(3),
+.scorekaart-tabel td:nth-child(3),
+.scorekaart-tabel th:nth-child(4),
+.scorekaart-tabel td:nth-child(4) {
+  width: 16%;
+}
+.scorekaart-tabel th:nth-child(5),
+.scorekaart-tabel td:nth-child(5),
+.scorekaart-tabel th:nth-child(6),
+.scorekaart-tabel td:nth-child(6) {
+  width: 21%;
+}
+.scorekaart-cel-rijnr {
+  color: #555;
+  font-weight: 600;
+}
+
+.scorekaart-voet {
+  display: flex;
+  border: 1px solid #000;
+  border-top: 0;
+  font-size: 9pt;
+}
+.scorekaart-voet div {
+  flex: 1;
+  padding: 2mm 3mm;
+  border-right: 1px solid #000;
+}
+.scorekaart-voet div:last-child {
+  border-right: 0;
+}
+
 /* ─── App version badge ────────────────────────────────── */
 
 .app-version {
@@ -2127,5 +2266,17 @@ input:focus-visible,
   .print-totalen,
   .print-waarschuwingen {
     page-break-inside: auto;
+  }
+
+  .scorekaarten-pagina {
+    page-break-after: always;
+    page-break-inside: avoid;
+    margin-bottom: 0;
+  }
+  .scorekaarten-pagina:last-child {
+    page-break-after: auto;
+  }
+  .scorekaart {
+    page-break-inside: avoid;
   }
 }

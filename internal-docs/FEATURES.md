@@ -76,13 +76,21 @@
 ## 4. Weergave & Afdrukken
 
 - Overzichtelijke weergave van de doelindeling per doel (wie schiet op doel 1, 2, 3, ...).
-- **Afdrukken**-tab per wedstrijd: live preview van een doelindelingslijst
-  (Excel-achtige tabel) met live-bijgewerkte opties voor oriëntatie,
-  groepering (per doel of per gilde), filters op doel-interval / gilde /
-  afstand, totalen en conflict-waarschuwingen. De native print-dialoog van
-  Windows opent met "Microsoft Print to PDF" als optie om een PDF op te
-  slaan. Zie [AFDRUKKEN.md](AFDRUKKEN.md) voor de volledige beschrijving.
-- **Openen in MS Excel**: een knop op de Afdrukken-tab genereert een opgemaakt .xlsx-werkboek met exact dezelfde rijen, kolommen, groepering en filters als de preview, en opent dat in de standaard-app voor .xlsx (doorgaans MS Excel). Het bestand opent **alleen-lezen**: om wijzigingen te bewaren gebruikt de organisatie "Opslaan als" en werkt ze verder in die kopie. Afdrukken vanuit Excel kan rechtstreeks. Het werkboek heeft vette kolomkoppen, een titelrij met wedstrijd en datum, gilde-groepkoppen (bij groepering per gilde) en optioneel de totalen en aandachtspunten.
+- **Afdrukken**-tab per wedstrijd, met twee document-types via een
+  modus-toggle in de stappenbalk:
+  - **Indeling**: live preview van een doelindelingslijst (Excel-achtige
+    tabel) met live-bijgewerkte opties voor oriëntatie, groepering (per doel
+    of per gilde), filters op doel-interval / gilde / afstand, totalen en
+    conflict-waarschuwingen.
+  - **Scorekaarten**: blanco scorekaarten, één per schutter, 6 per A4-pagina
+    (één pagina per doel, 3×2-rooster) om vooraf te printen en tijdens de
+    wedstrijd met pen in te vullen. Filters op doel-interval en afstand, plus
+    een optie om lege doelen als volledig blanco pagina toch af te drukken.
+
+  De native print-dialoog van Windows opent met "Microsoft Print to PDF" als
+  optie om een PDF op te slaan. Zie [AFDRUKKEN.md](AFDRUKKEN.md) voor de
+  volledige beschrijving van beide modi.
+- **Openen in MS Excel** (enkel modus Indeling, niet Scorekaarten): een knop genereert een opgemaakt .xlsx-werkboek met exact dezelfde rijen, kolommen, groepering en filters als de preview, en opent dat in de standaard-app voor .xlsx (doorgaans MS Excel). Het bestand opent **alleen-lezen**: om wijzigingen te bewaren gebruikt de organisatie "Opslaan als" en werkt ze verder in die kopie. Afdrukken vanuit Excel kan rechtstreeks. Het werkboek heeft vette kolomkoppen, een titelrij met wedstrijd en datum, gilde-groepkoppen (bij groepering per gilde) en optioneel de totalen en aandachtspunten.
 - Daarnaast kan het overzicht als PDF bewaard worden via print-to-PDF: de native Windows print-dialoog met "Microsoft Print to PDF". Een rechtstreekse CSV-export van de indeling bestaat nog niet en blijft een optionele toekomstige uitbreiding.
 
 ## 5. Wedstrijdinstellingen

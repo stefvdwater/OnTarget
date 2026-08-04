@@ -1,12 +1,20 @@
-# Afdrukken — Doelindelingslijst printen
+# Afdrukken — Doelindelingslijst en scorekaarten printen
 
-De **Afdrukken**-tab in een wedstrijd-view produceert één afdrukbare
-doelindelingslijst (Excel-achtige tabel) die de organisatie kan printen of
-als PDF opslaan via "Microsoft Print to PDF". De tab werkt volledig offline,
-zonder externe PDF-bibliotheek — Chromium's eigen `window.print()` doet het
-werk.
+De **Afdrukken**-tab in een wedstrijd-view heeft twee document-types, via
+een modus-toggle in de stappenbalk (rechts uitgelijnd, enkel zichtbaar op
+de Afdrukken-stap):
 
-## Lay-out van de tab
+- **Indeling**: een afdrukbare doelindelingslijst (Excel-achtige tabel).
+  Onderwerp van de rest van dit document tot en met "Niet in scope".
+- **Scorekaarten**: blanco scorekaarten om vooraf te printen, één per
+  schutter. Zie de sectie [Modus: Scorekaarten](#modus-scorekaarten)
+  onderaan.
+
+Beide modi kan de organisatie printen of als PDF opslaan via "Microsoft
+Print to PDF". De tab werkt volledig offline, zonder externe
+PDF-bibliotheek — Chromium's eigen `window.print()` doet het werk.
+
+## Modus: Indeling — lay-out van de tab
 
 Twee kolommen, links opties en rechts een live preview.
 
@@ -134,10 +142,15 @@ Indeling-tab), met `voegConflictenToe` zodat de aandachtspunten in sync zijn.
 
 | Bestand | Rol |
 |---|---|
-| [`pages/AfdrukkenTab.tsx`](../src/renderer/src/pages/AfdrukkenTab.tsx) | UI + state voor opties; laadt data; bouwt `PrintOpties`; schrijft dynamische `<style id="ontarget-dynamic-page">` voor `@page`. |
-| [`components/PrintDocument.tsx`](../src/renderer/src/components/PrintDocument.tsx) | Pure presentational component: header, tabel (Per doel of Per gilde), totalen, aandachtspunten. |
-| [`components/afdruk-helpers.ts`](../src/renderer/src/components/afdruk-helpers.ts) | Pure helpers: interval-parsing, positie-letters, filters, totalen, categorie-afkortingen. |
-| [`index.css`](../src/renderer/src/index.css) (`.print-*` klassen + `@media print` blok) | Print-styling: Excel-achtige tabel met dunne zwarte randen, dichte cellen, vaste lettergrootte. |
+| [`pages/WedstrijdDetailPage.tsx`](../src/renderer/src/pages/WedstrijdDetailPage.tsx) | Houdt de modus-state (`'indeling' \| 'scorekaarten'`) bij en rendert de modus-toggle in de stappenbalk. |
+| [`pages/AfdrukkenTab.tsx`](../src/renderer/src/pages/AfdrukkenTab.tsx) | Dunne controlled component: schakelt op basis van de `modus`-prop tussen `IndelingAfdrukTab` en `ScorekaartenAfdrukTab`. |
+| [`pages/IndelingAfdrukTab.tsx`](../src/renderer/src/pages/IndelingAfdrukTab.tsx) | UI + state voor de Indeling-opties; bouwt `PrintOpties`; schrijft dynamische `<style id="ontarget-dynamic-page">` voor `@page`. |
+| [`pages/ScorekaartenAfdrukTab.tsx`](../src/renderer/src/pages/ScorekaartenAfdrukTab.tsx) | UI + state voor de Scorekaarten-opties (doel-interval, afstand, lege doelen). |
+| [`pages/useAfdrukDoelen.ts`](../src/renderer/src/pages/useAfdrukDoelen.ts) | Gedeelde hook: laadt `DoelMetConflicten[]` voor een wedstrijd, gebruikt door beide modi zodat de doelen-/conflictenopbouw niet gedupliceerd is. |
+| [`components/PrintDocument.tsx`](../src/renderer/src/components/PrintDocument.tsx) | Pure presentational component voor Indeling: header, tabel (Per doel of Per gilde), totalen, aandachtspunten. |
+| [`components/ScorekaartenDocument.tsx`](../src/renderer/src/components/ScorekaartenDocument.tsx) | Pure presentational component voor Scorekaarten: één pagina per doel, 3×2-rooster van blanco kaarten. |
+| [`components/afdruk-helpers.ts`](../src/renderer/src/components/afdruk-helpers.ts) | Pure helpers voor beide modi: interval-parsing, positie-letters, filters, totalen, categorie-afkortingen, `bouwScorekaartPaginas`. |
+| [`index.css`](../src/renderer/src/index.css) (`.print-*` / `.scorekaart*` klassen + `@media print` blok) | Print-styling: Excel-achtige tabel (Indeling) resp. kaarten-rooster (Scorekaarten), dunne zwarte randen, vaste lettergrootte. |
 
 ## Print-pijplijn
 
@@ -167,10 +180,82 @@ Indeling-tab), met `voegConflictenToe` zodat de aandachtspunten in sync zijn.
 | Compound/zone-mix | Geen aparte kolom; het is af te leiden uit `Boog` + `Afstand`. |
 | Lege doelen door filter | Tonen nog steeds 6 rijen met enkel het doellabel ingevuld. |
 
+## Modus: Scorekaarten
+
+Blanco scorekaarten om vooraf te printen: de organisatie deelt ze uit en de
+schutter vult ze tijdens de wedstrijd met pen in. Geen live scores, geen
+Excel-export, geen gilde-filter of groepering — enkel doel-interval en
+afstand.
+
+### Lay-out
+
+```
+┌──────────────┬─────────────────────────────────────────┐
+│ Afdrukopties │ Voorbeeld — N pagina's (A4 portret)     │
+│              │ ┌─────────────────────────────────────┐ │
+│ Doelen       │ │ Doel 4                              │ │
+│ Afstand      │ │ ┌───────┬───────┬───────┐            │ │
+│ Extra        │ │ │ kaart │ kaart │ kaart │            │ │
+│              │ │ ├───────┼───────┼───────┤            │ │
+│ [Afdrukken]  │ │ │ kaart │ kaart │ kaart │            │ │
+│              │ │ └───────┴───────┴───────┘            │ │
+│              │ └─────────────────────────────────────┘ │
+└──────────────┴─────────────────────────────────────────┘
+```
+
+### Opties
+
+| Optie | Waarde | Default |
+|---|---|---|
+| Doelen | "Alle doelen" of custom interval (bv. `1-10, 15`) — zelfde parser als Indeling | Alle |
+| Afstand | 25m / 18m / 12m (checkboxen) | Alle aan |
+| Lege doelen ook opnemen | checkbox | **Uit** |
+
+### Paginering: één pagina per doel
+
+Een doel heeft maximaal 6 posities (**R10** in [RULES.md](RULES.md)), wat
+exact een 3×2-rooster vult. `bouwScorekaartPaginas` in
+[`afdruk-helpers.ts`](../src/renderer/src/components/afdruk-helpers.ts)
+bouwt daarom per doel dat door het doel-interval komt een pagina met 6
+posities (`DoelSlot | null`):
+
+- Doel zonder enige schutter die de afstandsfilter passeert → **geen
+  pagina**, tenzij "Lege doelen ook opnemen" aan staat (dan een pagina met
+  6 volledig blanco kaarten).
+- Lege positie op een doel dat wél een pagina krijgt → altijd een blanco
+  kaart (niet weggelaten), zodat het rooster altijd 6 kaarten telt en de
+  knipmaten consistent blijven.
+- Het doelnummer staat als paginatitel **boven** het rooster, niet op de
+  kaart zelf.
+
+### Kaart-inhoud
+
+Elke kaart draagt zelf de wedstrijd-identificatie, want kaarten worden na
+het printen los geknipt:
+
+1. **Kop**: wedstrijdnaam + korte datum (`13/06/2026`, via
+   `formatDatumKort`).
+2. **Info** (leeg bij een blanco kaart): naam, gilde, categorie
+   (`categorieLabel`), boogtype — platte tekst, bewust géén
+   schutterkaart-visuele stijl (geen kleurstrip).
+3. **Scoretabel**: 10 rijen, kolommen rijnummer / 1 / 2 / 3 / Tot. /
+   Alg.Tot. (`table-layout: fixed`, vaste breedteverdeling 10/16/16/16/21/21%).
+   Alle cellen blanco.
+4. **Voet**: Rozen / Punten, blanco.
+
+### Print-padding
+
+`.print-root` valt tijdens het echte afdrukken al terug op `padding: 0`
+(bestaande regel, zie hierboven bij Print-pijplijn) — de vaste `@page`-marge
+(12mm) is dan de enige echte paginarand. Een eerdere versie ging per
+ongeluk uit van de schermvoorbeeld-padding (14mm) als extra marge, wat tot
+overflow van de 128mm-kaarten over twee pagina's leidde. De fix:
+`.scorekaarten-print-root` geeft enkel in het scherm-voorbeeld 6mm padding;
+tijdens het printen wint de bestaande `padding: 0`-regel.
+
 ## Niet in scope (huidige iteratie)
 
-- Scoreformulieren / doelbordjes (PrintDocument is bewust herbruikbaar, maar
-  niets vooraf geïmplementeerd).
-- Niet-ingedeelde schutters in de afdruk.
+- Niet-ingedeelde schutters in de afdruk (beide modi).
 - Externe PDF-libraries (jsPDF, pdfmake, react-pdf) — niet nodig.
 - "Print"-knop in andere tabs — alleen in Afdrukken-tab.
+- Scorekaarten: Excel-export, gilde-filter, groepering per gilde.

@@ -1,16 +1,19 @@
 import { Fragment } from 'react'
-import type { DoelMetConflicten, DoelSlot } from '../algoritme/types'
+import type { DoelMetConflicten } from '../algoritme/types'
 import type { Wedstrijd } from '../types'
 import {
-  berekenTotalen,
+  berekenZichtbareTotalen,
   bouwDoelGroepen,
   bouwGildeGroepen,
   doelLabel,
-  doelPasseertFilter,
   formatDatum,
-  passeertFilters,
   slotNaarCellen,
-  type PrintOpties
+  verzamelConflicten,
+  type DoelGroep,
+  type GildeGroep,
+  type PrintOpties,
+  type Totalen,
+  type PrintConflict
 } from './afdruk-helpers'
 
 interface Props {
@@ -24,32 +27,12 @@ export default function PrintDocument({
   doelen,
   opties
 }: Props): JSX.Element {
-  // Verzamel alle (gefilterde) ingedeelde schutters voor totalen
-  const alleGefilterdeSchutters: DoelSlot[] = []
-  for (const d of doelen) {
-    for (const s of d.schutters) {
-      if (passeertFilters(s, d.nummer, opties.filters)) {
-        alleGefilterdeSchutters.push(s)
-      }
-    }
-  }
-  const totalen = berekenTotalen(alleGefilterdeSchutters)
-
-  const conflicten = opties.waarschuwingenTonen
-    ? doelen
-        .filter((d) => d.conflicten.length > 0 && doelPasseertFilter(d.nummer, opties.filters))
-        .flatMap((d) => d.conflicten.map((c) => ({ doelNr: d.nummer, bericht: c.bericht })))
-    : []
+  const totalen = berekenZichtbareTotalen(doelen, opties)
+  const conflicten = opties.waarschuwingenTonen ? verzamelConflicten(doelen, opties) : []
 
   return (
     <>
-      <header className="print-header">
-        <h1 className="print-titel">{wedstrijd.naam}</h1>
-        <div className="print-subtitel">
-          {formatDatum(wedstrijd.datum)}
-          {wedstrijd.locatie ? ` · ${wedstrijd.locatie}` : ''} · {wedstrijd.aantal_doelen} doelen
-        </div>
-      </header>
+      <PrintHeader wedstrijd={wedstrijd} />
 
       {opties.groepering === 'doel' ? (
         <DoelTabel doelen={doelen} opties={opties} />
@@ -57,46 +40,28 @@ export default function PrintDocument({
         <GildeTabel doelen={doelen} opties={opties} />
       )}
 
-      {opties.totalenTonen && totalen.totaalSchutters > 0 && (
-        <section className="print-totalen">
-          <div><strong>Totaal schutters:</strong> {totalen.totaalSchutters}</div>
-          <div>
-            <strong>Per boog:</strong>{' '}
-            {Object.entries(totalen.perBoog)
-              .sort(([a], [b]) => a.localeCompare(b))
-              .map(([b, n]) => `${b}: ${n}`)
-              .join(' · ')}
-          </div>
-          <div>
-            <strong>Per gilde:</strong>{' '}
-            {Object.entries(totalen.perGilde)
-              .sort(([a], [b]) => a.localeCompare(b, 'nl'))
-              .map(([g, n]) => `${g}: ${n}`)
-              .join(' · ')}
-          </div>
-          <div><strong>Dubbelschutters:</strong> {totalen.aantalDubbel}</div>
-        </section>
-      )}
+      {opties.totalenTonen && totalen.totaalSchutters > 0 && <PrintTotalen totalen={totalen} />}
 
-      {conflicten.length > 0 && (
-        <section className="print-waarschuwingen">
-          <h3>Aandachtspunten</h3>
-          <ul>
-            {conflicten.map((c, i) => (
-              <li key={i}>
-                <strong>Doel {String(c.doelNr).padStart(2, '0')}:</strong> {c.bericht}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {conflicten.length > 0 && <PrintWaarschuwingen conflicten={conflicten} />}
     </>
   )
 }
 
-// ── Gedeelde kolomkop ───────────────────────────────────────
+// ── Herbruikbare bouwstenen (ook gebruikt door de gepagineerde preview) ──
 
-function TabelKop(): JSX.Element {
+export function PrintHeader({ wedstrijd }: { wedstrijd: Wedstrijd }): JSX.Element {
+  return (
+    <header className="print-header">
+      <h1 className="print-titel">{wedstrijd.naam}</h1>
+      <div className="print-subtitel">
+        {formatDatum(wedstrijd.datum)}
+        {wedstrijd.locatie ? ` · ${wedstrijd.locatie}` : ''} · {wedstrijd.aantal_doelen} doelen
+      </div>
+    </header>
+  )
+}
+
+export function TabelKop(): JSX.Element {
   return (
     <thead>
       <tr>
@@ -112,13 +77,91 @@ function TabelKop(): JSX.Element {
   )
 }
 
-function Cellen({ cellen }: { cellen: string[] }): JSX.Element {
+export function Cellen({ cellen }: { cellen: string[] }): JSX.Element {
   return (
     <>
       {cellen.map((cel, i) => (
         <td key={i} className={i === 0 ? 'print-cel-doel' : undefined}>{cel}</td>
       ))}
     </>
+  )
+}
+
+export function DoelGroepTbody({ groep }: { groep: DoelGroep }): JSX.Element {
+  return (
+    <tbody className="print-doel-groep">
+      {groep.rijen.map((r, idx) => (
+        <tr key={`${groep.doelNummer}-${idx}`}>
+          <Cellen cellen={slotNaarCellen(r.label, r.slot)} />
+        </tr>
+      ))}
+    </tbody>
+  )
+}
+
+export function GildeKopRij({ gilde, aantal }: { gilde: string; aantal: number }): JSX.Element {
+  return (
+    <tr className="print-gildekop">
+      <td colSpan={7}>
+        <strong>{gilde}</strong> <span style={{ color: '#555' }}>({aantal})</span>
+      </td>
+    </tr>
+  )
+}
+
+export function GildeDataRij({ rij }: { rij: GildeGroep['rijen'][number] }): JSX.Element {
+  return (
+    <tr>
+      <Cellen cellen={slotNaarCellen(doelLabel(rij.doelNummer, rij.positie1), rij.slot)} />
+    </tr>
+  )
+}
+
+export function PrintTotalen({ totalen }: { totalen: Totalen }): JSX.Element {
+  return (
+    <section className="print-totalen">
+      <div><strong>Totaal schutters:</strong> {totalen.totaalSchutters}</div>
+      <div>
+        <strong>Per boog:</strong>{' '}
+        {Object.entries(totalen.perBoog)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([b, n]) => `${b}: ${n}`)
+          .join(' · ')}
+      </div>
+      <div>
+        <strong>Per gilde:</strong>{' '}
+        {Object.entries(totalen.perGilde)
+          .sort(([a], [b]) => a.localeCompare(b, 'nl'))
+          .map(([g, n]) => `${g}: ${n}`)
+          .join(' · ')}
+      </div>
+      <div><strong>Dubbelschutters:</strong> {totalen.aantalDubbel}</div>
+    </section>
+  )
+}
+
+export function WaarschuwingenTitel(): JSX.Element {
+  return <h3>Aandachtspunten</h3>
+}
+
+export function WaarschuwingenItem({ conflict }: { conflict: PrintConflict }): JSX.Element {
+  return (
+    <li>
+      <strong>Doel {String(conflict.doelNr).padStart(2, '0')}:</strong> {conflict.bericht}
+    </li>
+  )
+}
+
+export function PrintWaarschuwingen({ conflicten }: { conflicten: PrintConflict[] }): JSX.Element {
+  return (
+    <section className="print-waarschuwingen">
+      <WaarschuwingenTitel />
+      <ul>
+        {conflicten.map((c, i) => (
+          <WaarschuwingenItem key={i} conflict={c} />
+        ))}
+      </ul>
+    </section>
   )
 }
 
@@ -137,13 +180,7 @@ function DoelTabel({
     <table className="print-tabel">
       <TabelKop />
       {groepen.map((groep) => (
-        <tbody key={groep.doelNummer} className="print-doel-groep">
-          {groep.rijen.map((r, idx) => (
-            <tr key={`${groep.doelNummer}-${idx}`}>
-              <Cellen cellen={slotNaarCellen(r.label, r.slot)} />
-            </tr>
-          ))}
-        </tbody>
+        <DoelGroepTbody key={groep.doelNummer} groep={groep} />
       ))}
     </table>
   )
@@ -166,16 +203,9 @@ function GildeTabel({
       <tbody>
         {groepen.map((groep) => (
           <Fragment key={groep.gilde}>
-            <tr className="print-gildekop">
-              <td colSpan={7}>
-                <strong>{groep.gilde}</strong>{' '}
-                <span style={{ color: '#555' }}>({groep.rijen.length})</span>
-              </td>
-            </tr>
+            <GildeKopRij gilde={groep.gilde} aantal={groep.rijen.length} />
             {groep.rijen.map((r) => (
-              <tr key={`${groep.gilde}-${r.doelNummer}-${r.slot.schutter_id}`}>
-                <Cellen cellen={slotNaarCellen(doelLabel(r.doelNummer, r.positie1), r.slot)} />
-              </tr>
+              <GildeDataRij key={`${groep.gilde}-${r.doelNummer}-${r.slot.schutter_id}`} rij={r} />
             ))}
           </Fragment>
         ))}

@@ -5,6 +5,7 @@ import ScorekaartenDocument from '../components/ScorekaartenDocument'
 import {
   bouwScorekaartPaginas,
   parseDoelInterval,
+  PRINT_PAGINA_MARGE_MM,
   type PrintFilters
 } from '../components/afdruk-helpers'
 import { IconPrinter } from '../components/icons/IconPrinter'
@@ -74,7 +75,7 @@ export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element
     stijl.textContent = `
       @page {
         size: A4 portrait;
-        margin: 12mm;
+        margin: ${PRINT_PAGINA_MARGE_MM}mm;
       }
     `
   }, [])
@@ -161,19 +162,48 @@ export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element
           Voorbeeld: {paginas.length} {paginas.length === 1 ? 'pagina' : "pagina's"} (A4 portret)
         </div>
         <div className="afdrukken-preview-pagina">
-          <div
-            className="print-root scorekaarten-print-root"
-            style={{ width: `${A4_KORT}mm` }}
-          >
-            <ScorekaartenDocument wedstrijd={wedstrijd} paginas={paginas} />
-            {paginas.length === 0 && (
-              <div style={{ color: 'var(--muted)', fontSize: 13, padding: '8px 0' }}>
-                Geen scorekaarten om te tonen voor de huidige filters.
+          <div className="afdrukken-preview-paginas">
+            {paginas.length === 0 ? (
+              <div
+                className="print-pagina-vel scorekaarten-print-root"
+                style={{ width: `${A4_KORT}mm` }}
+              >
+                <div style={{ color: 'var(--muted)', fontSize: 13, padding: '8px 0' }}>
+                  Geen scorekaarten om te tonen voor de huidige filters.
+                </div>
               </div>
+            ) : (
+              paginas.map((pagina) => (
+                <div
+                  key={pagina.doelNummer}
+                  className="print-pagina-vel scorekaarten-print-root"
+                  style={{ width: `${A4_KORT}mm` }}
+                >
+                  <ScorekaartenDocument wedstrijd={wedstrijd} paginas={[pagina]} />
+                </div>
+              ))
             )}
           </div>
         </div>
       </section>
+
+      {/* Verborgen, ongepagineerde kopie: enige bron voor het echte afdrukken
+          (window.print gebruikt .print-root, .print-root *). Scorekaarten
+          zijn al vooraf één-pagina-per-doel opgebouwd, dus hier is geen
+          meting nodig zoals bij IndelingAfdrukTab. De leeg-melding hoort hier
+          ook thuis: zonder deze zou een afdruk bij 0 scorekaarten gewoon een
+          blanco pagina geven in plaats van uit te leggen waarom. */}
+      <div className="print-root-meetkopie">
+        <div className="print-root scorekaarten-print-root" style={{ width: `${A4_KORT}mm` }}>
+          {paginas.length === 0 ? (
+            <div style={{ color: 'var(--muted)', fontSize: 13, padding: '8px 0' }}>
+              Geen scorekaarten om te tonen voor de huidige filters.
+            </div>
+          ) : (
+            <ScorekaartenDocument wedstrijd={wedstrijd} paginas={paginas} />
+          )}
+        </div>
+      </div>
     </div>
   )
 }

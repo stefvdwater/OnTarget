@@ -133,6 +133,35 @@ export interface Totalen {
   aantalDubbel: number
 }
 
+/** Verzamelt alle (gefilterde) ingedeelde schutters en berekent de totalen. */
+export function berekenZichtbareTotalen(
+  doelen: DoelMetConflicten[],
+  opties: PrintOpties
+): Totalen {
+  const gefilterd: DoelSlot[] = []
+  for (const d of doelen) {
+    for (const s of d.schutters) {
+      if (passeertFilters(s, d.nummer, opties.filters)) gefilterd.push(s)
+    }
+  }
+  return berekenTotalen(gefilterd)
+}
+
+export interface PrintConflict {
+  doelNr: number
+  bericht: string
+}
+
+/** Verzamelt de conflict-waarschuwingen voor de (gefilterde) doelen, in doelvolgorde. */
+export function verzamelConflicten(
+  doelen: DoelMetConflicten[],
+  opties: PrintOpties
+): PrintConflict[] {
+  return doelen
+    .filter((d) => d.conflicten.length > 0 && doelPasseertFilter(d.nummer, opties.filters))
+    .flatMap((d) => d.conflicten.map((c) => ({ doelNr: d.nummer, bericht: c.bericht })))
+}
+
 export function berekenTotalen(slots: DoelSlot[]): Totalen {
   const perBoog: Record<string, number> = {}
   const perGilde: Record<string, number> = {}
@@ -286,6 +315,112 @@ export function bouwGildeGroepen(
   })
 }
 
+// ── Gepagineerde schermvoorbeeld (indeling) ─────────────────
+// Bij het echte afdrukken laat de browser de inhoud zelf over meerdere
+// pagina's vloeien (page-break-inside: avoid per doel-groep resp. per rij).
+// Voor het schermvoorbeeld pakken we exact diezelfde eenheden greedy na, op
+// basis van werkelijk gemeten hoogtes (zie usePrintPaginering.ts), zodat de
+// preview toont wat er ook effectief wordt afgedrukt.
+
+export type PrintPakEenheid =
+  | { soort: 'doel-groep'; groep: DoelGroep }
+  | { soort: 'gilde-kop'; gilde: string; aantal: number }
+  | { soort: 'gilde-rij'; rij: GildeGroep['rijen'][number] }
+  // Totalen blijft één atomair blok: het is altijd precies 4 vaste regels, de
+  // enige groei zit in de tekstterugloop van de "Per gilde"-regel zelf, wat
+  // toch niet oplosbaar is door enkel op regelniveau te splitsen. Bij het
+  // echte afdrukken (page-break-inside: auto) kan dat blok in theorie
+  // alsnog midden in een regel breken; gezien de beperkte hoogte (hooguit
+  // enkele tientallen px extra bij veel gilden) is dat een bewust aanvaarde,
+  // kleine afwijking.
+  | { soort: 'totalen'; totalen: Totalen }
+  // Waarschuwingen groeit wel onbegrensd (één regel per conflict) en is dus
+  // per item gepakt, net als gilde-rij, zodat een lange lijst net als bij het
+  // echte afdrukken (page-break-inside: auto) over een paginagrens kan
+  // vallen in plaats van als één blok te verspringen.
+  | { soort: 'waarschuwingen-titel' }
+  | { soort: 'waarschuwingen-item'; conflict: PrintConflict }
+
+export interface GemetenEenheid {
+  eenheid: PrintPakEenheid
+  hoogtePx: number
+}
+
+export interface PakBudget {
+  /** Bruikbare hoogte per pagina in px (paginahoogte min padding). */
+  bruikbareHoogtePx: number
+  /** Hoogte van de kolomkop (thead), herhaalt op elke pagina met een tabel. */
+  theadHoogtePx: number
+  /** Hoogte van de documentkop, enkel op de eerste pagina. */
+  headerHoogtePx: number
+}
+
+/** Welke eenheden tabelinhoud zijn (tellen mee voor het thead-budget). */
+export function isTabelEenheid(eenheid: PrintPakEenheid): boolean {
+  return eenheid.soort === 'doel-groep' || eenheid.soort === 'gilde-kop' || eenheid.soort === 'gilde-rij'
+}
+
+/**
+ * Pakt gemeten eenheden greedy in pagina's: een eenheid gaat pas naar de
+ * volgende pagina als hij niet meer past op de huidige. Elke eenheid is
+ * atomair (nooit gesplitst): dat is exact wat page-break-inside: avoid bij
+ * het echte afdrukken ook doet. De thead-hoogte telt enkel mee op pagina's
+ * die effectief tabelinhoud bevatten; de documentkop enkel op de eerste
+ * pagina.
+ */
+export function pakInPaginas(
+  eenheden: GemetenEenheid[],
+  budget: PakBudget
+): PrintPakEenheid[][] {
+  const paginas: PrintPakEenheid[][] = []
+  let huidige: PrintPakEenheid[] = []
+  let huidigeHoogte = 0
+  let huidigeHeeftTabel = false
+
+  for (const { eenheid, hoogtePx } of eenheden) {
+    const isEerstePagina = paginas.length === 0
+    // De eerste pagina toont altijd een tabel (met kolomkop), ook leeg, zie
+    // PrintPaginaInhoud se toonTabel. Reserveer de thead-hoogte dus sowieso
+    // op de eerste pagina, anders klopt het budget niet met wat er echt
+    // gerenderd wordt wanneer die pagina toevallig geen tabel-eenheden bevat
+    // (bv. enkel een waarschuwingen-blok, met alle doel-groepen weggefilterd).
+    const heeftTabelOpDezePagina = huidigeHeeftTabel || isTabelEenheid(eenheid) || isEerstePagina
+    const beschikbaar =
+      budget.bruikbareHoogtePx -
+      (heeftTabelOpDezePagina ? budget.theadHoogtePx : 0) -
+      (isEerstePagina ? budget.headerHoogtePx : 0)
+
+    if (huidige.length > 0 && huidigeHoogte + hoogtePx > beschikbaar) {
+      paginas.push(huidige)
+      huidige = []
+      huidigeHoogte = 0
+      huidigeHeeftTabel = false
+    }
+    huidige.push(eenheid)
+    huidigeHoogte += hoogtePx
+    if (isTabelEenheid(eenheid)) huidigeHeeftTabel = true
+  }
+  if (huidige.length > 0) paginas.push(huidige)
+  return paginas
+}
+
+/** CSS-referentiewaarde: 96px per inch, 25.4mm per inch. */
+export const MM_NAAR_PX = 96 / 25.4
+
+/**
+ * De echte @page-marge bij het afdrukken (zie de dynamische stijl in
+ * IndelingAfdrukTab/ScorekaartenAfdrukTab). Dit is NIET hetzelfde als de
+ * 14mm padding van .print-root/.print-pagina-vel: die padding is enkel
+ * cosmetisch voor het schermvoorbeeld. Voor de paginering moet gerekend
+ * worden met wat er echt op papier past, dus met deze marge.
+ */
+export const PRINT_PAGINA_MARGE_MM = 12
+
+/** Bruikbare hoogte in px van een afgedrukte pagina (paginahoogte min @page-marges). */
+export function berekenBruikbareHoogtePx(hoogteMm: number): number {
+  return (hoogteMm - 2 * PRINT_PAGINA_MARGE_MM) * MM_NAAR_PX
+}
+
 const MAANDEN = [
   'januari', 'februari', 'maart', 'april', 'mei', 'juni',
   'juli', 'augustus', 'september', 'oktober', 'november', 'december'
@@ -391,13 +526,7 @@ export function bouwExcelModel(
 
   const totalen: string[] = []
   if (opties.totalenTonen) {
-    const gefilterd: DoelSlot[] = []
-    for (const d of doelen) {
-      for (const s of d.schutters) {
-        if (passeertFilters(s, d.nummer, opties.filters)) gefilterd.push(s)
-      }
-    }
-    const t = berekenTotalen(gefilterd)
+    const t = berekenZichtbareTotalen(doelen, opties)
     if (t.totaalSchutters > 0) {
       totalen.push(`Totaal schutters: ${t.totaalSchutters}`)
       totalen.push(
@@ -420,12 +549,8 @@ export function bouwExcelModel(
 
   const waarschuwingen: string[] = []
   if (opties.waarschuwingenTonen) {
-    for (const d of doelen) {
-      if (d.conflicten.length > 0 && doelPasseertFilter(d.nummer, opties.filters)) {
-        for (const c of d.conflicten) {
-          waarschuwingen.push(`Doel ${String(d.nummer).padStart(2, '0')}: ${c.bericht}`)
-        }
-      }
+    for (const c of verzamelConflicten(doelen, opties)) {
+      waarschuwingen.push(`Doel ${String(c.doelNr).padStart(2, '0')}: ${c.bericht}`)
     }
   }
 

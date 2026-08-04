@@ -1992,15 +1992,42 @@ input:focus-visible,
   background: #14110f;
 }
 
+/* Stapelt de gepagineerde .print-pagina-vel-vellen onder elkaar, met een
+   duidelijke tussenruimte (de grijze achtergrond van .afdrukken-preview-pagina
+   erdoorheen) zodat elke pagina zichtbaar apart is. */
+.afdrukken-preview-paginas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
 /* ─── Print document (preview + print) ───────────────── */
 
-.print-root {
+/* .print-root = de verborgen, ongepagineerde kopie die effectief wordt
+   afgedrukt (zie .print-root-meetkopie hieronder). .print-pagina-vel deelt
+   dezelfde vormgeving maar is enkel voor de gepagineerde schermweergave en
+   moet dus buiten de @media print-selectie blijven, anders print alles
+   dubbel. */
+.print-root,
+.print-pagina-vel {
   background: white;
   color: black;
   font-family: sans-serif;
   padding: 14mm;
   box-shadow: 0 1px 0 #d6d2cb, 0 6px 20px -10px rgba(0, 0, 0, 0.2);
   /* width/min-height worden inline gezet op basis van A4/A3 + portret/landschap */
+}
+
+/* Op het scherm onzichtbaar (enkel meetbron + afdrukbron); @media print
+   zet position terug op static, zodat .print-root's eigen absolute
+   positionering (zie @media print onderaan) relatief blijft t.o.v. de
+   pagina en niet t.o.v. deze wrapper. */
+.print-root-meetkopie {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .print-header {
@@ -2254,6 +2281,12 @@ input:focus-visible,
   .afdrukken-preview-wrap {
     position: static;
     max-height: none;
+  }
+  /* Zelfde reden: deze wrapper is enkel op het scherm position:absolute
+     (om zichzelf onzichtbaar/uit-flow te houden voor de meting), maar mag
+     tijdens het afdrukken geen containing block worden voor .print-root. */
+  .print-root-meetkopie {
+    position: static;
   }
   .print-root {
     position: absolute;

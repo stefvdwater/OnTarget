@@ -22,7 +22,7 @@ Het beleid (cadans, semver, branching) staat in [CLAUDE.md](../../../CLAUDE.md) 
    - Controleer op dode interne links in de geraakte docs (relatieve paden die niet meer bestaan).
    - **Website:** is er gebruikerszichtbaar gedrag veranderd, dan kan de handleiding aanpassing nodig hebben (zie de Website-sectie in CLAUDE.md). Screenshots zijn een extra drift-risico.
 
-4. **Changelog afronden.** Het interne `internal-docs/RELEASE_<versie>.md` moet de cyclus dekken (hoort al op de feature-branches te zijn aangevuld). Hernoem het naar het gekozen versienummer indien nodig. Schrijf daarnaast de **gecureerde publieke release-notes** (gebruikersgericht, Vlaams, geen em dashes) naar een tijdelijk bestand voor stap 7, en leg ze voor aan de gebruiker.
+4. **Changelog afronden.** Het interne `internal-docs/RELEASE_UNRELEASED.md` moet de cyclus dekken (hoort al op de feature-branches te zijn aangevuld). Hernoem het bestand naar `internal-docs/RELEASE_<gekozen-versie>.md` en werk de titel/"Doel van dit document"-zin bij (niet meer "onuitgebracht", wel het echte versienummer). Schrijf daarnaast de **gecureerde publieke release-notes** (gebruikersgericht, Vlaams, geen em dashes) naar een tijdelijk bestand voor stap 7, en leg ze voor aan de gebruiker.
 
 5. **Bump + commit + push.** Zet de volledige versie in `package.json`, commit met het **kale versienummer** als message, push `main`.
 
@@ -43,7 +43,7 @@ Het beleid (cadans, semver, branching) staat in [CLAUDE.md](../../../CLAUDE.md) 
    ```
    Verwacht twee assets (`OnTarget-Setup-<versie>.exe` en `OnTarget-<versie>.zip`). `isPrerelease` is `true` voor `v0.x`, `false` voor `v1.0.0`+.
 
-9. **Template voor de volgende changelog aanmaken.** Maak meteen op `main` een leeg `internal-docs/RELEASE_<volgende-versie>.md` aan (zelfde opzet als de vorige: titel "Release \<versie\> (vs \<zojuist-uitgebrachte-versie\>)", de "Doel van dit document"-zin, lege `## Overzicht` en `## Wijziging`-secties). Gok bij gebrek aan beter een minor-bump (meest voorkomend); blijkt de cyclus nadien toch patch of major, dan hernoem je het bestand gewoon in stap 4 van de volgende release, zoals daar al voorzien is. Los committen van de bump-commit (die blijft het kale versienummer), en pushen naar `main`. Doel: de eerste feature-PR van de nieuwe cyclus vult een al bestaand bestand aan in plaats van er zelf een te structureren en de versie te gokken.
+9. **Template voor de volgende changelog aanmaken.** Maak meteen op `main` een leeg `internal-docs/RELEASE_UNRELEASED.md` aan (zelfde opzet als de vorige: titel "Release onuitgebracht (vs \<zojuist-uitgebrachte-versie\>)", de "Doel van dit document"-zin, lege `## Overzicht` en `## Wijziging`-secties). Geen versienummer gokken: dat wordt pas ingevuld bij de volgende release, in stap 4 (hernoemen naar `RELEASE_<gekozen-versie>.md`). Los committen van de bump-commit (die blijft het kale versienummer), en pushen naar `main`. Doel: de eerste feature-PR van de nieuwe cyclus vult een al bestaand bestand aan in plaats van er zelf een te structureren of een versie te gokken.
 
 10. **Website-reminder.** Staat er handleiding-/site-werk klaar dat bij deze release hoort? De site is ontkoppeld (`gh-pages`, zie CLAUDE.md); bied aan om mee te deployen, deploy niet automatisch.
 

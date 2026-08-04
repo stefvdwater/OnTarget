@@ -74,6 +74,31 @@ modi.
 Bewuste scope-beperking: enkel de Afdrukken-tab. Geen wijziging aan
 indeling, inschrijvingen, of het indelingsalgoritme.
 
+### Afdrukken-preview: onafhankelijke scroll ([issue #41](https://github.com/stefvdwater/OnTarget/issues/41))
+
+De preview-pane in de Afdrukken-tab scrolde voorheen mee met de volledige
+pagina: bij een preview die hoger is dan het scherm, scrolde je de hele
+`.app-main` mee, inclusief het optiespaneel eronder. `.afdrukken-preview-wrap`
+volgt nu hetzelfde sticky-plus-eigen-scroll-patroon als `.beschikbaar-paneel`
+in de Inschrijvingen-tab: sticky binnen de pagina, met een eigen
+`overflow-y: auto` voor de preview zelf, terwijl de "Voorbeeld: ..."-kop
+zichtbaar blijft staan.
+
+Twee gerelateerde CSS-subtiliteiten kwamen daarbij aan het licht en zijn
+opgelost:
+- `position: sticky` op het preview-paneel maakte het onbedoeld tot
+  containing block voor `.print-root`'s `position: absolute` tijdens
+  `@media print`, waardoor het echte afdrukken werd afgekapt op ongeveer
+  één schermhoogte in plaats van over meerdere pagina's te vloeien.
+  `@media print` reset nu expliciet `position`/`overflow`/`max-height` op
+  de wrapper-elementen.
+- `.afdrukken-preview-pagina` (flex, standaard `align-items: stretch`) rekte
+  `.print-root` verticaal naar de beschikbare hoogte van het scroll-paneel;
+  tabelinhoud voorbij die hoogte liep ongeclipt door op de grijze
+  achtergrond in plaats van binnen de witte pagina te blijven.
+  `align-items: flex-start` laat `.print-root` weer op eigen inhoudshoogte
+  groeien.
+
 ## Bekend aandachtspunt (niet opgelost deze cyclus)
 
 Tab-lokale UI-state (filters, toggles, zoekvelden) in alle sub-tabs van

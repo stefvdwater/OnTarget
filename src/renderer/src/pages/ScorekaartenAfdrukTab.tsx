@@ -190,10 +190,18 @@ export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element
       {/* Verborgen, ongepagineerde kopie: enige bron voor het echte afdrukken
           (window.print gebruikt .print-root, .print-root *). Scorekaarten
           zijn al vooraf één-pagina-per-doel opgebouwd, dus hier is geen
-          meting nodig zoals bij IndelingAfdrukTab. */}
+          meting nodig zoals bij IndelingAfdrukTab. De leeg-melding hoort hier
+          ook thuis: zonder deze zou een afdruk bij 0 scorekaarten gewoon een
+          blanco pagina geven in plaats van uit te leggen waarom. */}
       <div className="print-root-meetkopie">
         <div className="print-root scorekaarten-print-root" style={{ width: `${A4_KORT}mm` }}>
-          <ScorekaartenDocument wedstrijd={wedstrijd} paginas={paginas} />
+          {paginas.length === 0 ? (
+            <div style={{ color: 'var(--muted)', fontSize: 13, padding: '8px 0' }}>
+              Geen scorekaarten om te tonen voor de huidige filters.
+            </div>
+          ) : (
+            <ScorekaartenDocument wedstrijd={wedstrijd} paginas={paginas} />
+          )}
         </div>
       </div>
     </div>

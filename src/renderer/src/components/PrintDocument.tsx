@@ -140,15 +140,25 @@ export function PrintTotalen({ totalen }: { totalen: Totalen }): JSX.Element {
   )
 }
 
+export function WaarschuwingenTitel(): JSX.Element {
+  return <h3>Aandachtspunten</h3>
+}
+
+export function WaarschuwingenItem({ conflict }: { conflict: PrintConflict }): JSX.Element {
+  return (
+    <li>
+      <strong>Doel {String(conflict.doelNr).padStart(2, '0')}:</strong> {conflict.bericht}
+    </li>
+  )
+}
+
 export function PrintWaarschuwingen({ conflicten }: { conflicten: PrintConflict[] }): JSX.Element {
   return (
     <section className="print-waarschuwingen">
-      <h3>Aandachtspunten</h3>
+      <WaarschuwingenTitel />
       <ul>
         {conflicten.map((c, i) => (
-          <li key={i}>
-            <strong>Doel {String(c.doelNr).padStart(2, '0')}:</strong> {c.bericht}
-          </li>
+          <WaarschuwingenItem key={i} conflict={c} />
         ))}
       </ul>
     </section>

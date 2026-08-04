@@ -81,9 +81,16 @@ export function usePrintPaginering(
       const conflicten = verzamelConflicten(doelen, opties)
       if (conflicten.length > 0) {
         eenheden.push({
-          eenheid: { soort: 'waarschuwingen', conflicten },
+          eenheid: { soort: 'waarschuwingen-titel' },
           hoogtePx:
-            container.querySelector('.print-waarschuwingen')?.getBoundingClientRect().height ?? 0
+            container.querySelector('.print-waarschuwingen h3')?.getBoundingClientRect().height ?? 0
+        })
+        const itemEls = container.querySelectorAll('.print-waarschuwingen li')
+        conflicten.forEach((conflict, i) => {
+          eenheden.push({
+            eenheid: { soort: 'waarschuwingen-item', conflict },
+            hoogtePx: itemEls[i]?.getBoundingClientRect().height ?? 0
+          })
         })
       }
     }

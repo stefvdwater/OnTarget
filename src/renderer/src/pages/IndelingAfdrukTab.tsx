@@ -8,11 +8,13 @@ import PrintDocument, {
   GildeKopRij,
   PrintHeader,
   PrintTotalen,
-  PrintWaarschuwingen,
+  WaarschuwingenItem,
+  WaarschuwingenTitel,
   TabelKop
 } from '../components/PrintDocument'
 import {
   bouwExcelModel,
+  isTabelEenheid,
   parseDoelInterval,
   PRINT_PAGINA_MARGE_MM,
   type Groepering,
@@ -33,6 +35,12 @@ interface Props {
 // ander formaat kiezen.
 const A4_KORT = 210
 const A4_LANG = 297
+
+// Debounce voor het doel-interval-veld: usePrintPaginering hertelt bij elke
+// wijziging van doelIntervalGeldig de volledige paginering (een synchrone
+// meting van alle doel-groepen/rijen). Zonder debounce gebeurt dat bij elke
+// toetsaanslag; de foutmelding zelf blijft wel meteen (goedkope parse).
+const DOEL_INTERVAL_DEBOUNCE_MS = 250
 
 export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
   const doelen = useAfdrukDoelen(wedstrijd)
@@ -78,11 +86,16 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
     }
     const r = parseDoelInterval(doelInterval, wedstrijd.aantal_doelen)
     if ('fout' in r) {
+      // Foutmelding blijft meteen zichtbaar; enkel het doorzetten van een
+      // geldige selectie (die de preview laat herpagineren) wordt vertraagd.
       setDoelIntervalFout(r.fout)
-    } else {
-      setDoelIntervalFout(null)
-      setDoelIntervalGeldig(r.nummers)
+      return
     }
+    setDoelIntervalFout(null)
+    const timer = setTimeout(() => {
+      setDoelIntervalGeldig(r.nummers)
+    }, DOEL_INTERVAL_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
   }, [doelInterval, alleDoelen, wedstrijd.aantal_doelen])
 
   // ── Build PrintOpties ─────────────────────────────────
@@ -353,7 +366,15 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
               <div
                 key={i}
                 className="print-pagina-vel"
-                style={{ width: `${breedteMm}mm`, minHeight: `${hoogteMm}mm` }}
+                style={{
+                  // Volledige paginabreedte met de werkelijke @page-marge als
+                  // padding (i.p.v. de vroegere, foutieve 14mm): zo toont de
+                  // pagina nog steeds een rand, maar de inhoudsbreedte komt
+                  // exact overeen met de verborgen meetkopie hieronder.
+                  width: `${breedteMm}mm`,
+                  minHeight: `${hoogteMm}mm`,
+                  padding: `${PRINT_PAGINA_MARGE_MM}mm`
+                }}
               >
                 <PrintPaginaInhoud
                   wedstrijd={wedstrijd}
@@ -373,15 +394,15 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
         <div
           className="print-root"
           style={{
-            // padding:0 + de werkelijke @page-content-breedte, want dit is
-            // wat er ook echt wordt afgedrukt (@media print zet .print-root
-            // toch al op padding:0 + width:100%). De 14mm schermpadding van
-            // .print-root is enkel cosmetisch voor de zichtbare .print-pagina-vel
-            // -vellen; hier zou ze de tekstterugloop (en dus de gemeten
-            // rijhoogtes) onterecht smaller meten dan wat effectief afdrukt.
-            width: `${breedteMm - 2 * PRINT_PAGINA_MARGE_MM}mm`,
+            // Zelfde breedte/padding als de zichtbare .print-pagina-vel-vellen
+            // hierboven (werkelijke @page-marge, niet de 14mm van de
+            // .print-root-CSS-standaard): een afwijking hier zou de
+            // tekstterugloop (en dus de gemeten rijhoogtes) anders meten dan
+            // wat er echt te zien/af te drukken is. Bij het echte afdrukken
+            // zet @media print .print-root sowieso op padding:0 + width:100%.
+            width: `${breedteMm}mm`,
             minHeight: `${hoogteMm}mm`,
-            padding: 0
+            padding: `${PRINT_PAGINA_MARGE_MM}mm`
           }}
         >
           <PrintDocument wedstrijd={wedstrijd} doelen={doelen} opties={opties} />
@@ -402,14 +423,12 @@ function PrintPaginaInhoud({
   eenheden: PrintPakEenheid[]
   toonHeader: boolean
 }): JSX.Element {
-  const tabelEenheden = eenheden.filter(
-    (e) => e.soort === 'doel-groep' || e.soort === 'gilde-kop' || e.soort === 'gilde-rij'
-  )
+  const tabelEenheden = eenheden.filter(isTabelEenheid)
   const totalenEenheid = eenheden.find(
     (e): e is Extract<PrintPakEenheid, { soort: 'totalen' }> => e.soort === 'totalen'
   )
-  const waarschuwingenEenheid = eenheden.find(
-    (e): e is Extract<PrintPakEenheid, { soort: 'waarschuwingen' }> => e.soort === 'waarschuwingen'
+  const heeftWaarschuwingen = eenheden.some(
+    (e) => e.soort === 'waarschuwingen-titel' || e.soort === 'waarschuwingen-item'
   )
   // De eerste pagina toont de tabel altijd, ook leeg (zelfde gedrag als de
   // ongepagineerde tabel voorheen); latere pagina's enkel als er iets op staat.
@@ -425,7 +444,7 @@ function PrintPaginaInhoud({
         </table>
       )}
       {totalenEenheid && <PrintTotalen totalen={totalenEenheid.totalen} />}
-      {waarschuwingenEenheid && <PrintWaarschuwingen conflicten={waarschuwingenEenheid.conflicten} />}
+      {heeftWaarschuwingen && <WaarschuwingenInhoud eenheden={eenheden} />}
     </>
   )
 }
@@ -434,20 +453,47 @@ function TabelInhoud({ eenheden }: { eenheden: PrintPakEenheid[] }): JSX.Element
   if (eenheden.some((e) => e.soort === 'doel-groep')) {
     return (
       <>
-        {eenheden.map((e, i) =>
-          e.soort === 'doel-groep' ? <DoelGroepTbody key={i} groep={e.groep} /> : null
+        {eenheden.map((e) =>
+          e.soort === 'doel-groep' ? (
+            <DoelGroepTbody key={e.groep.doelNummer} groep={e.groep} />
+          ) : null
         )}
       </>
     )
   }
   return (
     <tbody>
-      {eenheden.map((e, i) => {
-        if (e.soort === 'gilde-kop') return <GildeKopRij key={i} gilde={e.gilde} aantal={e.aantal} />
-        if (e.soort === 'gilde-rij') return <GildeDataRij key={i} rij={e.rij} />
+      {eenheden.map((e) => {
+        if (e.soort === 'gilde-kop') return <GildeKopRij key={e.gilde} gilde={e.gilde} aantal={e.aantal} />
+        if (e.soort === 'gilde-rij') {
+          return <GildeDataRij key={`${e.rij.doelNummer}-${e.rij.slot.schutter_id}`} rij={e.rij} />
+        }
         return null
       })}
     </tbody>
+  )
+}
+
+// Herbouwt .print-waarschuwingen per pagina: de titel verschijnt enkel op de
+// pagina die de waarschuwingen-titel-eenheid kreeg toegewezen (geen herhaling
+// zoals bij de thead), items lopen gewoon door zonder titel op vervolgpagina's.
+function WaarschuwingenInhoud({ eenheden }: { eenheden: PrintPakEenheid[] }): JSX.Element {
+  const toonTitel = eenheden.some((e) => e.soort === 'waarschuwingen-titel')
+  const items = eenheden.filter(
+    (e): e is Extract<PrintPakEenheid, { soort: 'waarschuwingen-item' }> =>
+      e.soort === 'waarschuwingen-item'
+  )
+  return (
+    <section className="print-waarschuwingen">
+      {toonTitel && <WaarschuwingenTitel />}
+      {items.length > 0 && (
+        <ul>
+          {items.map((e) => (
+            <WaarschuwingenItem key={`${e.conflict.doelNr}:${e.conflict.bericht}`} conflict={e.conflict} />
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }
 

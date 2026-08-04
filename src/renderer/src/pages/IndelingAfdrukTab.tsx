@@ -1,14 +1,25 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Wedstrijd } from '../types'
 import { useAfdrukDoelen } from './useAfdrukDoelen'
-import PrintDocument from '../components/PrintDocument'
+import { usePrintPaginering } from './usePrintPaginering'
+import PrintDocument, {
+  DoelGroepTbody,
+  GildeDataRij,
+  GildeKopRij,
+  PrintHeader,
+  PrintTotalen,
+  PrintWaarschuwingen,
+  TabelKop
+} from '../components/PrintDocument'
 import {
   bouwExcelModel,
   parseDoelInterval,
+  PRINT_PAGINA_MARGE_MM,
   type Groepering,
   type Orientatie,
   type PrintFilters,
-  type PrintOpties
+  type PrintOpties,
+  type PrintPakEenheid
 } from '../components/afdruk-helpers'
 import { IconPrinter } from '../components/icons/IconPrinter'
 import { IconExcel } from '../components/icons/IconExcel'
@@ -98,16 +109,23 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
     afstand25
   ])
 
-  const opties: PrintOpties = {
-    papier: 'A4',
-    orientatie,
-    groepering,
-    // Sortering wordt impliciet bepaald: doel → positie, gilde → naam.
-    sortering: groepering === 'doel' ? 'positie' : 'naam',
-    filters,
-    totalenTonen,
-    waarschuwingenTonen
-  }
+  // Gememoized: usePrintPaginering hieronder herrekent de paginering bij elke
+  // wijziging van deze referentie. Een nieuw object-literal bij elke render
+  // (bv. door excelBezig-wissels) zou die herrekening blijven triggeren en
+  // via setPaginas in een oneindige render-lus terechtkomen.
+  const opties: PrintOpties = useMemo(
+    () => ({
+      papier: 'A4',
+      orientatie,
+      groepering,
+      // Sortering wordt impliciet bepaald: doel → positie, gilde → naam.
+      sortering: groepering === 'doel' ? 'positie' : 'naam',
+      filters,
+      totalenTonen,
+      waarschuwingenTonen
+    }),
+    [orientatie, groepering, filters, totalenTonen, waarschuwingenTonen]
+  )
 
   // Pagina-afmetingen voor de preview (A4 in portret/landschap)
   const { breedteMm, hoogteMm } = useMemo(() => {
@@ -115,6 +133,11 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
       ? { breedteMm: A4_KORT, hoogteMm: A4_LANG }
       : { breedteMm: A4_LANG, hoogteMm: A4_KORT }
   }, [orientatie])
+
+  // Gepagineerde schermweergave: meet de verborgen kopie hieronder en pakt
+  // de inhoud in pagina's die overeenkomen met wat er echt wordt afgedrukt.
+  const { meetRef, paginas } = usePrintPaginering(doelen, opties, hoogteMm)
+  const weerTeGevenPaginas = paginas.length > 0 ? paginas : [[]]
 
   // ── Dynamische @page styling ──────────────────────────
   // Default A4 + de gekozen oriëntatie. De gebruiker kan in de native
@@ -132,7 +155,7 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
     stijl.textContent = `
       @page {
         size: A4 ${orient};
-        margin: 12mm;
+        margin: ${PRINT_PAGINA_MARGE_MM}mm;
       }
     `
   }, [orientatie])
@@ -320,22 +343,111 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
       {/* Rechter paneel: preview */}
       <section className="afdrukken-preview-wrap">
         <div className="afdrukken-preview-meta">
-          Voorbeeld: A4 {orientatie === 'portret' ? 'portret' : 'landschap'}
+          Voorbeeld: {weerTeGevenPaginas.length}{' '}
+          {weerTeGevenPaginas.length === 1 ? 'pagina' : "pagina's"} · A4{' '}
+          {orientatie === 'portret' ? 'portret' : 'landschap'}
         </div>
         <div className="afdrukken-preview-pagina">
-          <div
-            className="print-root"
-            style={{ width: `${breedteMm}mm`, minHeight: `${hoogteMm}mm` }}
-          >
-            <PrintDocument
-              wedstrijd={wedstrijd}
-              doelen={doelen}
-              opties={opties}
-            />
+          <div className="afdrukken-preview-paginas">
+            {weerTeGevenPaginas.map((eenheden, i) => (
+              <div
+                key={i}
+                className="print-pagina-vel"
+                style={{ width: `${breedteMm}mm`, minHeight: `${hoogteMm}mm` }}
+              >
+                <PrintPaginaInhoud
+                  wedstrijd={wedstrijd}
+                  eenheden={eenheden}
+                  toonHeader={i === 0}
+                />
+              </div>
+            ))}
           </div>
         </div>
       </section>
+
+      {/* Verborgen, ongepagineerde kopie: enige bron voor het echte afdrukken
+          (window.print gebruikt .print-root, .print-root *) en tegelijk de
+          meetbron voor de pagina-indeling hierboven. */}
+      <div className="print-root-meetkopie" ref={meetRef}>
+        <div
+          className="print-root"
+          style={{
+            // padding:0 + de werkelijke @page-content-breedte, want dit is
+            // wat er ook echt wordt afgedrukt (@media print zet .print-root
+            // toch al op padding:0 + width:100%). De 14mm schermpadding van
+            // .print-root is enkel cosmetisch voor de zichtbare .print-pagina-vel
+            // -vellen; hier zou ze de tekstterugloop (en dus de gemeten
+            // rijhoogtes) onterecht smaller meten dan wat effectief afdrukt.
+            width: `${breedteMm - 2 * PRINT_PAGINA_MARGE_MM}mm`,
+            minHeight: `${hoogteMm}mm`,
+            padding: 0
+          }}
+        >
+          <PrintDocument wedstrijd={wedstrijd} doelen={doelen} opties={opties} />
+        </div>
+      </div>
     </div>
+  )
+}
+
+// ── Pagina-inhoud (schermweergave) ──────────────────────────
+
+function PrintPaginaInhoud({
+  wedstrijd,
+  eenheden,
+  toonHeader
+}: {
+  wedstrijd: Wedstrijd
+  eenheden: PrintPakEenheid[]
+  toonHeader: boolean
+}): JSX.Element {
+  const tabelEenheden = eenheden.filter(
+    (e) => e.soort === 'doel-groep' || e.soort === 'gilde-kop' || e.soort === 'gilde-rij'
+  )
+  const totalenEenheid = eenheden.find(
+    (e): e is Extract<PrintPakEenheid, { soort: 'totalen' }> => e.soort === 'totalen'
+  )
+  const waarschuwingenEenheid = eenheden.find(
+    (e): e is Extract<PrintPakEenheid, { soort: 'waarschuwingen' }> => e.soort === 'waarschuwingen'
+  )
+  // De eerste pagina toont de tabel altijd, ook leeg (zelfde gedrag als de
+  // ongepagineerde tabel voorheen); latere pagina's enkel als er iets op staat.
+  const toonTabel = toonHeader || tabelEenheden.length > 0
+
+  return (
+    <>
+      {toonHeader && <PrintHeader wedstrijd={wedstrijd} />}
+      {toonTabel && (
+        <table className="print-tabel">
+          <TabelKop />
+          <TabelInhoud eenheden={tabelEenheden} />
+        </table>
+      )}
+      {totalenEenheid && <PrintTotalen totalen={totalenEenheid.totalen} />}
+      {waarschuwingenEenheid && <PrintWaarschuwingen conflicten={waarschuwingenEenheid.conflicten} />}
+    </>
+  )
+}
+
+function TabelInhoud({ eenheden }: { eenheden: PrintPakEenheid[] }): JSX.Element {
+  if (eenheden.some((e) => e.soort === 'doel-groep')) {
+    return (
+      <>
+        {eenheden.map((e, i) =>
+          e.soort === 'doel-groep' ? <DoelGroepTbody key={i} groep={e.groep} /> : null
+        )}
+      </>
+    )
+  }
+  return (
+    <tbody>
+      {eenheden.map((e, i) => {
+        if (e.soort === 'gilde-kop') return <GildeKopRij key={i} gilde={e.gilde} aantal={e.aantal} />
+        if (e.soort === 'gilde-rij') return <GildeDataRij key={i} rij={e.rij} />
+        return null
+      })}
+    </tbody>
   )
 }
 

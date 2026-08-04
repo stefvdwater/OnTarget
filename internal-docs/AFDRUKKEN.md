@@ -228,6 +228,22 @@ posities (`DoelSlot | null`):
 - Het doelnummer staat als paginatitel **boven** het rooster, niet op de
   kaart zelf.
 
+### Volledige dubbelschutters krijgen 2 kaarten
+
+Een volledige dubbelschutter (1e+2e, dus `dubbel_eerste_helft &&
+dubbel_tweede_helft`) schiet als eerste én als laatste beurt binnen het
+doel (**R5** in [RULES.md](RULES.md)) en krijgt daarom **2 kaarten** op de
+pagina in plaats van 1: één op zijn normale plaats in de schietvolgorde,
+en één op de effectief **laatste positie van de pagina** (niet zomaar de
+eerstvolgende vrije positie na de andere kaarten). Bij meerdere volledige
+dubbelschutters blijft hun onderlinge volgorde in beide groepen behouden,
+bv. `A B C _ A B` (zie RULES.md, "Volledig dubbel"): B's tweede kaart komt
+op de laatste positie, en de lege positie ertussen blijft een blanco
+kaart. `bouwKaartPosities` in `afdruk-helpers.ts` implementeert dit door
+de kaarten vooraan op te vullen (in schietvolgorde) en de tweede kaarten
+van volledige dubbelschutters vanaf de laatste positie terug te tellen.
+Halve dubbelschutters (enkel EH of TH) krijgen zoals voorheen 1 kaart.
+
 ### Kaart-inhoud
 
 Elke kaart draagt zelf de wedstrijd-identificatie, want kaarten worden na

@@ -202,7 +202,7 @@ function Step({
   return (
     <div className={'step' + (actief ? ' actief' : '')}>
       <button className="step-btn" onClick={onClick}>
-        <span className="step-circle">{icon}</span>
+        <span className="step-icoon">{icon}</span>
         <span className="step-tekst">
           <span className="step-label">{label}</span>
           {badge}

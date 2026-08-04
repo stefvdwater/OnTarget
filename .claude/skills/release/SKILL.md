@@ -43,7 +43,9 @@ Het beleid (cadans, semver, branching) staat in [CLAUDE.md](../../../CLAUDE.md) 
    ```
    Verwacht twee assets (`OnTarget-Setup-<versie>.exe` en `OnTarget-<versie>.zip`). `isPrerelease` is `true` voor `v0.x`, `false` voor `v1.0.0`+.
 
-9. **Website-reminder.** Staat er handleiding-/site-werk klaar dat bij deze release hoort? De site is ontkoppeld (`gh-pages`, zie CLAUDE.md); bied aan om mee te deployen, deploy niet automatisch.
+9. **Template voor de volgende changelog aanmaken.** Maak meteen op `main` een leeg `internal-docs/RELEASE_<volgende-versie>.md` aan (zelfde opzet als de vorige: titel "Release \<versie\> (vs \<zojuist-uitgebrachte-versie\>)", de "Doel van dit document"-zin, lege `## Overzicht` en `## Wijziging`-secties). Gok bij gebrek aan beter een minor-bump (meest voorkomend); blijkt de cyclus nadien toch patch of major, dan hernoem je het bestand gewoon in stap 4 van de volgende release, zoals daar al voorzien is. Los committen van de bump-commit (die blijft het kale versienummer), en pushen naar `main`. Doel: de eerste feature-PR van de nieuwe cyclus vult een al bestaand bestand aan in plaats van er zelf een te structureren en de versie te gokken.
+
+10. **Website-reminder.** Staat er handleiding-/site-werk klaar dat bij deze release hoort? De site is ontkoppeld (`gh-pages`, zie CLAUDE.md); bied aan om mee te deployen, deploy niet automatisch.
 
 ## Hotfix (op een al uitgebrachte versie)
 

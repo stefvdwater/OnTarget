@@ -552,11 +552,11 @@ input:focus-visible,
   border: 0;
   padding: 4px 2px;
 }
-.step-circle {
+.step-icoon {
   flex: 0 0 auto;
   width: 28px;
   height: 28px;
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -603,7 +603,7 @@ input:focus-visible,
   border-radius: 1px;
   background: var(--yellow);
 }
-.step.actief .step-circle {
+.step.actief .step-icoon {
   background: var(--yellow);
   border-color: var(--yellow-deep);
   color: #2a200a;

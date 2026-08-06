@@ -145,11 +145,25 @@ Bewuste scope-beperking: enkel de scorekaarten-print. Halve
 dubbelschutters (enkel EH of TH) en het indelingsalgoritme zelf blijven
 onaangeroerd.
 
-## Bekend aandachtspunt (niet opgelost deze cyclus)
+### Tab-lokale UI-state overleeft tab-wissel ([issue #42](https://github.com/stefvdwater/OnTarget/issues/42))
 
-Tab-lokale UI-state (filters, toggles, zoekvelden) in alle sub-tabs van
-`WedstrijdDetailPage` reset bij het wisselen van tab, omdat elke sub-tab
-unmount bij `{tab === 'x' && <XTab />}`. Gemerkt bij de nieuwe
-"Lege doelen ook opnemen"-toggle, maar het patroon is ouder en breder (bv.
-het zoekveld in `InschrijvingenTab`). Bewust niet aangepakt deze cyclus, zie
-[issue #42](https://github.com/stefvdwater/OnTarget/issues/42).
+Elke sub-tab van `WedstrijdDetailPage` unmount bij het wisselen van tab
+(`{tab === 'x' && <XTab />}`), waardoor lokale `useState` (zoekveld,
+print-filters) telkens terugviel op de default. Opgelost door de
+betrokken state te verhuizen naar `WedstrijdDetailPage`, die zelf niet
+unmount tijdens het wisselen van tab (zelfde patroon als het bestaande
+`afdrukModus`):
+
+- `InschrijvingenTab`: het zoekveld (`zoek`) is nu een gecontroleerde prop
+  (`zoek`/`onZoekChange`) i.p.v. lokale state.
+- `IndelingAfdrukTab`/`ScorekaartenAfdrukTab`: alle opties/filters
+  (oriëntatie, groepering, doel-interval, gilde-selectie, afstanden,
+  totalen/waarschuwingen tonen, "Lege doelen ook opnemen") zijn nu
+  `filters`/`onFiltersChange`-props, getypeerd als `IndelingAfdrukFilters`/
+  `ScorekaartenAfdrukFilters` in `afdruk-helpers.ts`. Dit geldt ook voor
+  het wisselen tussen de Indeling/Scorekaarten-modus binnen Afdrukken.
+- Bewust niet aangepakt: puur ephemere state (bevestig-modals in
+  `ConfiguratieTab`/`IndelingTab`, de afgeleide `doelIntervalFout`/
+  `doelIntervalGeldig`, in-flight Excel-export-status) blijft lokaal —
+  die hoort niet te overleven, of herstelt zichzelf uit de wel-gelifte
+  brontekst.

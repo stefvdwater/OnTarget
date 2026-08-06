@@ -8,12 +8,13 @@ import { IconMinus } from '../components/icons/IconMinus'
 
 interface Props {
   wedstrijd: Wedstrijd
+  zoek: string
+  onZoekChange: (zoek: string) => void
 }
 
-export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
+export default function InschrijvingenTab({ wedstrijd, zoek, onZoekChange }: Props): JSX.Element {
   const [inschrijvingen, setInschrijvingen] = useState<Inschrijving[]>([])
   const [alleSchutters, setAlleSchutters] = useState<Schutter[]>([])
-  const [zoek, setZoek] = useState('')
   const [nieuwOpen, setNieuwOpen] = useState(false)
 
   useEffect(() => {
@@ -93,7 +94,7 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
       dubbel_tweede_helft: 0
     })
     setNieuwOpen(false)
-    setZoek('')
+    onZoekChange('')
     laad()
   }
 
@@ -215,7 +216,7 @@ export default function InschrijvingenTab({ wedstrijd }: Props): JSX.Element {
               style={{ width: '100%' }}
               placeholder="Zoek schutter of gilde…"
               value={zoek}
-              onChange={(e) => setZoek(e.target.value)}
+              onChange={(e) => onZoekChange(e.target.value)}
             />
           </div>
         </div>

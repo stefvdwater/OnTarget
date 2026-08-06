@@ -26,6 +26,64 @@ export interface PrintOpties {
 }
 
 /**
+ * Opties-state van de Indeling-afdrukmodus (IndelingAfdrukTab), gescheiden
+ * van PrintOpties: dit zijn de rauwe formulierwaarden (bv. `alleDoelen` +
+ * ruwe `doelInterval`-tekst), PrintOpties/PrintFilters is de afgeleide vorm
+ * die de print-opbouw effectief gebruikt. Leeft in WedstrijdDetailPage
+ * (zie issue #42) zodat wisselen van tab of modus deze niet reset.
+ */
+export interface IndelingAfdrukFilters {
+  orientatie: Orientatie
+  groepering: Groepering
+  alleDoelen: boolean
+  doelInterval: string
+  alleGildes: boolean
+  geselGildes: Set<string>
+  afstand25: boolean
+  afstand18: boolean
+  afstand12: boolean
+  totalenTonen: boolean
+  waarschuwingenTonen: boolean
+}
+
+export function maakIndelingAfdrukFiltersDefault(): IndelingAfdrukFilters {
+  return {
+    orientatie: 'portret',
+    groepering: 'doel',
+    alleDoelen: true,
+    doelInterval: '',
+    alleGildes: true,
+    geselGildes: new Set(),
+    afstand25: true,
+    afstand18: true,
+    afstand12: true,
+    totalenTonen: true,
+    waarschuwingenTonen: false
+  }
+}
+
+/** Zelfde opzet als IndelingAfdrukFilters, voor ScorekaartenAfdrukTab. */
+export interface ScorekaartenAfdrukFilters {
+  alleDoelen: boolean
+  doelInterval: string
+  afstand25: boolean
+  afstand18: boolean
+  afstand12: boolean
+  legeDoelenOpnemen: boolean
+}
+
+export function maakScorekaartenAfdrukFiltersDefault(): ScorekaartenAfdrukFilters {
+  return {
+    alleDoelen: true,
+    doelInterval: '',
+    afstand25: true,
+    afstand18: true,
+    afstand12: true,
+    legeDoelenOpnemen: false
+  }
+}
+
+/**
  * Parseert een interval-uitdrukking zoals "1-10, 15, 18-20" naar een
  * gesorteerde lijst unieke doelnummers. Whitespace wordt genegeerd. Lege
  * input → lege lijst. Open intervallen toegestaan: "2-" = 2 tot en met

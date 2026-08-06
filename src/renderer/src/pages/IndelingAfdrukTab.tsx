@@ -18,6 +18,7 @@ import {
   parseDoelInterval,
   PRINT_PAGINA_MARGE_MM,
   type Groepering,
+  type IndelingAfdrukFilters,
   type Orientatie,
   type PrintFilters,
   type PrintOpties,
@@ -28,6 +29,8 @@ import { IconExcel } from '../components/icons/IconExcel'
 
 interface Props {
   wedstrijd: Wedstrijd
+  filters: IndelingAfdrukFilters
+  onFiltersChange: (patch: Partial<IndelingAfdrukFilters>) => void
 }
 
 // Pagina-afmetingen in mm voor de preview-verhouding. We tonen altijd A4
@@ -42,27 +45,32 @@ const A4_LANG = 297
 // toetsaanslag; de foutmelding zelf blijft wel meteen (goedkope parse).
 const DOEL_INTERVAL_DEBOUNCE_MS = 250
 
-export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
+export default function IndelingAfdrukTab({
+  wedstrijd,
+  filters,
+  onFiltersChange
+}: Props): JSX.Element {
   const doelen = useAfdrukDoelen(wedstrijd)
 
-  // Opties
-  const [orientatie, setOrientatie] = useState<Orientatie>('portret')
-  const [groepering, setGroepering] = useState<Groepering>('doel')
+  // Opties (gelift naar WedstrijdDetailPage, zie issue #42)
+  const {
+    orientatie,
+    groepering,
+    alleDoelen,
+    doelInterval,
+    alleGildes,
+    geselGildes,
+    afstand25,
+    afstand18,
+    afstand12,
+    totalenTonen,
+    waarschuwingenTonen
+  } = filters
 
-  const [alleDoelen, setAlleDoelen] = useState(true)
-  const [doelInterval, setDoelInterval] = useState('')
+  // Ephemere, niet-liftbare state: puur afgeleid van doelInterval/alleDoelen
+  // via de debounce hieronder, dus verlies bij tab-wissel herstelt zichzelf.
   const [doelIntervalFout, setDoelIntervalFout] = useState<string | null>(null)
   const [doelIntervalGeldig, setDoelIntervalGeldig] = useState<number[]>([])
-
-  const [alleGildes, setAlleGildes] = useState(true)
-  const [geselGildes, setGeselGildes] = useState<Set<string>>(new Set())
-
-  const [afstand25, setAfstand25] = useState(true)
-  const [afstand18, setAfstand18] = useState(true)
-  const [afstand12, setAfstand12] = useState(true)
-
-  const [totalenTonen, setTotalenTonen] = useState(true)
-  const [waarschuwingenTonen, setWaarschuwingenTonen] = useState(false)
 
   const [excelBezig, setExcelBezig] = useState(false)
   const [excelFout, setExcelFout] = useState<string | null>(null)
@@ -99,7 +107,7 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
   }, [doelInterval, alleDoelen, wedstrijd.aantal_doelen])
 
   // ── Build PrintOpties ─────────────────────────────────
-  const filters: PrintFilters = useMemo(() => {
+  const printFilters: PrintFilters = useMemo(() => {
     const afstanden = new Set<12 | 18 | 25>()
     if (afstand12) afstanden.add(12)
     if (afstand18) afstanden.add(18)
@@ -133,11 +141,11 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
       groepering,
       // Sortering wordt impliciet bepaald: doel → positie, gilde → naam.
       sortering: groepering === 'doel' ? 'positie' : 'naam',
-      filters,
+      filters: printFilters,
       totalenTonen,
       waarschuwingenTonen
     }),
-    [orientatie, groepering, filters, totalenTonen, waarschuwingenTonen]
+    [orientatie, groepering, printFilters, totalenTonen, waarschuwingenTonen]
   )
 
   // Pagina-afmetingen voor de preview (A4 in portret/landschap)
@@ -174,22 +182,18 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
   }, [orientatie])
 
   function toggleGilde(g: string): void {
-    setGeselGildes((prev) => {
-      const n = new Set(prev)
-      if (n.has(g)) n.delete(g)
-      else n.add(g)
-      return n
-    })
+    const n = new Set(geselGildes)
+    if (n.has(g)) n.delete(g)
+    else n.add(g)
+    onFiltersChange({ geselGildes: n })
   }
 
   function alleGildesAanvinken(): void {
-    setGeselGildes(new Set(gildeNamen))
-    setAlleGildes(false)
+    onFiltersChange({ geselGildes: new Set(gildeNamen), alleGildes: false })
   }
 
   function geenGildesAanvinken(): void {
-    setGeselGildes(new Set())
-    setAlleGildes(false)
+    onFiltersChange({ geselGildes: new Set(), alleGildes: false })
   }
 
   function afdrukken(): void {
@@ -226,7 +230,7 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
               { v: 'portret', label: 'Portret' },
               { v: 'landschap', label: 'Landschap' }
             ]}
-            onChange={(v) => setOrientatie(v as Orientatie)}
+            onChange={(v) => onFiltersChange({ orientatie: v as Orientatie })}
           />
         </Sectie>
 
@@ -238,7 +242,7 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
               { v: 'doel', label: 'Per doel' },
               { v: 'gilde', label: 'Per gilde' }
             ]}
-            onChange={(v) => setGroepering(v as Groepering)}
+            onChange={(v) => onFiltersChange({ groepering: v as Groepering })}
           />
         </Sectie>
 
@@ -247,7 +251,7 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
             <input
               type="checkbox"
               checked={alleDoelen}
-              onChange={(e) => setAlleDoelen(e.target.checked)}
+              onChange={(e) => onFiltersChange({ alleDoelen: e.target.checked })}
             />
             Alle doelen
           </label>
@@ -257,7 +261,7 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
                 className="input"
                 placeholder="bv. 1-10, 15"
                 value={doelInterval}
-                onChange={(e) => setDoelInterval(e.target.value)}
+                onChange={(e) => onFiltersChange({ doelInterval: e.target.value })}
                 style={{ marginTop: 6, width: '100%' }}
               />
               {doelIntervalFout && (
@@ -272,7 +276,7 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
             <input
               type="checkbox"
               checked={alleGildes}
-              onChange={(e) => setAlleGildes(e.target.checked)}
+              onChange={(e) => onFiltersChange({ alleGildes: e.target.checked })}
             />
             Alle gilden
           </label>
@@ -307,15 +311,27 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
 
         <Sectie label="Afstand">
           <label className="afdruk-check">
-            <input type="checkbox" checked={afstand25} onChange={(e) => setAfstand25(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={afstand25}
+              onChange={(e) => onFiltersChange({ afstand25: e.target.checked })}
+            />
             25m
           </label>
           <label className="afdruk-check">
-            <input type="checkbox" checked={afstand18} onChange={(e) => setAfstand18(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={afstand18}
+              onChange={(e) => onFiltersChange({ afstand18: e.target.checked })}
+            />
             18m
           </label>
           <label className="afdruk-check">
-            <input type="checkbox" checked={afstand12} onChange={(e) => setAfstand12(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={afstand12}
+              onChange={(e) => onFiltersChange({ afstand12: e.target.checked })}
+            />
             12m
           </label>
         </Sectie>
@@ -325,7 +341,7 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
             <input
               type="checkbox"
               checked={totalenTonen}
-              onChange={(e) => setTotalenTonen(e.target.checked)}
+              onChange={(e) => onFiltersChange({ totalenTonen: e.target.checked })}
             />
             Totalen tonen
           </label>
@@ -333,7 +349,7 @@ export default function IndelingAfdrukTab({ wedstrijd }: Props): JSX.Element {
             <input
               type="checkbox"
               checked={waarschuwingenTonen}
-              onChange={(e) => setWaarschuwingenTonen(e.target.checked)}
+              onChange={(e) => onFiltersChange({ waarschuwingenTonen: e.target.checked })}
             />
             Conflict-waarschuwingen tonen
           </label>

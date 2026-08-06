@@ -4,6 +4,12 @@ import InschrijvingenTab from './InschrijvingenTab'
 import IndelingTab from './IndelingTab'
 import ConfiguratieTab from './ConfiguratieTab'
 import AfdrukkenTab, { type AfdrukModus } from './AfdrukkenTab'
+import {
+  maakIndelingAfdrukFiltersDefault,
+  maakScorekaartenAfdrukFiltersDefault,
+  type IndelingAfdrukFilters,
+  type ScorekaartenAfdrukFilters
+} from '../components/afdruk-helpers'
 import { IconArrowLeft } from '../components/icons/IconArrowLeft'
 import { IconChevron } from '../components/icons/IconChevron'
 import { IconGear } from '../components/icons/IconGear'
@@ -45,6 +51,26 @@ export default function WedstrijdDetailPage({
   const [afdrukModus, setAfdrukModus] = useState<AfdrukModus>('indeling')
   const [huidig, setHuidig] = useState<Wedstrijd>(wedstrijd)
   const [aantalInschrijvingen, setAantalInschrijvingen] = useState(0)
+
+  // Tab-lokale UI-state (zoekveld, print-filters) die hier leeft in plaats
+  // van in de sub-tabs zelf: WedstrijdDetailPage unmount niet bij het
+  // wisselen van tab, de sub-tabs wel (`{tab === 'x' && <XTab/>}`). Zonder
+  // deze lift verliest elke sub-tab zijn filters/toggles bij elke
+  // tab-wissel (issue #42).
+  const [inschrijvingenZoek, setInschrijvingenZoek] = useState('')
+  const [indelingAfdrukFilters, setIndelingAfdrukFilters] = useState<IndelingAfdrukFilters>(
+    maakIndelingAfdrukFiltersDefault
+  )
+  const [scorekaartenAfdrukFilters, setScorekaartenAfdrukFilters] =
+    useState<ScorekaartenAfdrukFilters>(maakScorekaartenAfdrukFiltersDefault)
+
+  function updateIndelingAfdrukFilters(patch: Partial<IndelingAfdrukFilters>): void {
+    setIndelingAfdrukFilters((prev) => ({ ...prev, ...patch }))
+  }
+
+  function updateScorekaartenAfdrukFilters(patch: Partial<ScorekaartenAfdrukFilters>): void {
+    setScorekaartenAfdrukFilters((prev) => ({ ...prev, ...patch }))
+  }
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingSaveRef = useRef<Wedstrijd | null>(null)
@@ -195,9 +221,24 @@ export default function WedstrijdDetailPage({
           onVerwijder={handleVerwijder}
         />
       )}
-      {tab === 'inschrijvingen' && <InschrijvingenTab wedstrijd={huidig} />}
+      {tab === 'inschrijvingen' && (
+        <InschrijvingenTab
+          wedstrijd={huidig}
+          zoek={inschrijvingenZoek}
+          onZoekChange={setInschrijvingenZoek}
+        />
+      )}
       {tab === 'indeling' && <IndelingTab wedstrijd={huidig} />}
-      {tab === 'afdrukken' && <AfdrukkenTab wedstrijd={huidig} modus={afdrukModus} />}
+      {tab === 'afdrukken' && (
+        <AfdrukkenTab
+          wedstrijd={huidig}
+          modus={afdrukModus}
+          indelingFilters={indelingAfdrukFilters}
+          onIndelingFiltersChange={updateIndelingAfdrukFilters}
+          scorekaartenFilters={scorekaartenAfdrukFilters}
+          onScorekaartenFiltersChange={updateScorekaartenAfdrukFilters}
+        />
+      )}
     </>
   )
 }

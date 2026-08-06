@@ -26,59 +26,65 @@ export interface PrintOpties {
 }
 
 /**
- * Opties-state van de Indeling-afdrukmodus (IndelingAfdrukTab), gescheiden
- * van PrintOpties: dit zijn de rauwe formulierwaarden (bv. `alleDoelen` +
- * ruwe `doelInterval`-tekst), PrintOpties/PrintFilters is de afgeleide vorm
- * die de print-opbouw effectief gebruikt. Leeft in WedstrijdDetailPage
- * (zie issue #42) zodat wisselen van tab of modus deze niet reset.
+ * Doel-/afstand-selectie, gedeeld tussen de opties-state van beide
+ * afdrukmodi (Indeling en Scorekaarten): welke doelen en welke afstanden
+ * meegenomen worden. `doelInterval` is de rauwe formulierwaarde ("1-10, 15"),
+ * niet de afgeleide `PrintFilters.doelen`-lijst.
  */
-export interface IndelingAfdrukFilters {
-  orientatie: Orientatie
-  groepering: Groepering
+export interface DoelAfstandFilters {
   alleDoelen: boolean
   doelInterval: string
-  alleGildes: boolean
-  geselGildes: Set<string>
   afstand25: boolean
   afstand18: boolean
   afstand12: boolean
+}
+
+function maakDoelAfstandFiltersDefault(): DoelAfstandFilters {
+  return {
+    alleDoelen: true,
+    doelInterval: '',
+    afstand25: true,
+    afstand18: true,
+    afstand12: true
+  }
+}
+
+/**
+ * Opties-state van de Indeling-afdrukmodus (IndelingAfdrukTab), gescheiden
+ * van PrintOpties: dit zijn de rauwe formulierwaarden, PrintOpties/
+ * PrintFilters is de afgeleide vorm die de print-opbouw effectief gebruikt.
+ * Leeft in WedstrijdDetailPage (zie issue #42) zodat wisselen van tab of
+ * modus deze niet reset.
+ */
+export interface IndelingAfdrukFilters extends DoelAfstandFilters {
+  orientatie: Orientatie
+  groepering: Groepering
+  alleGildes: boolean
+  geselGildes: Set<string>
   totalenTonen: boolean
   waarschuwingenTonen: boolean
 }
 
 export function maakIndelingAfdrukFiltersDefault(): IndelingAfdrukFilters {
   return {
+    ...maakDoelAfstandFiltersDefault(),
     orientatie: 'portret',
     groepering: 'doel',
-    alleDoelen: true,
-    doelInterval: '',
     alleGildes: true,
     geselGildes: new Set(),
-    afstand25: true,
-    afstand18: true,
-    afstand12: true,
     totalenTonen: true,
     waarschuwingenTonen: false
   }
 }
 
 /** Zelfde opzet als IndelingAfdrukFilters, voor ScorekaartenAfdrukTab. */
-export interface ScorekaartenAfdrukFilters {
-  alleDoelen: boolean
-  doelInterval: string
-  afstand25: boolean
-  afstand18: boolean
-  afstand12: boolean
+export interface ScorekaartenAfdrukFilters extends DoelAfstandFilters {
   legeDoelenOpnemen: boolean
 }
 
 export function maakScorekaartenAfdrukFiltersDefault(): ScorekaartenAfdrukFilters {
   return {
-    alleDoelen: true,
-    doelInterval: '',
-    afstand25: true,
-    afstand18: true,
-    afstand12: true,
+    ...maakDoelAfstandFiltersDefault(),
     legeDoelenOpnemen: false
   }
 }

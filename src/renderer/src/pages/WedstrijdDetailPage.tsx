@@ -10,6 +10,7 @@ import {
   type IndelingAfdrukFilters,
   type ScorekaartenAfdrukFilters
 } from '../components/afdruk-helpers'
+import { usePatchState } from '../hooks/usePatchState'
 import { IconArrowLeft } from '../components/icons/IconArrowLeft'
 import { IconChevron } from '../components/icons/IconChevron'
 import { IconGear } from '../components/icons/IconGear'
@@ -58,19 +59,11 @@ export default function WedstrijdDetailPage({
   // deze lift verliest elke sub-tab zijn filters/toggles bij elke
   // tab-wissel (issue #42).
   const [inschrijvingenZoek, setInschrijvingenZoek] = useState('')
-  const [indelingAfdrukFilters, setIndelingAfdrukFilters] = useState<IndelingAfdrukFilters>(
+  const [indelingAfdrukFilters, updateIndelingAfdrukFilters] = usePatchState<IndelingAfdrukFilters>(
     maakIndelingAfdrukFiltersDefault
   )
-  const [scorekaartenAfdrukFilters, setScorekaartenAfdrukFilters] =
-    useState<ScorekaartenAfdrukFilters>(maakScorekaartenAfdrukFiltersDefault)
-
-  function updateIndelingAfdrukFilters(patch: Partial<IndelingAfdrukFilters>): void {
-    setIndelingAfdrukFilters((prev) => ({ ...prev, ...patch }))
-  }
-
-  function updateScorekaartenAfdrukFilters(patch: Partial<ScorekaartenAfdrukFilters>): void {
-    setScorekaartenAfdrukFilters((prev) => ({ ...prev, ...patch }))
-  }
+  const [scorekaartenAfdrukFilters, updateScorekaartenAfdrukFilters] =
+    usePatchState<ScorekaartenAfdrukFilters>(maakScorekaartenAfdrukFiltersDefault)
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingSaveRef = useRef<Wedstrijd | null>(null)
@@ -233,10 +226,11 @@ export default function WedstrijdDetailPage({
         <AfdrukkenTab
           wedstrijd={huidig}
           modus={afdrukModus}
-          indelingFilters={indelingAfdrukFilters}
-          onIndelingFiltersChange={updateIndelingAfdrukFilters}
-          scorekaartenFilters={scorekaartenAfdrukFilters}
-          onScorekaartenFiltersChange={updateScorekaartenAfdrukFilters}
+          indeling={{ filters: indelingAfdrukFilters, onFiltersChange: updateIndelingAfdrukFilters }}
+          scorekaarten={{
+            filters: scorekaartenAfdrukFilters,
+            onFiltersChange: updateScorekaartenAfdrukFilters
+          }}
         />
       )}
     </>

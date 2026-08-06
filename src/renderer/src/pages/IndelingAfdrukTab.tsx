@@ -24,13 +24,14 @@ import {
   type PrintOpties,
   type PrintPakEenheid
 } from '../components/afdruk-helpers'
+import type { PatchFn } from '../hooks/usePatchState'
 import { IconPrinter } from '../components/icons/IconPrinter'
 import { IconExcel } from '../components/icons/IconExcel'
 
 interface Props {
   wedstrijd: Wedstrijd
   filters: IndelingAfdrukFilters
-  onFiltersChange: (patch: Partial<IndelingAfdrukFilters>) => void
+  onFiltersChange: PatchFn<IndelingAfdrukFilters>
 }
 
 // Pagina-afmetingen in mm voor de preview-verhouding. We tonen altijd A4
@@ -69,8 +70,15 @@ export default function IndelingAfdrukTab({
 
   // Ephemere, niet-liftbare state: puur afgeleid van doelInterval/alleDoelen
   // via de debounce hieronder, dus verlies bij tab-wissel herstelt zichzelf.
+  // Initieel wel meteen berekend uit de (wel gelifte) doelInterval-tekst i.p.v.
+  // op [] te starten: anders toont de preview/afdruk kortstondig 0 doelen na
+  // een tab- of modus-wissel terwijl het interval-tekstveld al een geldige
+  // waarde toont.
   const [doelIntervalFout, setDoelIntervalFout] = useState<string | null>(null)
-  const [doelIntervalGeldig, setDoelIntervalGeldig] = useState<number[]>([])
+  const [doelIntervalGeldig, setDoelIntervalGeldig] = useState<number[]>(() => {
+    const r = parseDoelInterval(doelInterval, wedstrijd.aantal_doelen)
+    return 'nummers' in r ? r.nummers : []
+  })
 
   const [excelBezig, setExcelBezig] = useState(false)
   const [excelFout, setExcelFout] = useState<string | null>(null)
@@ -181,11 +189,25 @@ export default function IndelingAfdrukTab({
     `
   }, [orientatie])
 
+  // Zet een enkel veld: collapse van de 8+ near-identieke inline onChange's
+  // hieronder tot een aanroep per veld.
+  function patchVeld<K extends keyof IndelingAfdrukFilters>(
+    veld: K,
+    waarde: IndelingAfdrukFilters[K]
+  ): void {
+    onFiltersChange({ [veld]: waarde } as Partial<IndelingAfdrukFilters>)
+  }
+
   function toggleGilde(g: string): void {
-    const n = new Set(geselGildes)
-    if (n.has(g)) n.delete(g)
-    else n.add(g)
-    onFiltersChange({ geselGildes: n })
+    // Updater-vorm i.p.v. een patch gebouwd op de props-snapshot: zo blijft
+    // dit correct als twee toggles vlak na elkaar vuren voor React opnieuw
+    // rendert met de bijgewerkte filters-prop.
+    onFiltersChange((huidig) => {
+      const n = new Set(huidig.geselGildes)
+      if (n.has(g)) n.delete(g)
+      else n.add(g)
+      return { geselGildes: n }
+    })
   }
 
   function alleGildesAanvinken(): void {
@@ -230,7 +252,7 @@ export default function IndelingAfdrukTab({
               { v: 'portret', label: 'Portret' },
               { v: 'landschap', label: 'Landschap' }
             ]}
-            onChange={(v) => onFiltersChange({ orientatie: v as Orientatie })}
+            onChange={(v) => patchVeld('orientatie', v as Orientatie)}
           />
         </Sectie>
 
@@ -242,7 +264,7 @@ export default function IndelingAfdrukTab({
               { v: 'doel', label: 'Per doel' },
               { v: 'gilde', label: 'Per gilde' }
             ]}
-            onChange={(v) => onFiltersChange({ groepering: v as Groepering })}
+            onChange={(v) => patchVeld('groepering', v as Groepering)}
           />
         </Sectie>
 
@@ -251,7 +273,7 @@ export default function IndelingAfdrukTab({
             <input
               type="checkbox"
               checked={alleDoelen}
-              onChange={(e) => onFiltersChange({ alleDoelen: e.target.checked })}
+              onChange={(e) => patchVeld('alleDoelen', e.target.checked)}
             />
             Alle doelen
           </label>
@@ -261,7 +283,7 @@ export default function IndelingAfdrukTab({
                 className="input"
                 placeholder="bv. 1-10, 15"
                 value={doelInterval}
-                onChange={(e) => onFiltersChange({ doelInterval: e.target.value })}
+                onChange={(e) => patchVeld('doelInterval', e.target.value)}
                 style={{ marginTop: 6, width: '100%' }}
               />
               {doelIntervalFout && (
@@ -276,7 +298,7 @@ export default function IndelingAfdrukTab({
             <input
               type="checkbox"
               checked={alleGildes}
-              onChange={(e) => onFiltersChange({ alleGildes: e.target.checked })}
+              onChange={(e) => patchVeld('alleGildes', e.target.checked)}
             />
             Alle gilden
           </label>
@@ -314,7 +336,7 @@ export default function IndelingAfdrukTab({
             <input
               type="checkbox"
               checked={afstand25}
-              onChange={(e) => onFiltersChange({ afstand25: e.target.checked })}
+              onChange={(e) => patchVeld('afstand25', e.target.checked)}
             />
             25m
           </label>
@@ -322,7 +344,7 @@ export default function IndelingAfdrukTab({
             <input
               type="checkbox"
               checked={afstand18}
-              onChange={(e) => onFiltersChange({ afstand18: e.target.checked })}
+              onChange={(e) => patchVeld('afstand18', e.target.checked)}
             />
             18m
           </label>
@@ -330,7 +352,7 @@ export default function IndelingAfdrukTab({
             <input
               type="checkbox"
               checked={afstand12}
-              onChange={(e) => onFiltersChange({ afstand12: e.target.checked })}
+              onChange={(e) => patchVeld('afstand12', e.target.checked)}
             />
             12m
           </label>
@@ -341,7 +363,7 @@ export default function IndelingAfdrukTab({
             <input
               type="checkbox"
               checked={totalenTonen}
-              onChange={(e) => onFiltersChange({ totalenTonen: e.target.checked })}
+              onChange={(e) => patchVeld('totalenTonen', e.target.checked)}
             />
             Totalen tonen
           </label>
@@ -349,7 +371,7 @@ export default function IndelingAfdrukTab({
             <input
               type="checkbox"
               checked={waarschuwingenTonen}
-              onChange={(e) => onFiltersChange({ waarschuwingenTonen: e.target.checked })}
+              onChange={(e) => patchVeld('waarschuwingenTonen', e.target.checked)}
             />
             Conflict-waarschuwingen tonen
           </label>

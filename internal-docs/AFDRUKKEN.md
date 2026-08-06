@@ -142,10 +142,10 @@ Indeling-tab), met `voegConflictenToe` zodat de aandachtspunten in sync zijn.
 
 | Bestand | Rol |
 |---|---|
-| [`pages/WedstrijdDetailPage.tsx`](../src/renderer/src/pages/WedstrijdDetailPage.tsx) | Houdt de modus-state (`'indeling' \| 'scorekaarten'`) bij en rendert de modus-toggle in de stappenbalk. |
-| [`pages/AfdrukkenTab.tsx`](../src/renderer/src/pages/AfdrukkenTab.tsx) | Dunne controlled component: schakelt op basis van de `modus`-prop tussen `IndelingAfdrukTab` en `ScorekaartenAfdrukTab`. |
-| [`pages/IndelingAfdrukTab.tsx`](../src/renderer/src/pages/IndelingAfdrukTab.tsx) | UI + state voor de Indeling-opties; bouwt `PrintOpties`; schrijft dynamische `<style id="ontarget-dynamic-page">` voor `@page`. |
-| [`pages/ScorekaartenAfdrukTab.tsx`](../src/renderer/src/pages/ScorekaartenAfdrukTab.tsx) | UI + state voor de Scorekaarten-opties (doel-interval, afstand, lege doelen). |
+| [`pages/WedstrijdDetailPage.tsx`](../src/renderer/src/pages/WedstrijdDetailPage.tsx) | Houdt de modus-state (`'indeling' \| 'scorekaarten'`) én de opties/filters van beide modi bij (via `usePatchState`, zie [`hooks/usePatchState.ts`](../src/renderer/src/hooks/usePatchState.ts)), zodat wisselen van tab of modus deze niet reset ([issue #42](https://github.com/stefvdwater/OnTarget/issues/42)). Rendert ook de modus-toggle in de stappenbalk. |
+| [`pages/AfdrukkenTab.tsx`](../src/renderer/src/pages/AfdrukkenTab.tsx) | Dunne controlled component: schakelt op basis van de `modus`-prop tussen `IndelingAfdrukTab` en `ScorekaartenAfdrukTab`, geeft enkel de `filters`/`onFiltersChange` van `WedstrijdDetailPage` door. |
+| [`pages/IndelingAfdrukTab.tsx`](../src/renderer/src/pages/IndelingAfdrukTab.tsx) | UI voor de Indeling-opties (opties zelf komen als `filters`-prop); bouwt `PrintOpties`; schrijft dynamische `<style id="ontarget-dynamic-page">` voor `@page`. Enkel `doelIntervalFout`/`doelIntervalGeldig`/Excel-export-status blijven lokale state. |
+| [`pages/ScorekaartenAfdrukTab.tsx`](../src/renderer/src/pages/ScorekaartenAfdrukTab.tsx) | UI voor de Scorekaarten-opties (doel-interval, afstand, lege doelen; opties zelf komen als `filters`-prop). Enkel `doelIntervalFout`/`doelIntervalGeldig` blijven lokale state. |
 | [`pages/useAfdrukDoelen.ts`](../src/renderer/src/pages/useAfdrukDoelen.ts) | Gedeelde hook: laadt `DoelMetConflicten[]` voor een wedstrijd, gebruikt door beide modi zodat de doelen-/conflictenopbouw niet gedupliceerd is. |
 | [`components/PrintDocument.tsx`](../src/renderer/src/components/PrintDocument.tsx) | Pure presentational component voor Indeling: header, tabel (Per doel of Per gilde), totalen, aandachtspunten. |
 | [`components/ScorekaartenDocument.tsx`](../src/renderer/src/components/ScorekaartenDocument.tsx) | Pure presentational component voor Scorekaarten: één pagina per doel, 3×2-rooster van blanco kaarten. |

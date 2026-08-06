@@ -164,6 +164,8 @@ unmount tijdens het wisselen van tab (zelfde patroon als het bestaande
   het wisselen tussen de Indeling/Scorekaarten-modus binnen Afdrukken.
 - Bewust niet aangepakt: puur ephemere state (bevestig-modals in
   `ConfiguratieTab`/`IndelingTab`, de afgeleide `doelIntervalFout`/
-  `doelIntervalGeldig`, in-flight Excel-export-status) blijft lokaal —
-  die hoort niet te overleven, of herstelt zichzelf uit de wel-gelifte
+  `doelIntervalGeldig`, in-flight Excel-export-status) blijft lokaal: die
+  hoort niet te overleven, of herstelt zichzelf uit de wel-gelifte
   brontekst.
+- Gedeelde patch-updater (`usePatchState` in `src/renderer/src/hooks/`)
+  i.p.v. losse handgeschreven merge-functies per gelift stuk state.

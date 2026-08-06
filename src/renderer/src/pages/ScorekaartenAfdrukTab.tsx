@@ -6,29 +6,46 @@ import {
   bouwScorekaartPaginas,
   parseDoelInterval,
   PRINT_PAGINA_MARGE_MM,
-  type PrintFilters
+  type PrintFilters,
+  type ScorekaartenAfdrukFilters
 } from '../components/afdruk-helpers'
+import type { PatchFn } from '../hooks/usePatchState'
 import { IconPrinter } from '../components/icons/IconPrinter'
 
 interface Props {
   wedstrijd: Wedstrijd
+  filters: ScorekaartenAfdrukFilters
+  onFiltersChange: PatchFn<ScorekaartenAfdrukFilters>
 }
 
 const A4_KORT = 210
 
-export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element {
+export default function ScorekaartenAfdrukTab({
+  wedstrijd,
+  filters,
+  onFiltersChange
+}: Props): JSX.Element {
   const doelen = useAfdrukDoelen(wedstrijd)
 
-  const [alleDoelen, setAlleDoelen] = useState(true)
-  const [doelInterval, setDoelInterval] = useState('')
+  const { alleDoelen, doelInterval, afstand25, afstand18, afstand12, legeDoelenOpnemen } = filters
+
+  // Ephemeer; initieel al berekend uit doelInterval i.p.v. op [] te starten
+  // (zie IndelingAfdrukTab voor waarom: anders toont de preview kortstondig
+  // 0 doelen na een tab-/modus-wissel).
   const [doelIntervalFout, setDoelIntervalFout] = useState<string | null>(null)
-  const [doelIntervalGeldig, setDoelIntervalGeldig] = useState<number[]>([])
+  const [doelIntervalGeldig, setDoelIntervalGeldig] = useState<number[]>(() => {
+    const r = parseDoelInterval(doelInterval, wedstrijd.aantal_doelen)
+    return 'nummers' in r ? r.nummers : []
+  })
 
-  const [afstand25, setAfstand25] = useState(true)
-  const [afstand18, setAfstand18] = useState(true)
-  const [afstand12, setAfstand12] = useState(true)
-
-  const [legeDoelenOpnemen, setLegeDoelenOpnemen] = useState(false)
+  // Zet een enkel veld: collapse van de near-identieke inline onChange's
+  // hieronder tot een aanroep per veld.
+  function patchVeld<K extends keyof ScorekaartenAfdrukFilters>(
+    veld: K,
+    waarde: ScorekaartenAfdrukFilters[K]
+  ): void {
+    onFiltersChange({ [veld]: waarde } as Partial<ScorekaartenAfdrukFilters>)
+  }
 
   // ── Parsing doel-interval (live) ───────────────────────
   useEffect(() => {
@@ -45,7 +62,7 @@ export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element
     }
   }, [doelInterval, alleDoelen, wedstrijd.aantal_doelen])
 
-  const filters: PrintFilters = useMemo(() => {
+  const printFilters: PrintFilters = useMemo(() => {
     const afstanden = new Set<12 | 18 | 25>()
     if (afstand12) afstanden.add(12)
     if (afstand18) afstanden.add(18)
@@ -59,8 +76,8 @@ export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element
   }, [alleDoelen, doelIntervalGeldig, afstand12, afstand18, afstand25])
 
   const paginas = useMemo(
-    () => bouwScorekaartPaginas(doelen, filters, legeDoelenOpnemen),
-    [doelen, filters, legeDoelenOpnemen]
+    () => bouwScorekaartPaginas(doelen, printFilters, legeDoelenOpnemen),
+    [doelen, printFilters, legeDoelenOpnemen]
   )
 
   // ── Dynamische @page styling: scorekaarten zijn altijd A4 portret ──
@@ -95,7 +112,7 @@ export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element
             <input
               type="checkbox"
               checked={alleDoelen}
-              onChange={(e) => setAlleDoelen(e.target.checked)}
+              onChange={(e) => patchVeld('alleDoelen', e.target.checked)}
             />
             Alle doelen
           </label>
@@ -105,7 +122,7 @@ export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element
                 className="input"
                 placeholder="bv. 1-10, 15"
                 value={doelInterval}
-                onChange={(e) => setDoelInterval(e.target.value)}
+                onChange={(e) => patchVeld('doelInterval', e.target.value)}
                 style={{ marginTop: 6, width: '100%' }}
               />
               {doelIntervalFout && <div className="afdruk-fout">{doelIntervalFout}</div>}
@@ -118,7 +135,7 @@ export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element
             <input
               type="checkbox"
               checked={afstand25}
-              onChange={(e) => setAfstand25(e.target.checked)}
+              onChange={(e) => patchVeld('afstand25', e.target.checked)}
             />
             25m
           </label>
@@ -126,7 +143,7 @@ export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element
             <input
               type="checkbox"
               checked={afstand18}
-              onChange={(e) => setAfstand18(e.target.checked)}
+              onChange={(e) => patchVeld('afstand18', e.target.checked)}
             />
             18m
           </label>
@@ -134,7 +151,7 @@ export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element
             <input
               type="checkbox"
               checked={afstand12}
-              onChange={(e) => setAfstand12(e.target.checked)}
+              onChange={(e) => patchVeld('afstand12', e.target.checked)}
             />
             12m
           </label>
@@ -145,7 +162,7 @@ export default function ScorekaartenAfdrukTab({ wedstrijd }: Props): JSX.Element
             <input
               type="checkbox"
               checked={legeDoelenOpnemen}
-              onChange={(e) => setLegeDoelenOpnemen(e.target.checked)}
+              onChange={(e) => patchVeld('legeDoelenOpnemen', e.target.checked)}
             />
             Lege doelen ook opnemen
           </label>

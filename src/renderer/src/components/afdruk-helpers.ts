@@ -26,6 +26,70 @@ export interface PrintOpties {
 }
 
 /**
+ * Doel-/afstand-selectie, gedeeld tussen de opties-state van beide
+ * afdrukmodi (Indeling en Scorekaarten): welke doelen en welke afstanden
+ * meegenomen worden. `doelInterval` is de rauwe formulierwaarde ("1-10, 15"),
+ * niet de afgeleide `PrintFilters.doelen`-lijst.
+ */
+export interface DoelAfstandFilters {
+  alleDoelen: boolean
+  doelInterval: string
+  afstand25: boolean
+  afstand18: boolean
+  afstand12: boolean
+}
+
+function maakDoelAfstandFiltersDefault(): DoelAfstandFilters {
+  return {
+    alleDoelen: true,
+    doelInterval: '',
+    afstand25: true,
+    afstand18: true,
+    afstand12: true
+  }
+}
+
+/**
+ * Opties-state van de Indeling-afdrukmodus (IndelingAfdrukTab), gescheiden
+ * van PrintOpties: dit zijn de rauwe formulierwaarden, PrintOpties/
+ * PrintFilters is de afgeleide vorm die de print-opbouw effectief gebruikt.
+ * Leeft in WedstrijdDetailPage (zie issue #42) zodat wisselen van tab of
+ * modus deze niet reset.
+ */
+export interface IndelingAfdrukFilters extends DoelAfstandFilters {
+  orientatie: Orientatie
+  groepering: Groepering
+  alleGildes: boolean
+  geselGildes: Set<string>
+  totalenTonen: boolean
+  waarschuwingenTonen: boolean
+}
+
+export function maakIndelingAfdrukFiltersDefault(): IndelingAfdrukFilters {
+  return {
+    ...maakDoelAfstandFiltersDefault(),
+    orientatie: 'portret',
+    groepering: 'doel',
+    alleGildes: true,
+    geselGildes: new Set(),
+    totalenTonen: true,
+    waarschuwingenTonen: false
+  }
+}
+
+/** Zelfde opzet als IndelingAfdrukFilters, voor ScorekaartenAfdrukTab. */
+export interface ScorekaartenAfdrukFilters extends DoelAfstandFilters {
+  legeDoelenOpnemen: boolean
+}
+
+export function maakScorekaartenAfdrukFiltersDefault(): ScorekaartenAfdrukFilters {
+  return {
+    ...maakDoelAfstandFiltersDefault(),
+    legeDoelenOpnemen: false
+  }
+}
+
+/**
  * Parseert een interval-uitdrukking zoals "1-10, 15, 18-20" naar een
  * gesorteerde lijst unieke doelnummers. Whitespace wordt genegeerd. Lege
  * input → lege lijst. Open intervallen toegestaan: "2-" = 2 tot en met

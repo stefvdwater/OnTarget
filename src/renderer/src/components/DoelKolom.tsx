@@ -12,7 +12,12 @@ interface Props {
 }
 
 export default function DoelKolom({ doel, onVergrendel }: Props): JSX.Element {
-  const { setNodeRef, isOver } = useDroppable({ id: `doel-${doel.nummer}` })
+  // Een vergrendeld doel neemt geen schutters op: uitgeschakeld als drop-zone,
+  // zodat er ook geen drag-over-markering verschijnt.
+  const { setNodeRef, isOver } = useDroppable({
+    id: `doel-${doel.nummer}`,
+    disabled: doel.vergrendeld
+  })
 
   const bezetting = doel.schutters.length
   const beurtenEerste = berekenBeurten(doel.schutters, 'eerste')
@@ -76,6 +81,7 @@ export default function DoelKolom({ doel, onVergrendel }: Props): JSX.Element {
                 draggableId={`${doel.nummer}-${s.schutter_id}`}
                 compact
                 conflict={heeftConflicten}
+                vergrendeld={doel.vergrendeld}
               />
             ))}
           </SortableContext>

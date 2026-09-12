@@ -645,14 +645,16 @@ input:focus-visible,
 .schutter[data-boog='Compound']::before { background: var(--red); }
 .schutter[data-boog='Barebow']::before { background: var(--yellow); }
 
-.schutter:hover {
+.schutter:not(.vergrendeld):hover {
   border-color: var(--text-2);
   box-shadow: 0 1px 0 var(--border), 0 4px 14px -10px rgba(0, 0, 0, 0.2);
 }
-.schutter:active { cursor: grabbing; }
+.schutter:not(.vergrendeld):active { cursor: grabbing; }
 .schutter.dragging { opacity: 0.45; }
 .schutter.conflict { box-shadow: 0 0 0 2px var(--yellow); border-color: var(--yellow-deep); }
 .schutter.compact { padding: 7px 9px 7px 14px; }
+/* Op een vergrendeld doel: niet versleepbaar, dus ook geen sleep-affordance. */
+.schutter.vergrendeld { cursor: default; }
 
 .schutter .naam-wrap {
   display: flex;

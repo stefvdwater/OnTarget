@@ -226,9 +226,10 @@ export default function IndelingTab({ wedstrijd }: Props): JSX.Element {
 
   function verplaatsNaarNietIngedeeld(schutterId: number, vanDoelNr: number | null): void {
     if (vanDoelNr === null) return
-    const slot = doelen
-      .find((d) => d.nummer === vanDoelNr)
-      ?.schutters.find((s) => s.schutter_id === schutterId)
+    const doelBron = doelen.find((d) => d.nummer === vanDoelNr)
+    // Een vergrendeld doel blijft ongewijzigd: ook niet leeggehaald via slepen.
+    if (!doelBron || doelBron.vergrendeld) return
+    const slot = doelBron.schutters.find((s) => s.schutter_id === schutterId)
     if (!slot) return
     const nieuweDoelen = doelen.map((d) =>
       d.nummer === vanDoelNr

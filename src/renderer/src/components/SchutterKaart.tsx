@@ -8,16 +8,20 @@ interface Props {
   draggableId: string
   compact?: boolean
   conflict?: boolean
+  /** Schutter staat op een vergrendeld doel: niet versleepbaar. */
+  vergrendeld?: boolean
 }
 
 export default function SchutterKaart({
   slot,
   draggableId,
   compact = false,
-  conflict = false
+  conflict = false,
+  vergrendeld = false
 }: Props): JSX.Element {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: draggableId
+    id: draggableId,
+    disabled: vergrendeld
   })
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -34,13 +38,14 @@ export default function SchutterKaart({
     'schutter' +
     (compact ? ' compact' : '') +
     (isDragging ? ' dragging' : '') +
-    (conflict ? ' conflict' : '')
+    (conflict ? ' conflict' : '') +
+    (vergrendeld ? ' vergrendeld' : '')
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      {...listeners}
+      {...(vergrendeld ? {} : listeners)}
       {...attributes}
       className={className}
       data-boog={slot.type_boog}

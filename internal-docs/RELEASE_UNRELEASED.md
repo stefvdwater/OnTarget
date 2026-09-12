@@ -169,3 +169,28 @@ unmount tijdens het wisselen van tab (zelfde patroon als het bestaande
   brontekst.
 - Gedeelde patch-updater (`usePatchState` in `src/renderer/src/hooks/`)
   i.p.v. losse handgeschreven merge-functies per gelift stuk state.
+
+### Vergrendeld doel is echt vergrendeld bij slepen ([issue #51](https://github.com/stefvdwater/OnTarget/issues/51))
+
+Een schutter op een vergrendeld doel kon nog altijd naar de
+aanmeldlijst ("niet ingedeeld") gesleept worden: het doel werd zo alsnog
+leeggehaald, wat de hele bedoeling van vergrendelen ondergraaft. Slepen
+*naar* een vergrendeld doel was wel al geblokkeerd
+(`verplaatsNaarDoel` in [`IndelingTab.tsx`](../src/renderer/src/pages/IndelingTab.tsx)),
+enkel de weg eruit niet.
+
+Nu op drie niveaus dichtgezet, zodat het ook zichtbaar is en niet enkel
+stil faalt:
+- **Kaarten op een vergrendeld doel zijn niet versleepbaar.**
+  `SchutterKaart` kreeg een `vergrendeld`-prop die `useSortable` uitschakelt
+  (zowel als sleepbron als als drop-doel) en de grab-cursor plus
+  hover-markering weglaat.
+- **Een vergrendeld doel is geen drop-zone meer.** `useDroppable` in
+  `DoelKolom` staat op `disabled`, dus de blauwe drag-over-rand verschijnt
+  niet meer op een doel dat toch niets aanneemt.
+- **Guard in de handler.** `verplaatsNaarNietIngedeeld` weigert nu een
+  bronschutter van een vergrendeld doel, net zoals `verplaatsNaarDoel` dat
+  al deed voor de bestemming.
+
+Onaangeroerd: het vergrendel-gedrag bij herberekenen, leegmaken en
+config-wijzigingen was al correct (die slaan vergrendelde doelen over).
